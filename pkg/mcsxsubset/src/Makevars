@@ -1,0 +1,11 @@
+
+objects = xsubset.o environ.o comput.o
+
+PKG_LIBS = $(objects) $(LAPACK_LIBS)
+
+.PHONY : all $(objects)
+
+all : $(objects) $(SHLIB)
+
+$(objects) : %.o : mcs/xsubset/%.cc
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@

@@ -1,0 +1,9 @@
+Package: mcsxsubset
+Version: 0.2
+Date: 2009-May-12
+Title: Variable-subset selection
+Author: MCS group
+Maintainer: Marc Hofmann <marc.hofmann@unine.ch>
+Description: Variable subset selection.
+License: GPL
+URL: http://iiun.unine.ch/matrix/index.htm
