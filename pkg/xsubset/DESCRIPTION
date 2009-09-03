@@ -2,7 +2,7 @@ Package: xsubset
 Version: 0.2-1
 Date: 2009-09-03
 Title: Variable Subset Selection
-Author: MCS Group, Achim Zeileis
+Author: Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis
 Maintainer: Marc Hofmann <marc.hofmann@unine.ch>
 Description: Variable subset selection in linear regression models.
 Depends: R (>= 2.7.0), stats
