@@ -1,9 +1,9 @@
-\name{mcsxsubset}
+\name{xsubset}
 
 \docType{package}
 
-\alias{mcsxsubset}
-\alias{mcsxsubset-package}
+\alias{xsubset}
+\alias{xsubset-package}
 
 \title{Matrix computations and statistics: variable subset selection}
 
