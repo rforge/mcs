@@ -1,0 +1,27 @@
+import("stats", "graphics")
+
+useDynLib("xsubset")
+
+export(
+  "xsubset",
+  "refit"
+)
+
+## xsubset generator methods
+S3method("xsubset", "default")
+S3method("xsubset", "formula")
+S3method("xsubset", "lm")
+
+## extractor methods for xsubset objects
+S3method("print", "xsubset")
+S3method("summary", "xsubset")
+S3method("print", "summary.xsubset")
+S3method("plot", "xsubset")
+S3method("deviance", "xsubset")
+S3method("logLik", "xsubset")
+S3method("AIC", "xsubset")
+S3method("model.frame", "xsubset")
+S3method("model.matrix", "xsubset")
+S3method("refit", "xsubset")
+S3method("coef", "xsubset")
+S3method("vcov", "xsubset")
