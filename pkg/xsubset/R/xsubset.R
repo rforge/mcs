@@ -203,7 +203,6 @@ xsubset.default <- function(x, y, weights = NULL, offset = NULL,
     pradius = pradius,
     tol = tol,
     nvis = C_rval$nvis, #Z# What is 'nvis'?
-    contrasts = attr(X, "contrasts"),
     na.action = na.action
   )
   class(rval) <- "xsubset"
