@@ -367,7 +367,11 @@ refit.xsubset <- function(object, size = NULL, ...) {
     if(!object$intercept) "0 +" else NULL, 
     paste(names(data)[-1], collapse = " + ")))
   
-  lm(formula, data)
+  ## offset and weights
+  offset <- object$offset
+  weights <- object$weights
+  
+  lm(formula, data, weights = weights, offset = offset)
 }
 
 coef.xsubset <- function(object, size = NULL, ...) {
