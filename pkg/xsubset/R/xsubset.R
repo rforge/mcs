@@ -155,7 +155,7 @@ xsubset.default <- function(x, y, weights = NULL, offset = NULL,
     ay   = as.numeric(ay),
     mark = as.integer(mark),
     prad = as.integer(pradius),
-    tau  = as.numeric(tol),
+    tau  = as.numeric(ntol),
     ## out
     rsel = numeric(nvar - 1),
     isel = integer(nvar * (nvar - 1) / 2),
@@ -201,7 +201,7 @@ xsubset.default <- function(x, y, weights = NULL, offset = NULL,
     nreg = nvar - 1 - icpt,
     intercept = icpt,
     pradius = pradius,
-    tol = tol,
+    tol = ntol,
     nvis = C_rval$nvis, #Z# What is 'nvis'?
     na.action = na.action
   )
