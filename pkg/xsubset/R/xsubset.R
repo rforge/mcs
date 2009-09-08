@@ -146,6 +146,7 @@ xsubset.default <- function(x, y, weights = NULL, offset = NULL,
   .TAU_MAX <- .Machine$double.xmax #Z# Can we have tol in [0, 1] or some other fixed interval?
   ntol <- rep(.TAU_MAX, length.out = nvar - 1)
   ntol[size] <- rep(tol, length.out = length(size))
+  tol <- ntol
   
   ## call underlying C code
   C_rval <- .C(name = "xsubset_R",
@@ -155,7 +156,7 @@ xsubset.default <- function(x, y, weights = NULL, offset = NULL,
     ay   = as.numeric(ay),
     mark = as.integer(mark),
     prad = as.integer(pradius),
-    tau  = as.numeric(ntol),
+    tau  = as.numeric(tol),
     ## out
     rsel = numeric(nvar - 1),
     isel = integer(nvar * (nvar - 1) / 2),
@@ -201,7 +202,7 @@ xsubset.default <- function(x, y, weights = NULL, offset = NULL,
     nreg = nvar - 1 - icpt,
     intercept = icpt,
     pradius = pradius,
-    tol = ntol,
+    tol = tol,
     nvis = C_rval$nvis, #Z# What is 'nvis'?
     na.action = na.action
   )
