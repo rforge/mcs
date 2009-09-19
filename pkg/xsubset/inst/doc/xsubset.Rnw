@@ -32,10 +32,10 @@
 
 \Address{
   Marc Hofmann\\
-  Department FIXME\\
+  Institut d'Informatique\\
   Universit{\'e} de Nech{\^a}tel\\
-  FIXME\\
-  Nech{\^a}tel, Switzerland\\
+  Rue Emile-Argand 11\\
+  CP 158 -- 2009 Nech{\^a}tel, Switzerland\\
   E-mail: \email{Marc.Hofmann@unine.ch}\\
 }
 
@@ -58,7 +58,7 @@ and \cite{xsubset:Gatu+Kontoghiorghes:2006}
 
 
 somewhere we need to comment on alternative approaches in R, especially
-the \pkg{leaps} package \citep{xsubset:Lumley+Miller:2009} based on \cite{xsubset:Miller:FIXME}
+the \pkg{leaps} package \citep{xsubset:Lumley+Miller:2009} based on \cite{xsubset:Miller:2002}
 and the \pkg{subselect} package \citep{xsubset:OrestesCerdeira+DuarteSilva+Cadima:2009}
 base on \cite{xsubset:DuarteSilva:2001}
 
