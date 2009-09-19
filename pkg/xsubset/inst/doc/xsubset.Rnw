@@ -1,0 +1,158 @@
+\documentclass[nojss]{jss}
+\usepackage{thumbpdf}
+%% need no \usepackage{Sweave}
+
+%% additional commands
+\newcommand{\squote}[1]{`{#1}'}
+\newcommand{\dquote}[1]{``{#1}''}
+\newcommand{\fct}[1]{{\texttt{#1()}\index{#1@\texttt{#1()}}}}
+\newcommand{\class}[1]{\dquote{\texttt{#1}}}
+
+\author{Marc Hofmann\\Universit{\'e} de Nech{\^a}tel
+   \And Cristian Gatu\\Universit{\'e} de Nech{\^a}tel
+   \AND Erricos J. Kontoghiorghes\\Birbeck College
+   \And Achim Zeileis\\WU Wirtschaftsuniversit\"at Wien}
+\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis}
+
+\title{\pkg{xsubset}: Efficient Computation of Best Subset Linear Regressions in \proglang{R}}
+\Plaintitle{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
+
+\Keywords{linear regression, model selection, variable selection, best subset regression, \proglang{R}}
+\Plainkeywords{linear regression, model selection, variable selection, best subset regression, R}
+
+\SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
+%\VignetteIndexEntry{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
+%\VignetteDepends{stats}
+%\VignetteKeywords{linear regression, model selection, variable selection, best subset regression, R}
+%\VignettePackage{xsubset}
+
+\Abstract{ 
+  todo
+}
+
+\Address{
+  Marc Hofmann\\
+  Department FIXME\\
+  Universit{\'e} de Nech{\^a}tel\\
+  FIXME\\
+  Nech{\^a}tel, Switzerland\\
+  E-mail: \email{Marc.Hofmann@unine.ch}\\
+}
+
+\begin{document}
+
+<<preliminaries, echo=FALSE, results=hide>>=
+options(width = 70, prompt = "R> ", continue = "+  ")
+library("xsubset")
+@
+
+\section{Introduction} \label{sec:intro}
+
+introduce the \pkg{xsubset} package \citep{xsubset:Hofmann+Gatu+Kontoghiorghes:2009}
+for the \proglang{R} system for statistical computing \citep{xsubset:R:2009},
+available from the Comprehensive \proglang{R} Archive Network at
+\url{http://CRAN.R-project.org/package=xsubset}
+
+implements the algorithms of \cite{xsubset:Hofmann+Gatu+Kontoghiorghes:2007}
+and \cite{xsubset:Gatu+Kontoghiorghes:2006}
+
+
+somewhere we need to comment on alternative approaches in R, especially
+the \pkg{leaps} package \citep{xsubset:Lumley+Miller:2009} based on \cite{xsubset:Miller:FIXME}
+and the \pkg{subselect} package \citep{xsubset:OrestesCerdeira+DuarteSilva+Cadima:2009}
+base on \cite{xsubset:DuarteSilva:2001}
+
+
+\section{Implementation} \label{sec:implementation}
+
+one could probably briefly comment on the algorithm and then
+point out how it is implemented in \proglang{C++}
+
+\subsection[C++]{\proglang{C++}}
+
+\subsection[R interface]{\proglang{R} interface}
+
+\proglang{S}3 class \class{xsubset} with associated methods
+
+\fct{xsubset} is generic with the default method being the workhorse 
+function and taking the regressor matrix \code{x} and response vector \code{y}
+as main arguments. In addition, a \class{formula} and a \class{lm} method
+are provided for convenience.
+
+Many methods that work for \class{lm} objects also work for \class{xsubset}
+objects. The idea is always that the linear model is refitted for the
+specified \code{size} and then the information is extracted. If some method
+is not available, \fct{refit} can always be called explicitly which returns
+a \class{lm} object. For some
+methods, \code{size} can also be a vector of sizes that should be assessed.
+The default for \code{size} is typically the best BIC model, sometimes (as
+in the \fct{summary} and \fct{plot} method) all sizes available in the 
+\class{xsubset} object are assessed.  Currently, the methods to the generic functions include
+\fct{print}, \fct{summary}, \fct{coef}, \fct{vcov}, \fct{logLik}, \fct{residuals}, 
+\fct{fitted}, \fct{model.frame}, \fct{model.matrix}, \fct{AIC}, \fct{logLik}, \fct{deviance}.  
+
+
+\section{Illustrations} \label{sec:illustrations}
+
+load package and example data, for convenience already take logs for relative potentials
+%
+<<AirPollution>>=
+library("xsubset")
+data("AirPollution", package = "xsubset")
+for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
+@
+%
+then fitting best subsets can be done via
+%
+<<xsubset>>=
+xs <- xsubset(mortality ~ ., data = AirPollution)
+xs
+@
+%
+To obtain a more complete picture, look at visualization (see
+Figure~\ref{fig:summary}) or a tabular summary:
+%
+<<summary, fig=TRUE, include=FALSE, height=5, width=6.7>>=
+plot(xs)
+summary(xs)
+@
+
+
+\begin{figure}{t}
+\begin{center}
+\includegraphics{xsubset-summary}
+\caption{\label{fig:summary} BIC and RSS.}
+\end{center}
+\end{figure}
+
+extract information (by default for best BIC model)
+@
+<<deviance>>=
+deviance(xs)
+logLik(xs)
+AIC(xs)
+AIC(xs, k = log(nrow(AirPollution)))
+@
+%
+extract information for all subsets fitted
+%
+<<deviance-all>>=
+deviance(xs, size = 0:15)
+AIC(xs, size = 0:15)
+AIC(xs, size = 0:15, k = log(nrow(AirPollution)))
+@
+%
+refit model (best BIC by default)
+%
+<<refit>>=
+lm5 <- refit(xs)
+summary(lm5)
+@
+
+(Note that the $p$~values are not valid due to model selection.)
+
+
+
+\bibliography{xsubset}
+
+\end{document}

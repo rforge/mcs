@@ -81,9 +81,9 @@ xsubset.lm <- function(object, ..., model = TRUE, y = TRUE, x = FALSE)
 }
 
 ## workhorse method
-xsubset.default <- function(x, y, weights = NULL, offset = NULL,
+xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   size = NULL, pradius = 1, tol = 0,
-  na.action = na.omit)
+  na.action = na.omit, ...)
 #Z# Argument | Previously | Comment
 #Z# ---------+------------+--------------------------------------------------------
 #Z# size     | vmin/vmax  | -
@@ -105,7 +105,7 @@ xsubset.default <- function(x, y, weights = NULL, offset = NULL,
   call[[1]] <- as.name("xsubset")
 
   ## process x, y, weights, offset
-  x <- as.matrix(x)
+  x <- as.matrix(object)
   stopifnot(is.numeric(x), is.numeric(y), NROW(x) == NROW(y))
   if(is.null(offset)) offset <- rep(0, length(y))  
   stopifnot(length(offset) == length(y))
@@ -287,13 +287,13 @@ print.summary.xsubset <- function(x, digits = max(3, getOption("digits") - 3), .
   invisible(x)
 }
 
-plot.xsubset <- function(x, legend = TRUE,
+plot.xsubset <- function(x, size = NULL, legend = TRUE,
   xlab = "Number of regressors in model", ylab = "",
   main = "BIC and residual sum of squares",
   col = c(1, 4), lty = 1, type = "b", ...)
 {
   ## extract main info
-  size <- x$size
+  if(is.null(size)) size <- x$size
   rss <- deviance(x, size = size)
   bic <- AIC(x, size = size, k = log(x$nobs))
 
@@ -381,5 +381,13 @@ coef.xsubset <- function(object, size = NULL, ...) {
 
 vcov.xsubset <- function(object, size = NULL, ...) {
   vcov(refit(object, size), ...)
+}
+
+fitted.xsubset <- function(object, size = NULL, ...) {
+  fitted(refit(object, size), ...)
+}
+
+residuals.xsubset <- function(object, size = NULL, ...) {
+  residuals(refit(object, size), ...)
 }
 
