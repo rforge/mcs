@@ -206,7 +206,7 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
     intercept = icpt,
     pradius = pradius,
     tol = tol,
-    nvis = C_rval$nvis, #Z# What is 'nvis'?
+    nvisited = C_rval$nvis,
     na.action = na.action
   )
   class(rval) <- "xsubset"

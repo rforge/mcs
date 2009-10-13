@@ -99,7 +99,7 @@ xsubset(object, \dots)
   \item{intercept}{logical indicating whether an intercept is included in the regression,}
   \item{pradius}{preordering radius used,}
   \item{tol}{tolerance parameter vector used,}
-  \item{nvis}{FIXME,}
+  \item{nvisited}{number of visited nodes in the search algorithm,}
   \item{na.action}{NA action used (if any),}
   \item{formula}{the original formula (in \code{formula} and \code{lm} methods),}
   \item{terms}{the associated terms (in \code{formula} and \code{lm} methods),}
