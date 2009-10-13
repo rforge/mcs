@@ -21,7 +21,7 @@ xsubset(object, \dots)
 \method{xsubset}{lm}(object, \dots, model = TRUE, y = TRUE, x = FALSE)
 
 \method{xsubset}{default}(object, y, weights = NULL, offset = NULL,
-  size = NULL, pradius = 1, tol = 0, na.action = na.omit, \dots)
+  size = NULL, pradius = NULL, tol = 0, na.action = na.omit, \dots)
 }
 
 \arguments{
@@ -45,7 +45,7 @@ xsubset(object, \dots)
   \item{size}{numeric. Vector of subset sizes (number of variables, excluding
     the intercept) to be evaluated in the subset selection. The default is to
     include all sizes from zero the number of available variables.}
-  \item{pradius}{numeric. Preordering radius.}
+  \item{pradius}{numeric. Preordering radius, by default \code{round(NROW(x)/3)}.}
   \item{tol}{numeric. Tolerance parameter.}
   \item{\dots}{further arguments passed to methods}
 }

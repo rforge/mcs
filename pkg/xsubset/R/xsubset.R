@@ -82,12 +82,12 @@ xsubset.lm <- function(object, ..., model = TRUE, y = TRUE, x = FALSE)
 
 ## workhorse method
 xsubset.default <- function(object, y, weights = NULL, offset = NULL,
-  size = NULL, pradius = 1, tol = 0,
+  size = NULL, pradius = NULL, tol = 0,
   na.action = na.omit, ...)
 #Z# Argument | Previously | Comment
 #Z# ---------+------------+--------------------------------------------------------
 #Z# size     | vmin/vmax  | -
-#Z# pradius  | prad       | Shouldn't the default be NROW(x)/3?
+#Z# pradius  | prad       | The default is now NROW(x)/3 (instead of 1)
 #Z# tol      | tau        | What is the range of this? Could we have tol in [0, 1]?
 #Z# weights  | -          | Could weights (for WLS rather than OLS) be incorporated
 #Z#          |            | into the underlying C code?
@@ -148,6 +148,9 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   ntol[size] <- rep(tol, length.out = length(size))
   tol <- ntol
   
+  ## pradius default
+  if(is.null(pradius)) pradius <- pmax(round(NROW(x)/3), 1)
+
   ## call underlying C code
   C_rval <- .C(name = "xsubset_R",
     ## in
