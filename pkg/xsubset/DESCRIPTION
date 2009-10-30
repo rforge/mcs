@@ -1,6 +1,6 @@
 Package: xsubset
-Version: 0.3-0
-Date: 2009-09-03
+Version: 0.3-1
+Date: 2009-10-29
 Title: Variable Subset Selection in Linear Regressions
 Author: Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis
 Maintainer: Marc Hofmann <marc.hofmann@unine.ch>

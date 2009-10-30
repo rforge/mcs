@@ -83,9 +83,9 @@ AIC(xs)
 AIC(xs, k = log(nrow(AirPollution)))
 
 ## extract information for all subsets fitted
-deviance(xs, size = 0:15)
-AIC(xs, size = 0:15)
-AIC(xs, size = 0:15, k = log(nrow(AirPollution)))
+deviance(xs, size = 1:16)
+AIC(xs, size = 1:16)
+AIC(xs, size = 1:16, k = log(nrow(AirPollution)))
 
 ## refit model (best BIC by default)
 lm5 <- refit(xs)

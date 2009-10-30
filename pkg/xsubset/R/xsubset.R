@@ -83,6 +83,7 @@ xsubset.lm <- function(object, ..., model = TRUE, y = TRUE, x = FALSE)
 ## workhorse method
 xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   size = NULL, pradius = NULL, tol = 0,
+  include = NULL, exclude = NULL,
   na.action = na.omit, ...)
 #Z# Argument | Previously | Comment
 #Z# ---------+------------+--------------------------------------------------------
@@ -118,29 +119,89 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   }
   nobs <- nrow(ay)
   nvar <- ncol(ay)
+  nreg <- nvar - 1
   if(is.null(weights)) weights <- rep(1, nobs)
   if(!isTRUE(all.equal(as.vector(weights), rep(1, nobs)))) stop("'weights' not implemented yet")
   #Z# Could weights be added to the underlying C code?
 
-  ## intercept processing
-  icpt <- isTRUE(all.equal(as.vector(ay[,1]), rep(1, nobs)))
-  if(icpt) {
-    size <- if(is.null(size)) 1:(nvar-1) else sort(unique(round(size))) + 1
-    mark <- 1 #Z# What exactly is 'mark'?
-    null.rss <- var(y - offset) * (nobs - 1)
-  } else {
-    size <- if(is.null(size)) 0:(nvar-1) else sort(unique(round(size)))
-    mark <- 0
-    null.rss <- sum((y - offset)^2)
+  ## has intercept?
+  intercept <- isTRUE(all.equal(as.vector(x[,1]), rep(1, nobs)))
+
+  ## include processing
+  if(is.null(include)) include <- as.integer(intercept) else {
+    if(is.character(include)) include <- match(include, colnames(x))
+    if(is.logical(include)) which(rep(include, length.out = nvar - 1))
+    if(any(is.na(include))) {
+      warning("non-existing columns selected in 'include'")
+      include <- na.omit(include)
+    }
+    if(length(include) < 1) include <- 0
+    if(any(include < 0)) {
+      warning("negative indices are not allowed in 'include'")
+      include[include >= 0]
+    }
+    if(any(include >= nvar)) {
+      warning("'include' indices can not be larger than number of columns")
+      include[include < nvar]
+    }
   }
-  if(max(size) > nvar - 1) stop("'size' can not be larger than number of regressors")
-  if(min(size) < icpt) stop("'size' must at least be 0")
-  if(as.integer(icpt) %in% size) {
-    null <- TRUE
-    size <- size[-which(size == as.integer(icpt))]
-  } else {
-    null <- FALSE
+  include <- sort(unique(round(include)))
+  if(length(include) > 1) include <- include[include > 0]
+
+  ## exclude processing
+  if(is.null(exclude)) exclude <- 0 else {
+    if(is.character(exclude)) exclude <- match(exclude, colnames(x))
+    if(is.logical(exclude)) which(rep(exclude, length.out = nvar - 1))
+    if(any(is.na(exclude))) {
+      warning("non-existing columns selected in 'exclude'")
+      exclude <- na.omit(exclude)
+    }
+    if(length(exclude) < 1) exclude <- 0
+    if(any(exclude < 0)) {
+      warning("negative indices are not allowed in 'exclude'")
+      exclude[exclude >= 0]
+    }  
+    if(any(exclude >= nvar)) {
+      warning("'exclude' indices can not be larger than number of columns")
+      exclude[exclude < nvar]
+    }
   }
+  exclude <- sort(unique(round(exclude)))
+  if(length(exclude) > 1) exclude <- exclude[exclude > 0]
+
+  ## include/exclude non-overlapping
+  if(include[1] > 0 & exclude[1] > 0) {
+    if(any(!is.na(inex <- match(include, exclude)))) {
+      warning("'include' and 'exclude' must not be overlapping, modified 'exclude'")
+      exclude <- exclude[-na.omit(inex)]
+    }
+  }
+
+  ## re-order columns to incorporate include/exclude
+  colnames(ay) <- 1:nvar
+  ay <- ay[, c(include[include > 0], (1:(nvar-1))[-c(include, exclude)], nvar), drop = FALSE]
+  nvar <- nvar - length(exclude[exclude > 0])
+
+  ## fixed first columns      
+  mark <- length(include[include > 0])
+  if(mark > 0) {
+    null.rss <- sum((lm.fit(x[, include, drop = FALSE], y - offset)$residuals)^2)
+  } else {
+    null.rss <- sum((y - offset)^2)    
+  }
+
+  ## size processing
+  size <- if(is.null(size)) (mark + 1):(nvar - 1) else sort(unique(round(size)))
+  if(max(size) >= nvar) {
+    warning(paste("'size' can not be larger than", nvar - 1))
+    size <- size[size <= nvar - 1]
+  }
+  if(min(size) < mark) {
+    warning(paste("'size' must at least be", mark))
+    size <- size[size >= mark]
+  }
+  size <- size[size > mark]
+  if(length(size) < 1) size <- (mark + 1):(nvar - 1)
   
   ## tolerance
   .TAU_MAX <- .Machine$double.xmax #Z# Can we have tol in [0, 1] or some other fixed interval?
@@ -167,26 +228,23 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   )
 
   ## extract selected variables and associated RSS
-  vwhich <- sapply(size, function(i) {
+  vwhich <- lapply(size, function(i) {
     j <- i * (i - 1) / 2
-    C_rval$isel[(j + 1 + icpt):(j + i)] + 1
+    C_rval$isel[(j + 1 + mark):(j + i)] + 1
   })
-  rss <- C_rval$rsel[size]
-
-  ## include null?
-  if(null) {
-    size <- c(as.integer(icpt), size)
-    vwhich <- c(list("0" = NULL), vwhich)
-    rss <- c(null.rss, rss)
-  }
-  
-  ## switch back to size without intercept
-  size <- size - icpt
+  ## combine with included columns
+  vwhich <- lapply(vwhich, function(i) sort(c(include[include > 0], as.integer(colnames(ay)[i]))))
+  rss <- C_rval$rsel[size]  
+  ## include null
+  size <- c(mark, size)
+  vwhich <- c(structure(list(include[include > 0]), .Names = mark), vwhich)
+  rss <- c(null.rss, rss)
+  ## names
   names(vwhich) <- names(rss) <- size
 
   ## compute BIC and best model
   logL <- -0.5 * nobs * (log(rss) + 1 - log(nobs) + log(2 * pi))
-  bic <- -2 * logL + log(nobs) * (size + icpt + 1)
+  bic <- -2 * logL + log(nobs) * (size + 1)
   names(logL) <- names(bic) <- size
   best <- size[which.min(bic)]
 
@@ -195,6 +253,8 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
     size = size,
     rss = rss,
     which = vwhich,
+    include = include,
+    exclude = exclude,
     bic = bic,
     best = best,
     x = x,
@@ -202,8 +262,8 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
     weights = NULL, #Z# if supported: if(isTRUE(all.equal(as.vector(weights), rep(1, nobs)))) NULL else weights
     offset = if(isTRUE(all.equal(as.vector(offset), rep(0, nobs)))) NULL else offset,
     nobs = nobs,
-    nreg = nvar - 1 - icpt,
-    intercept = icpt,
+    nreg = nreg,
+    intercept = intercept,
     pradius = pradius,
     tol = tol,
     nvisited = C_rval$nvis,
@@ -223,12 +283,10 @@ print.xsubset <- function(x, ...)
     else paste(size, collapse = ", ")
   
   rval <- format(c(x$nobs, x$nreg, x$best), width = max(nchar(size), 3))
-  rval <- as.matrix(c(rval[1:2],
-    format(if(x$intercept) "yes" else "no", width = max(nchar(size)), justify = "right"),
-    size, rval[3]))
+  rval <- as.matrix(c(rval[1:2], size, rval[3]))
   colnames(rval) <- ""
   rownames(rval) <- c("Number of observations:", "Number of regressors:",
-    "Intercept:", "Subset sizes assessed:", "Best BIC subset size:")
+    "Subset sizes assessed:", "Best BIC subset size:")
   print(rval, quote = FALSE)
   #Z# Should we also include technical arguments pradius/tol?
   
@@ -251,12 +309,13 @@ summary.xsubset <- function(object, size = NULL, ...) {
   nwhich <- matrix(FALSE, ncol = length(size), nrow = ncol(x))
   for(i in 1:length(size)) {
     wi <- which[[as.character(size[i])]]
-    if(object$intercept) wi <- c(1, wi)
     if(!is.null(wi)) nwhich[wi, i] <- TRUE
   }
   rownames(nwhich) <- colnames(x)
   colnames(nwhich) <- size
   colnames(nwhich)[wbest] <- paste(colnames(nwhich)[wbest], "*", sep = "")
+  rownames(nwhich)[object$include] <- paste("+", rownames(nwhich)[object$include], sep = "")
+  rownames(nwhich)[object$exclude] <- paste("-", rownames(nwhich)[object$exclude], sep = "")
   
   ## replace some slots with updated information
   object$size <- size
@@ -329,13 +388,14 @@ logLik.xsubset <- function(object, size = NULL, ...) {
   size <- if(is.null(size)) object$best else size[1]
   rss <- deviance(object, size = size)
   structure(-0.5 * object$nobs * (log(rss) + 1 - log(object$nobs) + log(2 * pi)),
-    df = size + object$intercept + 1, class = "logLik")
+    df = size + 1, class = "logLik")
 }
 
 AIC.xsubset <- function(object, size = NULL, ..., k = 2) {
+  if(is.null(size)) size <- object$best
   rss <- deviance(object, size = size)
   logl <- -0.5 * object$nobs * (log(rss) + 1 - log(object$nobs) + log(2 * pi))  
-  structure(-2 * logl + k * (size + object$intercept + 1), .Names = names(rss))
+  structure(-2 * logl + k * (size + 1), .Names = names(rss))
 }
 
 model.frame.xsubset <- function(formula, ...) {
@@ -351,7 +411,6 @@ model.matrix.xsubset <- function(object, size = NULL, ...) {
   if(is.null(object$x)) x <- model.matrix(terms(object), model.frame(object), contrasts = object$contrasts)
   wi <- which(size == object$size)
   wi <- object$which[[wi]]
-  if(object$intercept) wi <- c(1, wi)
   if(is.null(wi)) wi <- 0
   x[, wi, drop = FALSE]
 }

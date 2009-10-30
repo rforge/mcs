@@ -21,7 +21,8 @@ xsubset(object, \dots)
 \method{xsubset}{lm}(object, \dots, model = TRUE, y = TRUE, x = FALSE)
 
 \method{xsubset}{default}(object, y, weights = NULL, offset = NULL,
-  size = NULL, pradius = NULL, tol = 0, na.action = na.omit, \dots)
+  size = NULL, pradius = NULL, tol = 0, include = NULL, exclude = NULL,
+  na.action = na.omit, \dots)
 }
 
 \arguments{
@@ -42,11 +43,16 @@ xsubset(object, \dots)
   \item{model, x}{logicals. If \code{TRUE} (in the \code{formula} and \code{lm}
     method) the model frame or model matrix, respectively, is returned (similarly
     for the dependent variable \code{y}).}
-  \item{size}{numeric. Vector of subset sizes (number of variables, excluding
-    the intercept) to be evaluated in the subset selection. The default is to
-    include all sizes from zero the number of available variables.}
+  \item{size}{numeric. Vector of subset sizes (number of variables, including
+    the intercept if any) to be evaluated in the subset selection. The default is to
+    include all possible sizes (as implied by \code{include} and \code{exclude}).}
   \item{pradius}{numeric. Preordering radius, by default \code{round(NROW(x)/3)}.}
   \item{tol}{numeric. Tolerance parameter.}
+  \item{include, exclude}{index vectors. Index of variables that are forced to
+    be included or excluded from the model, respectively. The indexes pertain
+    to the columns of the regressor matrix and can be (as usual) integer indexes,
+    character names, or a logical vector selecting the desired columns. By default
+    no variables are excluded and the intercept (if any) is forced to be included.}
   \item{\dots}{further arguments passed to methods}
 }
 
@@ -66,7 +72,8 @@ xsubset(object, \dots)
 
   The function will preorder the variables to reduce execution time if
   \code{pradius}\eqn{>0} (\code{pradius}\eqn{\le n}).  Best execution times
-  are usually attained for approximately \code{pradius}\eqn{=n/3}.
+  are usually attained for approximately \code{pradius}\eqn{=n/3} which
+  is hence chosen as the default.
   If the exact solutions are not needed, and to prevent the function
   from performing an exhaustive search, a tolerance \code{tol}\eqn{>0}
   can be specified for each subset \code{size} (expanded if necessary).
@@ -86,6 +93,10 @@ xsubset(object, \dots)
   \item{size}{a vector with evaluated variable subset sizes,}
   \item{rss}{a vector with residual sum of squares of best subset corresponding to \code{size},}
   \item{which}{a list with variable indices of best subsets corresponding to \code{size},}
+  \item{include}{a vector with integer indexes of the variables (columns of \code{x})
+    forced to be included in the model,}
+  \item{exclude}{a vector with integer indexes of the variables (columns of \code{x})
+    forced to be excluded from the model,}
   \item{bic}{a vector with BIC values of best subsets corresponding to \code{size},}
   \item{best}{best BIC subset \code{size},}
   \item{x}{model matrix with all variables (always in default method, only if
@@ -140,9 +151,9 @@ AIC(xs)
 AIC(xs, k = log(nrow(AirPollution)))
 
 ## extract information for all subsets fitted
-deviance(xs, size = 0:15)
-AIC(xs, size = 0:15)
-AIC(xs, size = 0:15, k = log(nrow(AirPollution)))
+deviance(xs, size = 1:16)
+AIC(xs, size = 1:16)
+AIC(xs, size = 1:16, k = log(nrow(AirPollution)))
 
 ## refit model (best BIC by default)
 lm5 <- refit(xs)
