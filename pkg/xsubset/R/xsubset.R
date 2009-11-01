@@ -83,29 +83,14 @@ xsubset.lm <- function(object, ..., model = TRUE, y = TRUE, x = FALSE)
 ## workhorse method
 xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   size = NULL, pradius = NULL, tol = 0,
-  include = NULL, exclude = NULL,
+  criterion = NULL, include = NULL, exclude = NULL,
   na.action = na.omit, ...)
-#Z# Argument | Previously | Comment
-#Z# ---------+------------+--------------------------------------------------------
-#Z# size     | vmin/vmax  | -
-#Z# pradius  | prad       | The default is now NROW(x)/3 (instead of 1)
-#Z# tol      | tau        | What is the range of this? Could we have tol in [0, 1]?
-#Z# weights  | -          | Could weights (for WLS rather than OLS) be incorporated
-#Z#          |            | into the underlying C code?
-#Z# offset   | -          | Additional offset: E[y] = X beta + offset
-#Z#          |            | Can easily be handled by internal transformation
-#Z#          |            | of y (done).
-#Z# ?        | -          | Is there an argument that can force a particular
-#Z#          |            | variable/column in or out of the regression?
-#Z#          |            | Maybe 'mark' does something like that?
-#Z# ?        | -          | Is there some possibility to group columns together,
-#Z#          |            | i.e., include all or none? (could be used for factors)
 {
   ## keep call (of generic)
   call <- match.call()
   call[[1]] <- as.name("xsubset")
 
-  ## process x, y, weights, offset
+  ## process x, y, offset
   x <- as.matrix(object)
   stopifnot(is.numeric(x), is.numeric(y), NROW(x) == NROW(y))
   if(is.null(offset)) offset <- rep(0, length(y))  
@@ -117,15 +102,23 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   } else {
     na.action <- NULL
   }
-  nobs <- nrow(ay)
+  nobs <- nobs0 <- nrow(ay)
   nvar <- ncol(ay)
   nreg <- nvar - 1
-  if(is.null(weights)) weights <- rep(1, nobs)
-  if(!isTRUE(all.equal(as.vector(weights), rep(1, nobs)))) stop("'weights' not implemented yet")
-  #Z# Could weights be added to the underlying C code?
 
   ## has intercept?
   intercept <- isTRUE(all.equal(as.vector(x[,1]), rep(1, nobs)))
+
+  ## process weights
+  if(is.null(weights)) weights <- rep(1, nobs)
+  if(!isTRUE(all.equal(as.vector(weights), rep(1, nobs)))) {
+    if(any(weights < 0)) {
+      warning("negative weights are not allowed, set to zero")
+      weights[weights < 0] <- 0
+    }
+    ay <- sqrt(weights[weights > 0]) * ay[weights > 0, , drop = FALSE]
+    nobs <- NROW(ay)
+  }
 
   ## include processing
   if(is.null(include)) include <- as.integer(intercept) else {
@@ -179,15 +172,17 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
 
   ## re-order columns to incorporate include/exclude
   colnames(ay) <- 1:nvar
-  ay <- ay[, c(include[include > 0], (1:(nvar-1))[-c(include, exclude)], nvar), drop = FALSE]
+  ix <- c(include, exclude)
+  ix <- if(any(ix > 0)) (1:(nvar-1))[-ix] else (1:(nvar-1))
+  ay <- ay[, c(include[include > 0], ix, nvar), drop = FALSE]
   nvar <- nvar - length(exclude[exclude > 0])
 
   ## fixed first columns      
   mark <- length(include[include > 0])
   if(mark > 0) {
-    null.rss <- sum((lm.fit(x[, include, drop = FALSE], y - offset)$residuals)^2)
+    null.rss <- sum(weights * (lm.wfit(x[, include, drop = FALSE], y - offset, weights)$residuals)^2)
   } else {
-    null.rss <- sum((y - offset)^2)    
+    null.rss <- sum(weights * (y - offset)^2)    
   }
 
   ## size processing
@@ -204,7 +199,7 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   if(length(size) < 1) size <- (mark + 1):(nvar - 1)
   
   ## tolerance
-  .TAU_MAX <- .Machine$double.xmax #Z# Can we have tol in [0, 1] or some other fixed interval?
+  .TAU_MAX <- .Machine$double.xmax
   ntol <- rep(.TAU_MAX, length.out = nvar - 1)
   ntol[size] <- rep(tol, length.out = length(size))
   tol <- ntol
@@ -242,11 +237,35 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
   ## names
   names(vwhich) <- names(rss) <- size
 
-  ## compute BIC and best model
-  logL <- -0.5 * nobs * (log(rss) + 1 - log(nobs) + log(2 * pi))
-  bic <- -2 * logL + log(nobs) * (size + 1)
-  names(logL) <- names(bic) <- size
-  best <- size[which.min(bic)]
+  ## compute criterion and best model
+  logL <- 0.5 * (sum(log(weights[weights > 0])) - nobs * (log(2 * pi) + 1 - log(nobs) + log(rss)))
+  df <- size + 1
+  if(is.null(criterion)) {
+    crit <- -2 * logL + log(nobs) * df
+    critnam <- "BIC"
+  } else {
+    if(is.numeric(criterion)) {
+      criterion <- criterion[1L]
+      crit <- -2 * logL + criterion * df
+      critnam <- if(isTRUE(all.equal(criterion, 2))) {
+        "AIC"
+      } else if(isTRUE(all.equal(criterion, log(nobs)))) {
+        "BIC"
+      } else {
+        "modified AIC"
+      }      
+    } else if(is.function(criterion)) {
+      logL <- lapply(1:length(size), function(i) structure(logL[i], df = df[i], class = "logLik"))
+      crit <- sapply(logL, criterion)
+      critnam <- deparse(substitute(criterion))
+    } else {
+      stop("invalid 'criterion' specified")
+    }
+  }
+  best <- size[which.min(crit)]
+  crit <- matrix(crit, nrow = 1, ncol = length(size))
+  colnames(crit) <- size
+  rownames(crit) <- critnam
 
   rval <- list(
     call = call,
@@ -255,13 +274,13 @@ xsubset.default <- function(object, y, weights = NULL, offset = NULL,
     which = vwhich,
     include = include,
     exclude = exclude,
-    bic = bic,
+    criterion = crit,
     best = best,
     x = x,
     y = y,
-    weights = NULL, #Z# if supported: if(isTRUE(all.equal(as.vector(weights), rep(1, nobs)))) NULL else weights
-    offset = if(isTRUE(all.equal(as.vector(offset), rep(0, nobs)))) NULL else offset,
-    nobs = nobs,
+    weights = if(isTRUE(all.equal(as.vector(weights), rep(1, nobs0)))) NULL else weights,
+    offset = if(isTRUE(all.equal(as.vector(offset), rep(0, nobs0)))) NULL else offset,
+    nobs = nobs0,
     nreg = nreg,
     intercept = intercept,
     pradius = pradius,
@@ -286,9 +305,8 @@ print.xsubset <- function(x, ...)
   rval <- as.matrix(c(rval[1:2], size, rval[3]))
   colnames(rval) <- ""
   rownames(rval) <- c("Number of observations:", "Number of regressors:",
-    "Subset sizes assessed:", "Best BIC subset size:")
+    "Subset sizes assessed:", paste("Best", rownames(x$criterion) , "subset size:"))
   print(rval, quote = FALSE)
-  #Z# Should we also include technical arguments pradius/tol?
   
   invisible(x)
 }
@@ -302,9 +320,12 @@ summary.xsubset <- function(object, size = NULL, ...) {
   ## get maximal model matrix
   x <- if(is.null(object$x)) model.matrix(terms(object), model.frame(object)) else object$x
 
+  ## number of observations
+  nobs <- if(is.null(object$weights)) object$nobs else sum(object$weights > 0)
+
   ## collect information
   rss <- deviance(object, size = size)
-  bic <- AIC(object, size = size, k = log(object$nobs))
+  crit <- object$criterion[, object$size %in% size, drop = FALSE]
   wbest <- which(size == object$best)
   nwhich <- matrix(FALSE, ncol = length(size), nrow = ncol(x))
   for(i in 1:length(size)) {
@@ -321,7 +342,7 @@ summary.xsubset <- function(object, size = NULL, ...) {
   object$size <- size
   object$which <- nwhich
   object$rss <- rss
-  object$bic <- bic
+  object$criterion <- crit
 
   ## delete some slots
   object$x <- object$y <- object$formula <- object$terms <- object$model <-
@@ -341,8 +362,8 @@ print.summary.xsubset <- function(x, digits = max(3, getOption("digits") - 3), .
   print(wi, quote = FALSE)
 
   cat("\nModel fit:\n")
-  fit <- rbind(x$bic, x$rss)
-  rownames(fit) <- c("BIC", "RSS")
+  fit <- rbind(x$criterion, x$rss)
+  rownames(fit) <- c(rownames(x$criterion), "RSS")
   colnames(fit) <- colnames(wi)
   print(fit, digits = digits)
     
@@ -351,32 +372,33 @@ print.summary.xsubset <- function(x, digits = max(3, getOption("digits") - 3), .
 
 plot.xsubset <- function(x, size = NULL, legend = TRUE,
   xlab = "Number of regressors in model", ylab = "",
-  main = "BIC and residual sum of squares",
+  main = NULL,
   col = c(1, 4), lty = 1, type = "b", ...)
 {
   ## extract main info
   if(is.null(size)) size <- x$size
   rss <- deviance(x, size = size)
-  bic <- AIC(x, size = size, k = log(x$nobs))
+  crit <- x$criterion[, x$size %in% size, drop = FALSE]
 
   col <- rep(col, length.out = 2)
   type <- rep(type, length.out = 2)
   lty <- rep(lty, length.out = 2)
+  if(is.null(main)) main <- paste(rownames(x$criterion), "and residual sum of squares")
 
-  plot(size, bic,
+  plot(size, as.vector(crit),
     ylab = ylab, xlab = xlab, main = main,
     type = type[1], lty = lty[1], col = col[1], ...)
   onew <- getOption("new")
   par(new = TRUE)
   plot(size, rss, type = type[2], axes = FALSE, col = col[2], xlab = "", ylab = "")
-  if(legend) legend("topright", c("BIC", "RSS"), lty = lty, col = col, bty = "n")
+  if(legend) legend("topright", c(rownames(x$criterion), "RSS"), lty = lty, col = col, bty = "n")
   axis(4)
   par(new = onew)
   invisible(x)
 }
 
 deviance.xsubset <- function(object, size = NULL, ...) {
-  rsize <- if(is.null(size)) object$best else size
+  rsize <- if(is.null(size)) object$size else size
   size <- object$size
   if(!all(rsize %in% size)) stop("requested 'size' not available")
   rval <- object$rss[which(size %in% rsize)]
@@ -386,16 +408,24 @@ deviance.xsubset <- function(object, size = NULL, ...) {
 
 logLik.xsubset <- function(object, size = NULL, ...) {
   size <- if(is.null(size)) object$best else size[1]
+  if(is.null(object$weights)) {
+    nobs <- object$nobs 
+    sw <- 0
+  } else {
+    weights <- object$weights
+    nobs <- sum(weights > 0)
+    sw <- sum(log(weights[weights > 0]))
+  }
   rss <- deviance(object, size = size)
-  structure(-0.5 * object$nobs * (log(rss) + 1 - log(object$nobs) + log(2 * pi)),
+  structure(0.5 * (sw - nobs * (log(2 * pi) + 1 - log(nobs) + log(rss))),
     df = size + 1, class = "logLik")
 }
 
 AIC.xsubset <- function(object, size = NULL, ..., k = 2) {
-  if(is.null(size)) size <- object$best
-  rss <- deviance(object, size = size)
-  logl <- -0.5 * object$nobs * (log(rss) + 1 - log(object$nobs) + log(2 * pi))  
-  structure(-2 * logl + k * (size + 1), .Names = names(rss))
+  if(is.null(size)) size <- object$size
+  rval <- sapply(size, function(i) AIC(logLik(object, size = i, ..., k = k)))
+  names(rval) <- size
+  return(rval)
 }
 
 model.frame.xsubset <- function(formula, ...) {
@@ -427,8 +457,11 @@ refit.xsubset <- function(object, size = NULL, ...) {
   data <- cbind(data.frame(y = y), as.data.frame(x))
   if(!is.null(object$formula)) names(data)[1] <- as.character(object$formula[[2]])  
   formula <- as.formula(paste(names(data)[1], "~",
-    if(!object$intercept) "0 +" else NULL, 
-    paste(names(data)[-1], collapse = " + ")))
+    if(ncol(x) < 1) {
+      if(object$intercept) "1" else "0"
+    } else {
+      if(object$intercept) NULL else "0 +"
+    }, paste(names(data)[-1], collapse = " + ")))
   
   ## offset and weights
   offset <- object$offset

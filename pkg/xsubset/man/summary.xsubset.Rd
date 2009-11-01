@@ -28,8 +28,7 @@
 
 \method{plot}{xsubset}(x, size = NULL, legend = TRUE,
   xlab = "Number of regressors in model", ylab = "",
-  main = "BIC and residual sum of squares",
-  col = c(1, 4), lty = 1, type = "b", \dots)
+  main = NULL, col = c(1, 4), lty = 1, type = "b", \dots)
 }
 
 \arguments{
@@ -51,9 +50,9 @@
   is not available, \code{refit} can always be called explicitly which returns
   a \code{lm} object. For some
   methods, \code{size} can also be a vector of sizes that should be assessed.
-  The default for \code{size} is typically the best BIC model, sometimes (as
-  in the \code{summary} and \code{plot} method) all sizes available in the 
-  \code{xsubset} object are assessed. 
+  The default for \code{size} is either the best BIC model or in a few cases (as
+  in the \code{summary}, \code{plot}, \code{deviance}, and \code{AIC} methods)
+  all sizes available in the \code{xsubset} object. 
 
   Currently, the methods to the generic functions include
   \code{\link[base]{print}}, \code{\link[base]{summary}}, \code{\link[stats]{coef}}, 
