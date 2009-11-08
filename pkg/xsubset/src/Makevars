@@ -8,4 +8,4 @@ PKG_LIBS = $(objects) $(LAPACK_LIBS)
 all : $(objects) $(SHLIB)
 
 $(objects) : %.o : mcs/xsubset/%.cc
-	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+	$(CXX) -c $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $< -o $@
