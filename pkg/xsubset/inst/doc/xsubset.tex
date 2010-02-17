@@ -1,0 +1,185 @@
+\documentclass[nojss]{jss}
+\usepackage{thumbpdf}
+%% need no \usepackage{Sweave}
+
+%% additional commands
+\newcommand{\squote}[1]{`{#1}'}
+\newcommand{\dquote}[1]{``{#1}''}
+\newcommand{\fct}[1]{{\texttt{#1()}\index{#1@\texttt{#1()}}}}
+\newcommand{\class}[1]{\dquote{\texttt{#1}}}
+
+\author{Marc Hofmann\\Universit{\'e} de Nech{\^a}tel
+   \And Cristian Gatu\\Universit{\'e} de Nech{\^a}tel
+   \AND Erricos J. Kontoghiorghes\\Birbeck College
+   \And Achim Zeileis\\WU Wirtschaftsuniversit\"at Wien}
+\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis}
+
+\title{\pkg{xsubset}: Efficient Computation of Best Subset Linear Regressions in \proglang{R}}
+\Plaintitle{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
+
+\Keywords{linear regression, model selection, variable selection, best subset regression, \proglang{R}}
+\Plainkeywords{linear regression, model selection, variable selection, best subset regression, R}
+
+
+%\VignetteIndexEntry{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
+%\VignetteDepends{stats}
+%\VignetteKeywords{linear regression, model selection, variable selection, best subset regression, R}
+%\VignettePackage{xsubset}
+
+\Abstract{ 
+  todo
+}
+
+\Address{
+  Marc Hofmann\\
+  Institut d'Informatique\\
+  Universit{\'e} de Nech{\^a}tel\\
+  Rue Emile-Argand 11\\
+  CP 158 -- 2009 Nech{\^a}tel, Switzerland\\
+  E-mail: \email{Marc.Hofmann@unine.ch}\\
+}
+
+\begin{document}
+
+
+\section{Introduction} \label{sec:intro}
+
+introduce the \pkg{xsubset} package \citep{xsubset:Hofmann+Gatu+Kontoghiorghes:2009}
+for the \proglang{R} system for statistical computing \citep{xsubset:R:2009},
+available from the Comprehensive \proglang{R} Archive Network at
+\url{http://CRAN.R-project.org/package=xsubset}
+
+implements the algorithms of \cite{xsubset:Hofmann+Gatu+Kontoghiorghes:2007}
+and \cite{xsubset:Gatu+Kontoghiorghes:2006}
+
+
+somewhere we need to comment on alternative approaches in R, especially
+the \pkg{leaps} package \citep{xsubset:Lumley+Miller:2009} based on \cite{xsubset:Miller:2002}
+and the \pkg{subselect} package \citep{xsubset:OrestesCerdeira+DuarteSilva+Cadima:2009}
+base on \cite{xsubset:DuarteSilva:2001}
+
+
+\section{Implementation} \label{sec:implementation}
+
+one could probably briefly comment on the algorithm and then
+point out how it is implemented in \proglang{C++}
+
+\subsection[C++]{\proglang{C++}}
+
+\subsection[R interface]{\proglang{R} interface}
+
+\proglang{S}3 class \class{xsubset} with associated methods
+
+\fct{xsubset} is generic with the default method being the workhorse 
+function and taking the regressor matrix \code{x} and response vector \code{y}
+as main arguments. In addition, a \class{formula} and a \class{lm} method
+are provided for convenience.
+
+Many methods that work for \class{lm} objects also work for \class{xsubset}
+objects. The idea is always that the linear model is refitted for the
+specified \code{size} and then the information is extracted. If some method
+is not available, \fct{refit} can always be called explicitly which returns
+a \class{lm} object. For some
+methods, \code{size} can also be a vector of sizes that should be assessed.
+The default for \code{size} is typically the best BIC model, sometimes (as
+in the \fct{summary} and \fct{plot} method) all sizes available in the 
+\class{xsubset} object are assessed.  Currently, the methods to the generic functions include
+\fct{print}, \fct{summary}, \fct{coef}, \fct{vcov}, \fct{logLik}, \fct{residuals}, 
+\fct{fitted}, \fct{model.frame}, \fct{model.matrix}, \fct{AIC}, \fct{logLik}, \fct{deviance}.  
+
+
+\section{Illustrations} \label{sec:illustrations}
+
+load package and example data, for convenience already take logs for relative potentials
+%
+\begin{Schunk}
+\begin{Sinput}
+R> library("xsubset")
+R> data("AirPollution", package = "xsubset")
+R> for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
+\end{Sinput}
+\end{Schunk}
+%
+then fitting best subsets can be done via
+%
+\begin{Schunk}
+\begin{Sinput}
+R> xs <- xsubset(mortality ~ ., data = AirPollution)
+R> xs
+\end{Sinput}
+\begin{Soutput}
+Call:
+xsubset(object = mortality ~ ., data = AirPollution)
+                           
+Number of regressors:  16  
+Include:               1   
+Exclude:               -   
+Subset sizes assessed: 2:16
+Intercept:             YES 
+\end{Soutput}
+\end{Schunk}
+%
+To obtain a more complete picture, look at visualization (see
+Figure~\ref{fig:summary}) or a tabular summary:
+%
+\begin{Schunk}
+\begin{Sinput}
+R> plot(xs)
+R> summary(xs)
+\end{Sinput}
+\begin{Soutput}
+Call:
+xsubset(object = mortality ~ ., data = AirPollution)
+
+Selected variables:
+              2 3 4 5 6 7 8 9 10* 11 12 13 14 15 16
++(Intercept)  x x x x x x x x x   x  x  x  x  x  x 
+precipitation     x x x x x x x   x  x  x  x  x  x 
+temperature1        x x x x x x   x  x  x  x  x  x 
+temperature7                  x   x  x  x  x  x  x 
+age                         x x   x  x  x  x  x  x 
+household                 x x x   x  x  x  x  x  x 
+education       x     x x x x x   x  x  x  x  x  x 
+housing                                 x  x  x  x 
+population                           x  x  x  x  x 
+noncauc       x x x x x x x x x   x  x  x  x  x  x 
+whitecollar                                      x 
+income                                     x  x  x 
+hydrocarbon             x x x x   x  x  x  x  x  x 
+nox                 x x x x x x   x  x  x  x  x  x 
+so2               x               x  x  x  x  x  x 
+humidity                                      x  x 
+
+Model fit:
+           2       3       4       5       6       7       8       9
+AIC    638.8   623.3   610.2   600.6   597.1   596.9   596.6   596.3
+RSS 133694.5 99841.1 77673.5 64037.8 58390.6 56314.6 54128.4 52101.6
+        10*      11    12      13      14      15      16
+AIC   594.1   594.7   596   597.3   599.2   601.1   603.1
+RSS 48610.2 47471.4 46894 46380.2 46280.2 46248.6 46248.6
+\end{Soutput}
+\end{Schunk}
+
+
+\begin{figure}{t}
+\begin{center}
+\includegraphics{xsubset-summary}
+\caption{\label{fig:summary} BIC and RSS.}
+\end{center}
+\end{figure}
+
+extract information (by default for best BIC model)
+\begin{Schunk}
+\begin{Sinput}
+R> deviance(xs)
+\end{Sinput}
+\begin{Soutput}
+        2         3         4         5         6         7         8 
+133694.54  99841.07  77673.52  64037.82  58390.63  56314.60  54128.39 
+        9        10        11        12        13        14        15 
+ 52101.56  48610.18  47471.39  46893.66  46380.24  46280.17  46248.62 
+       16 
+ 46248.59 
+\end{Soutput}
+\begin{Sinput}
+R> logLik(xs)

@@ -1,11 +1,2 @@
-
-objects = xsubset.o environ.o comput.o
-
+PKG_CXXFLAGS = -std=c++0x
 PKG_LIBS = $(objects) $(LAPACK_LIBS)
-
-.PHONY : all $(objects)
-
-all : $(objects) $(SHLIB)
-
-$(objects) : %.o : mcs/xsubset/%.cc
-	$(CXX) -c $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $< -o $@

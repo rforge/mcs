@@ -1,9 +1,11 @@
 ##
-## File:  xsubset.R
+## File:  xselect.R
 ##
-## Author:  Achim Zeileis
+## Author:  Marc Hofmann
 ##
-## Modified by:  Marc Hofmann
+## Based on:  xsubset.R
+##
+## :-|  so much for code reuse...
 ##
 
 
@@ -12,13 +14,13 @@
 ## Args:
 ##   object  - (matrix) model matrix
 ##   y       - (~matrix = NULL) response variable
-##   ... - arguments forwarded to 'xsubset.data.frame'
+##   ... - arguments forwarded to 'xselect.data.frame'
 ##
 ## Rval: (list)
-##   (see 'xsubset.default')
+##   (see 'xselect.default')
 ##
 ## This method coerces the matrix 'cbind(y, x)' to a
-## 'data.fame' and forwards the call to 'xsubset.data.frame'.
+## 'data.fame' and forwards the call to 'xselect.data.frame'.
 ##
 ## Note:  response variable
 ## If 'y' is 'NULL', the last column of 'x' is used as the
@@ -28,10 +30,10 @@
 ## No automatic intercept detection.
 ## 
 ##
-xsubset.matrix <- function (object, y = NULL, ...) {
+xselect.matrix <- function (object, y = NULL, ...) {
   ## keep call (of generic)
   call <- match.call()
-  call[[1]] <- as.name("xsubset")
+  call[[1]] <- as.name("xselect")
 
   ## process x, y
   x <- object
@@ -60,7 +62,7 @@ xsubset.matrix <- function (object, y = NULL, ...) {
   df <- as.data.frame(cbind(y, x))
 
   ## forward call
-  rval <- xsubset(df, ...)
+  rval <- xselect(df, ...)
 
   ## update return value
   rval$call <- call
@@ -75,19 +77,19 @@ xsubset.matrix <- function (object, y = NULL, ...) {
 ## Args:
 ##   object  - (data.frame) data frame
 ##   y - (integer|character = 1) index of response variable
-##   ... - arguments forwarded to 'xsubset.formula'
+##   ... - arguments forwarded to 'xselect.formula'
 ##
 ## Rval: (list)
-##   (see 'xsubset.default')
+##   (see 'xselect.default')
 ##
 ## This method simply constructs a 'formula' from the
 ## object ('formula(object, env = NULL)') and forwards
-## the call to 'xsubset.formula'.
+## the call to 'xselect.formula'.
 ##
-xsubset.data.frame <- function (object, y = 1, ...) {
+xselect.data.frame <- function (object, y = 1, ...) {
   ## keep call (of generic)
   call <- match.call()
-  call[[1]] <- as.name("xsubset")
+  call[[1]] <- as.name("xselect")
 
   ## rearrange data frame
   if (is.character(y)) {
@@ -99,7 +101,7 @@ xsubset.data.frame <- function (object, y = 1, ...) {
   f <- formula(df, env = NULL)
 
   ## forward call
-  rval <- xsubset(f, object, ...)
+  rval <- xselect(f, object, ...)
 
   ## update return value
   rval$call <- call
@@ -122,24 +124,24 @@ xsubset.data.frame <- function (object, y = 1, ...) {
 ##   y - (logical)
 ##   contrasts - (numeric[])
 ##   offset - (numeric[])
-##   ... - arguments forwarded to 'xsubset.lm'
+##   ... - arguments forwarded to 'xselect.lm'
 ##
 ## Rval: (list)
-##   (see 'xsubset.default')
+##   (see 'xselect.default')
 ##
 ## Constructs an 'lm' object and forwards the call
-## to 'xsubset.lm'.
+## to 'xselect.lm'.
 ##
 ## Note:  arguments
 ## The named arguments are passed to 'lm'.
 ##
-xsubset.formula <- function (object, data = NULL, row.subset = NULL, weights = NULL,
+xselect.formula <- function (object, data = NULL, row.subset = NULL, weights = NULL,
                              na.action = na.omit, model = TRUE, x = FALSE, y = FALSE,
                              contrasts = NULL, offset = NULL, ...)
 {
   ## keep call (of generic)
   call <- match.call()
-  call[[1]] <- as.name("xsubset")
+  call[[1]] <- as.name("xselect")
 
   ## construct lm object
   ##
@@ -159,7 +161,7 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL, weights = N
   lm <- eval(cl, parent.frame())
 
   ## forward call
-  rval <- xsubset(lm, ...)
+  rval <- xselect(lm, ...)
 
   ## update return value
   rval$call <- call
@@ -173,21 +175,21 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL, weights = N
 ##
 ## Args:
 ##   lm - (lm)
-##   ... - arguments forwarded to 'xsubset.default'
+##   ... - arguments forwarded to 'xselect.default'
 ##
 ## Rval:
-##   (see 'xsubset.default')
+##   (see 'xselect.default')
 ##
-## Does nothing.  Simply forwards to 'xsubset.default'.
+## Does nothing.  Simply forwards to 'xselect.default'.
 ##   
-xsubset.lm <- function (object, ...)
+xselect.lm <- function (object, ...)
 {
   ## keep call (of generic)
   call <- match.call()
-  call[[1]] <- as.name("xsubset")
+  call[[1]] <- as.name("xselect")
 
   ## forward call
-  rval <- xsubset.default(object, ...)
+  rval <- xselect.default(object, ...)
 
   ## update return value
   rval$call <- call
@@ -203,11 +205,11 @@ xsubset.lm <- function (object, ...)
 ##   object - (lm)
 ##   include - (integer[] = NULL)
 ##   exclude - (integer[] = NULL)
-##   size - (integer[] = NULL)
 ##   tolerance - (numeric[] = 0)
+##   criterion - (numeric|character)
+##   ... - ignored
 ##   pradius - (integer)
 ##   precision - (character)
-##   ... - ignored
 ##
 ## Rval: (list)
 ##   call - (call)
@@ -215,20 +217,20 @@ xsubset.lm <- function (object, ...)
 ##   nreg - (integer)
 ##   include - (integer[])
 ##   exclude - (integer[])
-##   size - (integer[])
+##   criterion - (character|numeric)
 ##   which - (list)
-##   rss - (numeric[])
+##   value - (numeric)
 ##   intercept - (logical)
 ##
 ## All the fun happens here.
 ##
-xsubset.default <- function (object, include = NULL, exclude = NULL,
-                             size = NULL, tolerance = 0, ...,
+xselect.default <- function (object, include = NULL, exclude = NULL,
+                             tolerance = 0, criterion = NULL, ...,
                              pradius = NULL, precision = "double")
 {
   ## keep call (of generic)
   call <- match.call()
-  call[[1]] <- as.name("xsubset")
+  call[[1]] <- as.name("xselect")
 
   ## extract information from lm object
   x <- model.matrix(object)
@@ -261,7 +263,7 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
 
   ## variables names
   x.names <- variable.names(object)
-
+  
   ## include processing
   include.computed <- include
   if (is.null(include.computed)) {
@@ -346,25 +348,33 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
   ## mark included columns      
   mark.computed <- length(include.computed)
 
-  ## process size
-  size.computed <- process.size(size, size.default = (mark.computed + 1):nreg.computed,
-                                size.allow = (mark.computed + 1):nreg.computed,
-                                allow.vector = TRUE, canonicalize = TRUE)
-  nsize <- length(size.computed)
-  size.mask <- 1:nreg.computed %in% size.computed
-
   ## process tolerance
-  if (!is.numeric(tolerance)) {
+  tolerance.computed <- tolerance
+  if (!is.numeric(tolerance.computed)) {
     stop ("'tolerance' must be numeric")
   }
-  if (length(tolerance) > nsize) {
-    warning ("redundant values in 'tolerance'; truncating 'tolerance'")
-    tolerance <- tolerance[1:nsize]
+  if (length(tolerance.computed) > 1) {
+    tolerance.computed <- tolerance.computed[1]
+    warning ("redundant values in 'tolerance'; using ", tolerance.computed)
   }
-  tolerance <- rep(tolerance, length.out = nsize)
-  tolerance.computed <- rep(0, nreg.computed)
-  tolerance.computed[size.mask] <- tolerance
-  tolerance.computed[!size.mask] <- .Machine$double.xmax
+
+  ## process criterion
+  if (is.null(criterion)) {
+    criterion <- "AIC"
+  }
+  criterion.computed <- criterion
+  penalty.computed <- 0
+  if (is.numeric(criterion.computed)) {
+    criterion.computed <- "mAIC"
+    penalty.computed <- criterion
+  } else if (!is.character(criterion.computed)) {
+    stop ("'criterion' must be numeric or character")    
+  }
+  criterion.computed <- tolower(criterion.computed)
+  if (!(criterion.computed %in% c("aic", "aicc", "aicc2", "aicu",
+                                  "bic", "cp", "maic"))) {
+    stop ("unknown 'criterion'")
+  }
 
   ## process pradius
   pradius.computed <- pradius
@@ -397,6 +407,8 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
   ## call underlying C code
   C_args <- list(## in
                  precision = as.character(precision.computed),
+                 criterion = as.character(criterion.computed),
+                 penalty   = as.double(penalty.computed),
                  nobs      = as.integer(nobs.computed),
                  nreg      = as.integer(nreg.computed),
                  xy        = as.double(cbind(x.computed, y.computed)),
@@ -404,25 +416,21 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
                  tolerance = as.double(tolerance.computed),
                  pradius   = as.integer(pradius.computed),
                  ## out
-                 rss   = double(nreg.computed),
-                 which = integer(nreg.computed * nreg.computed),
+                 value = double(1),
+                 which = as.integer(rep(-1, nreg.computed)),
                  count = integer(1))
-  C_rval <- do.call(".C", c(name = "R_subset", C_args))
-
+  C_rval <- do.call(".C", c(name = "R_select", C_args))
 
   ## extract selected regressors
-  which <- lapply(size.computed, function (sz) {
-    first <- (sz - 1) * nreg.computed + 1
-    last <- first + sz - 1
-    which <- C_rval$which[first:last] + 1
-    column.index[which]
-  })
+  which <- C_rval$which + 1
+  which <- column.index[which[which > 0]]
+  best <- length(which)
 
-  ## extract RSS
-  rss <- C_rval$rss[size.computed]
+  ## extract criterion value
+  value <- C_rval$value
   
   ## names
-  names(which) <- names(rss) <- size.computed
+  names(which) <- names(value) <- best
 
   # return value
   rval <- list(call      = call,
@@ -430,29 +438,33 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
                nreg      = nreg.computed,
                include   = include.computed,
                exclude   = exclude.computed,
-               size      = size.computed,
+               criterion = criterion,
+               best      = best,
                which     = which,
-               rss       = rss,
+               value     = value,
                intercept = intercept.computed,
                .nodes = C_rval$count)
-  class(rval) <- "xsubset"
+  class(rval) <- "xselect"
+
+  print(rval$criterion)
 
   # done
   rval
 }
 
 
-## print method for 'xsubset' objects
+## print method for 'xselect' objects
 ##
 ## Args:
-##   x - (xsubset)
+##   x - (xselect)
+##   ... - ignored
 ##
-## Rval: (xsubset) invisible
+## Rval: (xselect) invisible
 ##
-print.xsubset <- function (x, ...)
+print.xselect <- function (x, ...)
 {
   catln <- function (...) base::cat(..., "\n", sep = "")
-  
+
   catln()
   catln("Call:")
   catln(deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
@@ -472,59 +484,15 @@ print.xsubset <- function (x, ...)
   rownames(val) <- c("Number of regressors:","Include:", "Exclude:",
                      "Subset sizes assessed:", "Intercept:")
   print(val, quote = FALSE)
-  
-  invisible(x)
-}
 
+  criterion.pretty <- pretty.criterion(x$criterion)
+  best.pretty <- format(x$best)
 
-## plot method for 'xsubset' objects
-##
-## Args:
-##   x - (xsubset)
-##   size - (integer = NULL)
-##   legend - (logical = TRUE)
-##   xlab - (character = ...)
-##   ylab - (character = "")
-##   main - (character = NULL)
-##   col - (integer|character = "blue")
-##   lty - (integer = 1)
-##   type - (character = "b")
-##   ... - passed ot 'plot.default'
-##
-## Rval: (xsubset) invisible
-##
-## All arguments are passed to 'plot.default'.
-##
-plot.xsubset <- function (x, size = NULL, legend = TRUE,
-  xlab = "Number of regressors in model", ylab = "",
-  main = NULL, col = "blue", lty = 1, type = "b", ...)
-{
-  ## process size
-  size <- process.size(size, size.default = x$size, size.allow = x$size,
-                       allow.vector = TRUE)
+  val <- as.matrix(c(criterion.pretty, best.pretty), ncol = 1)
+  colnames(val) <- ""
+  rownames(val) <- c("Criterion:", "Best subset:")
+  print(val, quote = FALSE)
 
-  ## extract rss
-  rss <- deviance(x, size = size)
-
-  ## title
-  if (is.null(main)) {
-    main <- paste("Residual sum of squares")
-  }
-
-  ## plot
-  plot(size, as.vector(rss),
-       ylab = ylab, xlab = xlab, main = main,
-       type = type, lty = lty, col = col, ...)
-
-  ## legend
-  if (legend) {
-    legend("topright", "RSS", lty = lty, col = col, bty = "n")
-  }
-
-  ## axis
-  axis(4)
-  
-  ## done
   invisible(x)
 }
 
@@ -532,7 +500,7 @@ plot.xsubset <- function (x, size = NULL, legend = TRUE,
 ## extract environment
 ##
 ## Args:
-##   object - (xsubset)
+##   object - (xselect)
 ##   ... - passed to 'environment.default'
 ##
 ## Rval: (environment)
@@ -540,7 +508,7 @@ plot.xsubset <- function (x, size = NULL, legend = TRUE,
 ## Returns the 'environment' object associated with
 ## this object's 'lm' object.
 ##
-environment.xsubset <- function (object, ...) {
+environment.xselect <- function (object, ...) {
   environment(object$lm, ...)
 }
 
@@ -548,46 +516,38 @@ environment.xsubset <- function (object, ...) {
 ## extract variable names
 ##
 ## Args:
-##   object - (xsubset)
-##   full - (logical = FALSE)
-##   size - (integer = NULL)
-##   ... - ignored
+##   object - (xselect)
+##   ... - passed to 'variable.names.lm'
 ##
 ## Rval: (character[]) variable names
 ##
-variable.names.xsubset <- function (object, full = FALSE, size = NULL, ...) {
+variable.names.xselect <- function (object, full = FALSE, ...) {
   ## extract all variable names
-  x.names <- variable.names(object$lm)
+  x.names <- variable.names(object$lm, ...)
 
   ## trivial
   if (full) {
+    ## done
     return (x.names)
   }
 
-  ## process size
-  size <- process.size(size, size.allow = object$size)
-
-  ## compute indices
-  x.which <- object$which[[which(size == object$size)]]
-
   ## done
-  x.names[x.which]
+  x.names[object$which]
 }
 
 
 ## extract formula
 ##
 ## Args:
-##   x - (xsubset)
-##   size - (integer)
-##   ... - ignored
+##   x - (xselect)
+##   ... - ignored'
 ##
 ## Rval: (formula)
 ##
-formula.xsubset <- function (x, size, ...) {
+formula.xselect <- function (x, ...) {
   ## extract variable names
   y.name <- as.character(formula(x$lm)[[2]])
-  x.names <- variable.names(x, size = size)
+  x.names <- variable.names(x)
 
   ## handle intercept
   if (x$intercept) {
@@ -607,12 +567,12 @@ formula.xsubset <- function (x, size, ...) {
 ## extract model frame
 ##
 ## Args:
-##   formula - (xsubset)
+##   formula - (xselect)
 ##   ... - passed to 'model.frame.lm'
 ##
 ## Rval: (data.frame)
 ##
-model.frame.xsubset <- function (formula, ...) {
+model.frame.xselect <- function (formula, ...) {
   model.frame(formula$lm, ...)
 }
 
@@ -620,39 +580,29 @@ model.frame.xsubset <- function (formula, ...) {
 ## extract model matrix
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer)
-##   ... - ignored
+##   object - (xselect)
+##   ... - passed to 'model.matrix.lm'
 ##
 ## Rval: (matrix)
 ##
-## Weights:  The returned matrix is not affected
-## by the weights (if present).
-##
-model.matrix.xsubset <- function (object, size, ...) {
-  ## process size
-  size <- process.size(size, size.allow = object$size)
-
+model.matrix.xselect <- function (object, ...) {
   ## extract model matrix
-  x <- model.matrix(object$lm)
-
-  ## compute index
-  which <- object$which[[which(size == object$size)]]
+  x <- model.matrix(object$lm, ...)
 
   ## done
-  x[, which, drop = FALSE]
+  x[, object$which, drop = FALSE]
 }
 
 
 ## extract response variable
 ##
 ## Args:
-##   object - (xsubset)
+##   object - (xselect)
 ##   ... - passed to 'model.response.lm'
 ##
 ## Rval: (numeric[])
 ##
-model.response.xsubset <- function (object, ...) {
+model.response.xselect <- function (object, ...) {
   model.response(object$lm, ...)
 }
 
@@ -660,12 +610,12 @@ model.response.xsubset <- function (object, ...) {
 ## extract model weights
 ##
 ## Args:
-##   object - (xsubset)
+##   object - (xselect)
 ##   ... - passed to 'model.weights.lm'
 ##
 ## Rval: (numeric[])
 ##
-model.weights.xsubset <- function (object, ...) {
+model.weights.xselect <- function (object, ...) {
   model.weights(object$lm, ...)
 }
 
@@ -673,12 +623,12 @@ model.weights.xsubset <- function (object, ...) {
 ## extract model offset
 ##
 ## Args:
-##   object - (xsubset)
+##   object - (xselect)
 ##   ... - passed to 'model.offset.lm'
 ##
 ## Rval: (numeric[])
 ##
-model.offset.xsubset <- function (object, ...) {
+model.offset.xselect <- function (object, ...) {
   model.offset(object$lm, ...)
 }
 
@@ -686,23 +636,14 @@ model.offset.xsubset <- function (object, ...) {
 ## extract terms object
 ##
 ## Args:
-##   x - (xsubset)
-##   size - (integer = NULL)
+##   x - (xselect)
 ##   ... - passed to 'terms.formula'
 ##
 ## Rval: (terms)
 ##
-## If 'size' is "NULL", then simply return the 'terms'
-## of the associated 'lm' object.
-##
-terms.xsubset <- function (x, size = NULL, ...) {
-  ## trivial
-  if (is.null(size)) {
-    return (terms(x$lm))
-  }
-
+terms.xselect <- function (x, ...) {
   ## extract formula and model frame
-  f <- formula(x, size)
+  f <- formula(x)
   mf <- model.frame(x)
 
   ## done
@@ -713,19 +654,15 @@ terms.xsubset <- function (x, size = NULL, ...) {
 ## refit associated 'lm' object
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer)
+##   object - (xselect)
 ##   ... - ignored
-##   mask.call - (logical) used internally
+##   mask.call - (logical)
 ##
 ## Rval: (lm)
 ##
-## Note:  'mask.call'
-## Reconstruct 'call' object for pretty printing.
-##
-refit.xsubset <- function (object, size, ..., mask.call = TRUE) {
+refit.xselect <- function (object, ..., mask.call = TRUE) {
   ## extract formula
-  f <- formula(object, size)
+  f <- formula(object)
 
   if (mask.call) {
     ## extract call to object
@@ -766,141 +703,92 @@ refit.xsubset <- function (object, size, ..., mask.call = TRUE) {
 ## extract ceofficients
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer)
+##   object - (xselect)
 ##   ... - passed to 'coef.lm'
 ##
 ## Rval: (numeric[])
 ##
-coef.xsubset <- function (object, size, ...) {
-  coef(refit(object, size, mask.call = FALSE), ...)
+coef.xselect <- function (object, ...) {
+  coef(refit(object, mask.call = FALSE), ...)
 }
 
 
 ## extract variance-covariance matrix
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer)
+##   object - (xselect)
 ##   ... - passed to 'vcov.lm'
 ##
 ## Rval: (matrix)
 ##
-vcov.xsubset <- function (object, size, ...) {
-  vcov(refit(object, size, mask.call = FALSE), ...)
+vcov.xselect <- function (object, ...) {
+  vcov(refit(object, mask.call = FALSE), ...)
 }
 
 
 ## extract fitted values
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer)
+##   object - (xselect)
 ##   ... - passed to 'fitted.lm'
 ##
 ## Rval: (numeric[])
 ##
-fitted.xsubset <- function (object, size, ...) {
-  fitted(refit(object, size, mask.call = FALSE), ...)
+fitted.xselect <- function (object, ...) {
+  fitted(refit(object, mask.call = FALSE), ...)
 }
 
 
 ## extract residuals
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer)
+##   object - (xselect)
 ##   ... - passed to 'residuals.lm'
 ##
-## Rval: (numeric[])
+## Rval: (numeric)
 ##
-residuals.xsubset <- function (object, size, ...) {
-  residuals(refit(object, size, mask.call = FALSE), ...)
+residuals.xselect <- function (object, ...) {
+  residuals(refit(object, mask.call = FALSE), ...)
 }
 
 
 ## extract deviance
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer[] = NULL)
-##   ... - ignored
+##   object - (xselect)
+##   ... - passed to 'deviance.lm'
 ##
-## Rval: (numeric[])
+## Rval: (numeric)
 ##
-## Returns the (weighted) RSS for the specified
-## subset sizes.
-##
-## Note:  'size'
-## The default behavior is to return the deviance
-## for all selected subset sizes.
-##
-deviance.xsubset <- function (object, size = NULL, ...) {
-  ## process size
-  size <- process.size(size, size.default = object$size, size.allow = object$size,
-                       allow.vector = TRUE)
-  
-  # compute index
-  rss.which <- which(object$size %in% size)
-
-  # done
-  object$rss[rss.which]
+deviance.xselect <- function (object, ...) {
+  deviance(refit(object, mask.call = FALSE), ...)
 }
 
 
 ## extract log-likelihood
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer)
+##   object - (xselect)
 ##   ... - passed to 'logLik.lm'
 ##
 ## Rval: (logLik)
 ##
-logLik.xsubset <- function (object, size, ...) {
-  ##
-  ## TODO:
-  ## Are the weights (if present) correctly taken
-  ## into account by 'logLik.lm'?
-  ##
-  logLik(refit(object, size, mask.call = FALSE), ...)
+logLik.xselect <- function (object, ...) {
+  logLik(refit(object, mask.call = FALSE), ...)
 }
 
 
 ## compute AIC
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer[] = NULL)
+##   object - (xselect)
 ##   k - (integer)
-##   ... - ignored
+##   ... - passed to 'AIC.default'
 ##
-## Rval: (numeric|data.frame)
+## Rval: (numeric)
 ##
-## Note:  'size'
-## The default behavior is to extract the AIC for
-## all selected subset sizes.
-##
-AIC.xsubset <- function (object, size = NULL, ..., k = 2) {
-  ## process size
-  size <- process.size(size, size.default = object$size, size.allow = object$size,
-                       allow.vector = TRUE)
-
-  ## refits
-  fitted <- lapply(size, function (sz) {
-    refit(object, sz, mask.call = FALSE)
-  })
-
-  # call AIC
-  rval <- do.call("AIC", c(fitted, k = k))
-  if (length(size) > 1) {
-    row.names(rval) <- size
-  } else {
-    names(rval) <- size
-  }
-
-  #done
-  rval
+AIC.xselect <- function (object, ..., k = 2) {
+  AIC(refit(object, mask.call = FALSE, k = k), ...)
 }
 
 
@@ -909,73 +797,53 @@ AIC.xsubset <- function (object, size = NULL, ..., k = 2) {
 ##
 
 
-## summary for 'xsubset' objects
+## summary for 'xselect' objects
 ##
 ## Args:
-##   object - (xsubset)
-##   size - (integer = NULL)
-##   aic.penalty - (numeric = 2)
+##   object - (xselect)
 ##   ... - ignored
 ##
-## Rval: (summary.xsubset)
+## Rval: (summary.xselect)
 ##
-summary.xsubset <- function (object, size = NULL, aic.penalty = 2, ...) {
+summary.xselect <- function (object, ...) {
   paste <- function (...) base::paste(..., sep = "")
-
-  ## validate size
-  size <- process.size(size, size.default = object$size,
-                       size.allow = object$size, allow.vector = TRUE)
-
+  
   ## collect information
   nreg <- object$nreg
   include <- object$include
   exclude <- object$exclude
+  best <- object$best
+  which <- object$which
 
-  ## extract criteria and determine best model
-  rss <- deviance(object, size)
-  aic <- AIC(object, size, k = aic.penalty)$AIC
-  best.which <- which(aic == min(aic))
-
-  ## construct summary table
-  which.tab <- matrix(FALSE, ncol = length(size), nrow = nreg)
-  for (i in 1:length(size)) {
-    sz <- size[i]
-    sz.name <- as.character(sz)
-    sz.which <- object$which[[sz.name]]
-    which.tab[sz.which, i] <- TRUE
-  }
+  ## collect information
+  which.tab <- (1:nreg) %in% which
+  which.tab <- matrix(which.tab, ncol = 1, nrow = nreg)
   rownames(which.tab) <- variable.names(object, full = TRUE)
-  colnames(which.tab) <- size
-  colnames(which.tab)[best.which] <- paste(colnames(which.tab)[best.which], "*")
+  colnames(which.tab) <- best
   rownames(which.tab)[include] <- paste("+", rownames(which.tab)[include])
   rownames(which.tab)[exclude] <- paste("-", rownames(which.tab)[exclude])
   
-  ## replace some slots with updated information
-  object$size <- size
+  ## update information
   object$which <- which.tab
-  object$rss <- rss
-  object$aic <- aic
-  object$best <- best.which
   object$lm <- summary(object$lm)
-  
-  ## object class
-  class(object) <- "summary.xsubset"
 
-  ## done
+  ## class
+  class(object) <- "summary.xselect"
+
   object
 }
 
 
-## print 'xsubset' summary
+## print 'xselect' summary
 ##
 ## Args:
-##   x - (summary.xsubset)
+##   x - (summary.xselect)
 ##   digits - (integer = ...)
 ##   ... - ignored
 ##
-## Rval: (summary.xsubset) invisible
+## Rval: (summary.xselect) invisible
 ##
-print.summary.xsubset <- function (x, digits = max(3, getOption("digits") - 3), ...)
+print.summary.xselect <- function (x, digits = max(3, getOption("digits") - 3), ...)
 {
   catln <- function (...) base::cat(..., "\n", sep = "")
 
@@ -990,62 +858,11 @@ print.summary.xsubset <- function (x, digits = max(3, getOption("digits") - 3), 
 
   catln()
   catln("Model fit:")
-  fit <- rbind(x$aic, x$rss)
-  rownames(fit) <- c("AIC", "RSS")
-  colnames(fit) <- colnames(which.x)
+  fit <- rbind(x$value)
+  rownames(fit) <- pretty.criterion(x$criterion)
+  colnames(fit) <- x$best
   print(fit, digits = digits)
     
-  invisible(x)
-}
-
-
-## plot 'xsubset' summary
-##
-## Args:
-##   x - (xsubset)
-##   size - (integer = NULL)
-##   legend - (logical = TRUE)
-##   xlab - (character = ...)
-##   ylab - (character = "")
-##   main - (character = NULL)
-##   col - (integer[]|character[] = ...)
-##   lty - (integer = 1)
-##   type - (character = "b")
-##   ... -
-##
-## Rval: (summary.xsubset) invisible
-##
-## All arguments are passed to 'plot.default'.
-##
-plot.summary.xsubset <- function (x, legend = TRUE,
-  xlab = "Number of regressors in model", ylab = "",
-  main = NULL, col = c("blue", "red"), lty = 1, type = "b", ...)
-{
-  ## extract main info
-  size <- x$size
-  rss <- x$rss
-  aic <- x$aic
-
-  col <- rep(col, length.out = 2)
-  type <- rep(type, length.out = 2)
-  lty <- rep(lty, length.out = 2)
-  if (is.null(main)) {
-    main <- paste("AIC and residual sum of squares")
-  }
-
-  plot(size, rss, ylab = ylab, xlab = xlab, main = main,
-    type = type[1], lty = lty[1], col = col[1], ...)
-  new.old <- getOption("new")
-  par(new = TRUE)
-  plot(size, aic, type = type[2], axes = FALSE, col = col[2],
-       xlab = "", ylab = "", ...)
-  if (legend) {
-    legend("topright", c("RSS", "AIC"),
-           lty = lty, col = col, bty = "n")
-  }
-  axis(4)
-  par(new = new.old)
-  
   invisible(x)
 }
 
@@ -1054,50 +871,26 @@ plot.summary.xsubset <- function (x, legend = TRUE,
 ## Misc
 ##
 
+pretty.criterion <- function (x, ...) {
+  paste <- function (...) base::paste(..., sep = "")
 
-process.size <- function (size, size.default = NULL, size.allow = NULL,
-                          allow.vector = FALSE, canonicalize = FALSE) {
-  if (missing(size)) {
-    stop ("missing argument 'size'")
+  if (is.numeric(x)) {
+    return (paste("mAIC (penalty = ", format(x), ")"))
   }
-  if (is.null(size)) {
-    size <- size.default
-  }
-  if (!is.numeric(size)) {
-    stop ("'size' must be numeric")
-  }
-  if (!allow.vector && (length(size) > 1)) {
-    size <- size[1]
-    warning ("redundant values in 'size'; using ", size)
-  }
-  if (!is.null(size.allow) && !all(size %in% size.allow)) {
-    stop ("requested 'size' not available")
-  }
-  size.rounded <- round(size)
-  if (any(size != size.rounded)) {
-    warning ("'size' must be integer; rounding 'size'")
-    size <- size.rounded
-  }
-  if (canonicalize) {
-    size <- sort(unique(size))
-  }
-  size
-}
-
-
-pretty.integer <- function (val) {
-  if (length(val) < 1) {
-    return ("-")
-  }
-  val.min <- min(val)
-  val.max <- max(val)
-  if (val.min == val.max) {
-    format(val)
-  } else if (all(val == val.min:val.max)) {
-    paste(val.min, val.max, sep = ":")
-  } else if (is.vector(val)) {
-    paste(val, collapse = ", ")
+  x <- tolower(x)
+  if (x == "aic") {
+    "AIC"
+  } else if (x == "aicc") {
+    "AICc"
+  } else if (x == "aicc2") {
+    "AICc2"
+  } else if (x == "aicu") {
+    "AICu"
+  } else if (x == "bic") {
+    "BIC"
+  } else if (x == "cp") {
+    "Cp"
   } else {
-    "-"
+    stop ("undefined 'criterion'")
   }
 }

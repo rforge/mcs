@@ -1,15 +1,17 @@
-//  -*- mode:c++ -*-
-
-
 /**
  * @file mcs/mcs.hh
  *
  * @brief General definitions for the MCS namespace.
+ *
+ * @author Marc Hofmann
  */
 
 
 #ifndef _MCS_HH_
 #define _MCS_HH_
+
+
+#include <cassert>
 
 
 #ifndef MCS_INLINE
@@ -22,10 +24,17 @@
 #endif
 
 
+//#define NDEBUG  // disable asserts
+
+#define MCS_ASSERT(expr) \
+  assert(expr)
+
+
+
 /**
  * @brief MCS namespace.
  */
-namespace MCS
+namespace mcs
 {
 }
 

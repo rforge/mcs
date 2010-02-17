@@ -1,132 +1,142 @@
 \name{xsubset}
 
 \alias{xsubset}
-\alias{xsubset.default}
+\alias{xsubset.matrix}
+\alias{xsubset.data.frame}
 \alias{xsubset.formula}
 \alias{xsubset.lm}
+\alias{xsubset.default}
+
 \alias{print.xsubset}
+\alias{plot.xsubset}
 
-\title{Variable Subset Selection}
+\title{All-Subsets Regression}
 
-\description{
-  Variable subset selection via best subset regression in linear regression models.
-}
+\description{All-subsets regression for linear models.}
 
 \usage{
-xsubset(object, \dots)
 
-\method{xsubset}{formula}(formula, data, subset, na.action, weights, offset, \dots,
-  model = TRUE, y = TRUE, x = FALSE)
-  
-\method{xsubset}{lm}(object, \dots, model = TRUE, y = TRUE, x = FALSE)
+  xsubset(object, \dots)
 
-\method{xsubset}{default}(object, y, weights = NULL, offset = NULL,
-  size = NULL, pradius = NULL, tol = 0,
-  criterion = NULL, include = NULL, exclude = NULL,
-  na.action = na.omit, \dots)
+  \method{xsubset}{matrix}(object, y, \ldots)
+
+  \method{xsubset}{data.frame}(object, y = 1, \dots)
+
+  \method{xsubset}{formula}(object, data = NULL, row.subset = NULL,
+    weights = NULL, na.action = na.omit, model = TRUE, x = FALSE,
+    y = FALSE, contrasts = NULL, offset = NULL, \ldots)
+
+  \method{xsubset}{lm}(object, \dots)
+
+  \method{xsubset}{default}(object, include = NULL, exclude = NULL,
+    size = NULL, tolerance = 0, \ldots, pradius = NULL, precision = "double")
+
 }
 
 \arguments{
-  \item{object}{an object. For the \code{lm} method, this needs to be of class \code{lm},
-    for the default method it needs to be the regressor matrix containing all
-    variables to be included in the subset selection. If an intercept should
-    be included it has to be in the first column of \code{x}.}
-  \item{y}{numeric (in the default method). Dependent variable in the linear
-    regression.}
-  \item{formula}{symbolic description of the variables included in the
-    subset selection.}
-  \item{data, subset, na.action}{arguments controlling formula processing
-    via \code{\link[stats]{model.frame}}.}
-  \item{weights}{optional numeric vector of weights,}
-  \item{offset}{optional numeric vector with an a priori known component to be
-    included in the linear predictor.}
-  \item{model, x}{logicals. If \code{TRUE} (in the \code{formula} and \code{lm}
-    method) the model frame or model matrix, respectively, is returned (similarly
-    for the dependent variable \code{y}).}
-  \item{size}{numeric. Vector of subset sizes (number of variables, including
-    the intercept if any) to be evaluated in the subset selection. The default is to
-    include all possible sizes (as implied by \code{include} and \code{exclude}).}
-  \item{pradius}{numeric. Preordering radius, by default \code{round(NROW(x)/3)}.}
-  \item{tol}{numeric. Tolerance when minimizing the residual sum of squares (RSS).
-    When \code{tol = 0} the RSS is minimized, otherwise a solution may be found
-    which is up to \code{tol} times the minimal RSS worse.}
-  \item{criterion}{numeric or function. A specification of the model selection
-    criterion: It can either be a a numeric penalty for calling
-    \code{AIC(loglik, k = criterion)}, where \code{logLik} is an object of class
-    \code{"logLik"}, see \code{\link[stats]{logLik}} and \code{\link[stats]{AIC}}.
-    Or it can be a function for calling \code{criterion(loglik)}.
-    The default is to use the BIC, i.e., \code{AIC(logLik, k = log(nobs))} where
-    \code{nobs} is the number of observations (with \code{weights > 0}).
-    In both cases the best model is chosen by the minimum criterion.}
-  \item{include, exclude}{index vectors. Index of variables that are forced to
-    be included or excluded from the model, respectively. The indexes pertain
-    to the columns of the regressor matrix and can be (as usual) integer indexes,
-    character names, or a logical vector selecting the desired columns. By default
-    no variables are excluded and the intercept (if any) is forced to be included.}
-  \item{\dots}{further arguments passed to methods}
+
+  \item{object}{An R object.}
+
+  \item{data, row.subset, weights, na.action, model, x, contrasts,
+    offset}{Arguments forwarded to \code{\link[stats]{lm}}.}
+
+  \item{y}{A numeric vector representing the response variable \eqn{y}
+    for \code{xsubset.matrix}, the index (numeric or character) of the
+    response variable in the data frame for \code{xsubset.data.frame},
+    or a logical for \code{xsubset.formula} (see \code{\link[stats]{lm}}
+    for details).}
+
+  \item{include, exclude}{Index vectors designating variables that are
+    forced into or out of the model, respectively.  The vectors can
+    consist of (integer) indexes, (character) names, or (logical) bits
+    selecting the desired columns.  All variables are included by
+    default.}
+
+  \item{size}{Vector of subset sizes (number of variables including the
+    intercept, if any) to be evaluated.  The default is to include all
+    possible sizes.  If not specified, the value of \code{size} is
+    determined from \code{include} and \code{exclude}.}
+
+  \item{pradius}{Preordering radius, by default \code{round(nreg/3)},
+    where \code{nreg} is the number of regressors.}
+
+  \item{tolerance}{The tolerance, where \code{tolerance[i]} is the
+    tolerance employed for subset size \code{size[i]}.}
+
+  \item{precision}{Use either single (\code{"single"}) or double
+    (\code{"double"}) precision arithmetics.}
+
+  \item{\dots}{Ignored.}
+
 }
 
+
 \details{
-  The function \code{xsubset} computes the best variable-subset models
-  for linear regression models. The function is generic and provides
-  various methods for conveniently specifying the regressor matrix and
-  response. Either a standard \code{formula} interface as in
-  \code{\link[stats]{lm}} can be used, or the information can be extracted
-  from an already fitted \code{lm} object. In both cases, the default
-  method is called as the workhorse function.
+
+  The function \code{xsubset} computes all variable-subsets for linear
+  regression models.  The function is generic and provides various
+  methods to conveniently specify the regressor and response variable.
+  Either the standard \code{formula} interface as in
+  \code{\link[stats]{lm}} can be used, or the information can be
+  extracted from an already fitted \code{lm} object.  The regressor
+  matrix and response variable can also be passed in directly.  In all
+  cases, the default method is eventually called.
 
   The number of observations (rows) has to be larger than the number of
-  variables (columns). The best subset model is derived for each number of
-  variables by default, the search scope can be limited by setting \code{size}
-  to a selection of potential subset sizes.
+  variables (columns).  By default, the best subset model is derived for
+  each number of variables, but the scope of the search can be limited
+  to certain subset sizes by setting \code{size}.
 
-  The function will preorder the variables to reduce execution time if
-  \code{pradius}\eqn{>0} (\code{pradius}\eqn{\le n}).  Best execution times
-  are usually attained for approximately \code{pradius}\eqn{=n/3} which
-  is hence chosen as the default.
-  If the exact solutions are not needed, and to prevent the function
-  from performing an exhaustive search, a tolerance \code{tol}\eqn{>0}
-  can be specified for each subset \code{size} (expanded if necessary).
+  \bold{Preordering:} The function will preorder the variables to reduce
+  execution times if \code{pradius}\eqn{>0} (\code{pradius}\eqn{\le n}),
+  where \eqn{n} is the number of regressors.  Best execution times are
+  usually attained for approximately \code{pradius}\eqn{=n/3}, which is
+  the default value.
+
+  \bold{Heuristic:} If the exact solution is not needed, a tolerance
+  \code{tolerance}\eqn{>0} can be specified for each subset size
+  (expanded if necessary) to speed up the procedure.  The solution
+  satisfies RSS\eqn{(k)\le(1+\tau_k)}RSS\eqn{^*(k)}, where RSS\eqn{(k)}
+  is the residual sum of squares (RSS) of the subset of size \eqn{k},
+  RSS\eqn{^*} is the (theoretical) RSS of the exact solution, and
+  \eqn{\tau_k} the tolerance for subset size \eqn{k}.  Specifically,
+  \code{tolerance[i]} is the tolerance for subsets of size
+  \code{size[i]}.
   
-  A set of standard extractor functions for fitted model objects is available for
-  objects of class \code{"xsubset"}, including methods to the generic functions
-  \code{\link[base]{print}}, \code{\link[base]{summary}}, \code{\link[stats]{coef}}, 
-  \code{\link[stats]{vcov}}, \code{\link[stats]{logLik}}, \code{\link[stats]{residuals}}, 
-  \code{\link[stats]{fitted}}, \code{\link[stats]{model.frame}}, \code{\link[stats]{model.matrix}},
-  \code{\link[stats]{AIC}}, \code{\link[stats]{logLik}}, \code{\link[stats]{deviance}}.  
-  See \code{\link{summary.xsubset}} for more details on all methods.
+  A set of standard extractor functions for fitted model objects is
+  available for objects of class \code{"xsubset"}.  See
+  \code{\link{summary.xsubset}} for more details.
+
 }
 
 \value{
-  An object of class \code{"xsubset"}, i.e., a list with components including
-  \item{call}{the original function call,}
-  \item{size}{a vector with evaluated variable subset sizes,}
-  \item{rss}{a vector with residual sum of squares of best subset corresponding to \code{size},}
-  \item{which}{a list with variable indices of best subsets corresponding to \code{size},}
-  \item{include}{a vector with integer indexes of the variables (columns of \code{x})
-    forced to be included in the model,}
-  \item{exclude}{a vector with integer indexes of the variables (columns of \code{x})
-    forced to be excluded from the model,}
-  \item{criterion}{a matrix with one row of criterion values (by default BIC) of the
-    best subsets corresponding to \code{size},}
-  \item{best}{best subset \code{size} (for which \code{criterion} is minimal),}
-  \item{x}{model matrix with all variables (always in default method, only if
-    \code{x = TRUE} in the other methods),}
-  \item{y}{the response count vector (always in default method, only if
-    \code{y = TRUE} in the other methods),}
-  \item{weights}{the case weights used (if any),}
-  \item{offset}{the offset vector used (if any),}
-  \item{nobs}{number of observations,}
-  \item{nreg}{number of variables/regressors,}
-  \item{intercept}{logical indicating whether an intercept is included in the regression,}
-  \item{pradius}{preordering radius used,}
-  \item{tol}{tolerance parameter vector used,}
-  \item{nvisited}{number of visited nodes in the search algorithm,}
-  \item{na.action}{NA action used (if any),}
-  \item{formula}{the original formula (in \code{formula} and \code{lm} methods),}
-  \item{terms}{the associated terms (in \code{formula} and \code{lm} methods),}
-  \item{model}{the full model frame (only if \code{model = TRUE} in the
-    \code{formula} and \code{lm} methods).}
+
+  An object of class \code{"xsubset"}, i.e. a list with the following
+  components:
+
+  \item{call}{The original function call.}
+
+  \item{lm}{An object of type \code{lm} representing the full model.}
+  
+  \item{nreg}{The (original) number of regressors.}
+
+  \item{include}{The (computed) index of included variables.}
+
+  \item{exclude}{The (computed) index of excluded variables.}
+
+  \item{size}{A vector giving the evaluated subset sizes (computed).}
+
+  \item{which}{A list indicating the selected variables.  The component
+    \code{which[[i]]} is a numeric vector of length \code{size[i]}
+    holding the indexes of the variables that form the selected subset
+    of size \code{size[i]}.}
+
+  \item{rss}{A vector indicating the residual sum of squares (RSS) of
+    the selected subsets.  The element \code{rss[i]} is the RSS of the
+    subset of size \code{size[i]}.}
+
+  \item{intercept}{Whether an intercept is included in the regression.}
+
 }
 
 \references{
@@ -144,6 +154,7 @@ xsubset(object, \dots)
 \seealso{\code{\link{summary.xsubset}}}
 
 \examples{
+
 ## load data (with logs for relative potentials)
 data("AirPollution", package = "xsubset")
 
@@ -151,42 +162,54 @@ data("AirPollution", package = "xsubset")
 ## basic usage ##
 #################
 
-## fit best subsets
+## simplest form
+xs <- xsubset(AirPollution, y = "mortality")
+
+## which, in this case, is equivalent to
+## (by default, 'y' is last column)
+xs <- xsubset(as.matrix(AirPollution))
+
+## canonical example: fit best subsets
 xs <- xsubset(mortality ~ ., data = AirPollution)
 
-## visualize/summarize RSS and BIC
+## visualize RSS
 plot(xs)
-summary(xs)
 
-## extract information (by default for best BIC model)
-logLik(xs)
-coef(xs)
+## visualize/summarize RSS and AIC
+sx_aic <- summary(xs)
+print(sx_aic)
+plot(sx_aic)
+
+## extract information (subset size 7)
+logLik(xs, 7)
+coef(xs, 7)
 
 ## extract information for all subsets fitted
 deviance(xs)
 AIC(xs)
 AIC(xs, k = log(nrow(AirPollution)))
 
-## refit model (best BIC by default)
-lm6 <- refit(xs)
-summary(lm6)
+## refit best model
+lm10 <- refit(xs, summary(xs)$best)
+summary(lm10)
 ## (Note that the p-values are not valid due to model selection.)
+
 
 #####################
 ## further options ##
 #####################
 
-## run full analysis with AIC model selection
-xs_aic <- xsubset(mortality ~ ., data = AirPollution, criterion = AIC)
-## or equivalently
-xs_aic <- xsubset(mortality ~ ., data = AirPollution, criterion = 2)
+## summarize BIC
+sx_bic <- summary(xs, aic.penalty = log(nrow(AirPollution)))
+print(sx_bic)
+plot(sx_bic)
 
 ## forced inclusion/exclusion of variables in the model
 xs_fix <- xsubset(mortality ~ ., data = AirPollution,
   include = c("(Intercept)", "noncauc"), exclude = "whitecollar")
 ## or equivalently
 xs_fix <- xsubset(mortality ~ ., data = AirPollution,
-  include = c(1, 10), exclude = 11)
+                  include = c(1, 10), exclude = 11)
 plot(xs_fix)
 plot(xs, size = 2:15)
 
@@ -195,7 +218,8 @@ set.seed(123)
 w <- runif(nrow(AirPollution), max = 3)
 w[w < 0.3] <- 0
 xs_wls <- xsubset(mortality ~ precipitation + temperature1 + age,
-  weights = w, data = AirPollution)
+                  weights = w, data = AirPollution)
+
 }
 
 \keyword{regression}

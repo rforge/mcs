@@ -56,10 +56,11 @@ for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 ## fit subsets
 xs <- xsubset(mortality ~ ., data = AirPollution)
 plot(xs)
-summary(xs)
+sx <- summary(xs)
+print(sx)
 
 ## refit best BIC model
-lm5 <- refit(xs)
+lm5 <- refit(xs, size = sx$best)
 summary(lm5)
 }
 
