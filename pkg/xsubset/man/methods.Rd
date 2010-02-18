@@ -1,4 +1,4 @@
-\name{Methods}
+\name{methods}
 
 \alias{model.response}
 \alias{model.weights}
@@ -46,8 +46,7 @@
 
 \description{
 
-  Methods for all-subsets regression objects fitted by
-  \code{\link{xsubset}} and \code{\link{xselect}}.
+  Methods \code{\link{xsubset}} and \code{\link{xselect}} objects.
 
 }
 
@@ -103,7 +102,7 @@ environment(object, \ldots)
   defined.  These are \code{model.response}, \code{model.weights},
   \code{model.offset}, and \code{environment}.
 
-  The information is extracted from the refitted model for a given size.
+  The information is extracted from the model refitted to a given size.
   If a method is not available, \code{refit} can always be called
   explicitly to obtain a new \code{lm} object of the desired size.  Most
   methods for \code{xsubset} objects require a \code{size} argument,
@@ -114,6 +113,8 @@ environment(object, \ldots)
 
 }
 
+\seealso{\code{\link{xsubset}}, \code{\link{xselect}},
+  \code{\link{summary}}.}
 
 \examples{
 
@@ -129,11 +130,8 @@ for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 ## fit best subsets
 xs <- xsubset(mortality ~ ., data = AirPollution)
 
-## visualize/summarize RSS and AIC
-plot(xs)
-sx <- summary(xs)
-print(sx)
-plot(sx)
+## summarize BIC
+sx <- summary(xs, aic.penalty = log(nrow(AirPollution)))
 
 ## extract information
 deviance(xs, size = sx$best)
@@ -146,7 +144,7 @@ deviance(xs)
 AIC(xs)
 AIC(xs, k = log(nrow(AirPollution)))
 
-## refit model (to best AIC)
+## refit model
 lm5 <- refit(xs, size = sx$best)
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
@@ -164,7 +162,7 @@ model.matrix(xs, size = 3)
 #############
 
 ## select best subset
-xs <- xselect(mortality ~ ., data = AirPollution)
+xs <- xselect(mortality ~ ., data = AirPollution, criterion = "Cp")
 
 ## summarize
 summary(xs)

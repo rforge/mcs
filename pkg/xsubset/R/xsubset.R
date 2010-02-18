@@ -955,7 +955,7 @@ summary.xsubset <- function (object, size = NULL, aic.penalty = 2, ...) {
   object$which <- which.tab
   object$rss <- rss
   object$aic <- aic
-  object$best <- best.which
+  object$best <- size[best.which]
   object$lm <- summary(object$lm)
   
   ## object class

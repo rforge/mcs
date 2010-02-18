@@ -48,7 +48,7 @@ plot(xs)
 summary(xs)
 
 ## refitting best BIC model
-summary(refit(xs))
+summary(refit(xs, size = summary(xs)$best))
 }
 
 \keyword{datasets}

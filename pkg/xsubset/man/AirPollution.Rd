@@ -37,6 +37,7 @@ A data frame containing 60 observations on 16 variables.
 \source{\url{http://lib.stat.cmu.edu/datasets/pollution}}
 
 \references{
+
   McDonald, G.C. and Schwing, R.C. (1973). Instabilities of
   Regression Estimates Relating Air Pollution to Mortality.
   \emph{Technometrics}, \bold{15}, 463--482.
@@ -45,10 +46,12 @@ A data frame containing 60 observations on 16 variables.
   New York: Chapman and Hall. 
   Related software can be found online at
   \url{http://users.bigpond.net.au/amiller/}.
+
 }
 
 
 \examples{
+
 ## load data (with logs for relative potentials)
 data("AirPollution", package = "xsubset")
 for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
@@ -56,12 +59,13 @@ for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 ## fit subsets
 xs <- xsubset(mortality ~ ., data = AirPollution)
 plot(xs)
-sx <- summary(xs)
+sx <- summary(xs, aic.penalty = log(nrow(AirPollution)))
 print(sx)
 
 ## refit best BIC model
-lm5 <- refit(xs, size = sx$best)
-summary(lm5)
+lm6 <- refit(xs, size = sx$best)
+summary(lm6)
+
 }
 
 \keyword{datasets}

@@ -63,8 +63,8 @@
   \item{tolerance}{The tolerance, where \code{tolerance[i]} is the
     tolerance employed for subset size \code{size[i]}.}
 
-  \item{precision}{Use either single (\code{"single"}) or double
-    (\code{"double"}) precision arithmetics.}
+  \item{precision}{Use either \code{"single"} or \code{"double"}
+    precision arithmetics.}
 
   \item{\dots}{Ignored.}
 
@@ -102,10 +102,14 @@
   \eqn{\tau_k} the tolerance for subset size \eqn{k}.  Specifically,
   \code{tolerance[i]} is the tolerance for subsets of size
   \code{size[i]}.
+
+  \bold{Precision:} Specify whether \code{"single"} or \code{"double"}
+  precision arithmetic should be used by the underlying C procedure.
+  The default is \code{"double"}.
   
   A set of standard extractor functions for fitted model objects is
   available for objects of class \code{"xsubset"}.  See
-  \code{\link{summary.xsubset}} for more details.
+  \code{\link{Methods}} for more details.
 
 }
 
@@ -151,7 +155,7 @@
   \bold{15}, 139--156.
 }
 
-\seealso{\code{\link{summary.xsubset}}}
+\seealso{\code{\link{xselect}}, \code{\link{summary}}, \link{methods}.}
 
 \examples{
 
@@ -190,8 +194,8 @@ AIC(xs)
 AIC(xs, k = log(nrow(AirPollution)))
 
 ## refit best model
-lm10 <- refit(xs, summary(xs)$best)
-summary(lm10)
+lm8 <- refit(xs, summary(xs)$best)
+summary(lm8)
 ## (Note that the p-values are not valid due to model selection.)
 
 
@@ -210,8 +214,7 @@ xs_fix <- xsubset(mortality ~ ., data = AirPollution,
 ## or equivalently
 xs_fix <- xsubset(mortality ~ ., data = AirPollution,
                   include = c(1, 10), exclude = 11)
-plot(xs_fix)
-plot(xs, size = 2:15)
+plot(summary(xs, size = 2:15))
 
 ## weights (artificial example)
 set.seed(123)

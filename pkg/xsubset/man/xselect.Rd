@@ -44,9 +44,9 @@
     offset}{Arguments forwarded to \code{\link[stats]{lm}}.}
 
   \item{y}{A numeric vector representing the response variable \eqn{y}
-    for \code{xsubset.matrix}, the index (numeric or character) of the
-    response variable in the data frame for \code{xsubset.data.frame},
-    or a logical for \code{xsubset.formula} (see \code{\link[stats]{lm}}
+    for \code{xselect.matrix}, the index (numeric or character) of the
+    response variable in the data frame for \code{xselect.data.frame},
+    or a logical for \code{xselect.formula} (see \code{\link[stats]{lm}}
     for details).}
 
   \item{include, exclude}{Index vectors designating variables that are
@@ -80,7 +80,7 @@
 
   The criterion can be one of "AIC", "AICc", "AICc2", "AICu", "BIC", or
   "mAIC".  The latter is given by the numeric value of the penalty to be
-  employed by the modified AIC criterion.
+  used in the modified AIC criterion.
 
   See \code{\link[stats]{lm}} for more information.
 
@@ -104,12 +104,10 @@
 
   \item{best}{The size of the best subset.}
 
-  \item{which}{A list indicating the selected variables.  The component
-    \code{which[[i]]} is a numeric vector of length \code{size[i]}
-    holding the indexes of the variables that form the selected subset
-    of size \code{size[i]}.}
+  \item{which}{A vector of length \code{best} indicating the selected
+    variables.}
 
-  \item{value}{The value of the modified AIC for the best subset.}
+  \item{value}{The value of the criterion for the best subset.}
 
   \item{intercept}{Whether an intercept is included in the regression.}
 
@@ -128,7 +126,7 @@
   \bold{15}, 139--156.
 }
 
-\seealso{\code{\link{summary.xselect}}}
+\seealso{\code{\link{xsubset}}, \code{\link{summary}}, \link{methods}.}
 
 \examples{
 

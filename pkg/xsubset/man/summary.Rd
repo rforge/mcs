@@ -29,7 +29,7 @@
   \item{object}{An object of class \code{"xsubset"} or
     \code{"xselect"}.}
 
-  \item{size}{Vector of subset sizes, defaulting to all subset sizes
+  \item{size}{Vector of subset sizes; defaults to all subset sizes
     evaluated in \code{object}.}
 
   \item{aic.penalty}{The penalty used by the modified AIC.}
@@ -65,6 +65,8 @@
 
 }
 
+\seealso{\code{\link{xsubset}}, \code{\link{xselect}}, \link{methods}}.}
+
 \examples{
 
 ## load data (with logs for relative potentials)
@@ -80,7 +82,7 @@ sx <- summary(xs, aic.penalty = log(nrow(AirPollution)))
 print(sx)
 plot(sx)
 
-## refit model (best BIC by default)
+## refit model (best BIC)
 lm5 <- refit(xs, size = sx$best)
 summary(lm5)
 
