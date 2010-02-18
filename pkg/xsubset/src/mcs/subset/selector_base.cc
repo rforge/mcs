@@ -64,7 +64,6 @@ namespace mcs
 	  next_node();
 
 	  preorder_regressors();
-
 	  report_subsets();
 
 	  spawn_nodes();

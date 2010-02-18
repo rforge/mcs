@@ -333,8 +333,16 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
 
   ## handle intercept
   intercept.computed <- x.names[1] == "(Intercept)"
-  if (intercept.computed && !is.element(1, exclude.computed)) {
-    include.computed <- c(1, include.computed)
+  if (intercept.computed) {
+    if (is.element(1, include.computed)) {
+      ## OK, already selected
+    } else if (is.element(1, exclude.computed)) {
+      ## not selected
+      intercept.computed <- FALSE
+    } else {
+      ## select
+      include.computed <- c(1, include.computed)
+    }
   }
 
   ## include/exclude columns
@@ -427,7 +435,7 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
   # return value
   rval <- list(call      = call,
                lm        = object,
-               nreg      = nreg.computed,
+               nreg      = nreg,
                include   = include.computed,
                exclude   = exclude.computed,
                size      = size.computed,
@@ -933,8 +941,15 @@ summary.xsubset <- function (object, size = NULL, aic.penalty = 2, ...) {
 
   ## extract criteria and determine best model
   rss <- deviance(object, size)
-  aic <- AIC(object, size, k = aic.penalty)$AIC
-  best.which <- which(aic == min(aic))
+  if (length(size) > 1) {
+    aic <- AIC(object, size, k = aic.penalty)$AIC
+    best.which <- which(aic == min(aic))
+  } else {
+    aic <- AIC(object, size, k = aic.penalty)
+    best.which <- 1
+  }
+  best <- size[best.which]
+  names(rss) <- names(aic) <- size
 
   ## construct summary table
   which.tab <- matrix(FALSE, ncol = length(size), nrow = nreg)
@@ -955,7 +970,7 @@ summary.xsubset <- function (object, size = NULL, aic.penalty = 2, ...) {
   object$which <- which.tab
   object$rss <- rss
   object$aic <- aic
-  object$best <- size[best.which]
+  object$best <- best
   object$lm <- summary(object$lm)
   
   ## object class

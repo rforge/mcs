@@ -335,8 +335,16 @@ xselect.default <- function (object, include = NULL, exclude = NULL,
 
   ## handle intercept
   intercept.computed <- x.names[1] == "(Intercept)"
-  if (intercept.computed && !is.element(1, exclude.computed)) {
-    include.computed <- c(1, include.computed)
+  if (intercept.computed) {
+    if (is.element(1, include.computed)) {
+      ## OK, already selected
+    } else if (is.element(1, exclude.computed)) {
+      ## not selected
+      intercept.computed <- FALSE
+    } else {
+      ## select
+      include.computed <- c(1, include.computed)
+    }
   }
 
   ## include/exclude columns
@@ -435,7 +443,7 @@ xselect.default <- function (object, include = NULL, exclude = NULL,
   # return value
   rval <- list(call      = call,
                lm        = object,
-               nreg      = nreg.computed,
+               nreg      = nreg,
                include   = include.computed,
                exclude   = exclude.computed,
                criterion = criterion,
@@ -445,8 +453,6 @@ xselect.default <- function (object, include = NULL, exclude = NULL,
                intercept = intercept.computed,
                .nodes = C_rval$count)
   class(rval) <- "xselect"
-
-  print(rval$criterion)
 
   # done
   rval

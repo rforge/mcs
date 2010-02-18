@@ -81,9 +81,8 @@ namespace mcs
 
       const value_type rss = current_node_.get_rss();
 
-      for (cutting_mark_ = n - 2;
-	   cutting_mark_ >= k;
-	   --cutting_mark_)
+      // TODO: this loop is uuugly...
+      for (cutting_mark_ = n - 1; (cutting_mark_--) - k; )
 	{
 	  const value_type bound = (1 + tolerances_[cutting_mark_]) * rss;
 	  if (bound < best_subsets_[cutting_mark_].get_value())
@@ -110,12 +109,12 @@ namespace mcs
 
       const size_type n = current_node_.get_subset_size();
       const size_type k = current_node_.get_mark();
-      const size_type d = n - k;
 
       value_type rss = current_node_.get_rss();
       const auto first = current_node_.subset_begin();
       auto last = current_node_.subset_end();
-      for (size_type  j = n - 1; j >= k; --j, --last)
+      // TODO: this loop is uuugly... tooo...
+      for (size_type  j = n; (j--) -  k; --last)
 	{
 	  if (rss < best_subsets_[j].get_value())
 	    {
