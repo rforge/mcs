@@ -27,11 +27,6 @@ namespace mcs
 
       template<typename Value,
 	       typename Alloc>
-      class vector;
-
-
-      template<typename Value,
-	       typename Alloc>
       class subvector;
 
 
@@ -41,7 +36,7 @@ namespace mcs
 
 
       template<typename Value,
-	       typename Alloc = std::allocator<Value> >
+	       typename Alloc = std::allocator<Value>>
       class matrix
       {
 
@@ -75,28 +70,17 @@ namespace mcs
 
       private:
 
-	struct matrix_impl : public allocator_type
-	{
+        allocator_type alloc_;
 
-	  pointer stor;
+	pointer stor_;
 
-	  pointer base;
+	pointer base_;
 
-	  size_type ldim;
+	size_type ldim_;
 
-	  size_type nrow;
+	size_type nrow_;
 
-	  size_type ncol;
-
-
-	  matrix_impl();
-
-	  matrix_impl(const allocator_type& alloc);
-
-	};
-
-
-	matrix_impl impl_;
+	size_type ncol_;
 
 
       public:
@@ -140,7 +124,13 @@ namespace mcs
 	~matrix();
 
 	matrix&
-	operator =(matrix mat);
+	operator =(const matrix& mat);
+
+        matrix&
+        operator =(matrix&& mat);
+
+        matrix&
+        operator =(submatrix_type&& mat);
 
 	reference
 	operator ()(size_type irow,
@@ -245,29 +235,20 @@ namespace mcs
 	friend class matrix<Value, Alloc>;
 
 
-      public:
+      private:
 
-	typedef Value value_type;
+        typedef matrix<Value, Alloc> matrix_type;
 
-        typedef Alloc allocator_type;
+        typedef typename matrix_type::size_type size_type;
 
-        typedef typename allocator_type::size_type size_type;
+        typedef typename matrix_type::pointer pointer;
 
-        typedef typename allocator_type::difference_type difference_type;
 
-        typedef typename allocator_type::pointer pointer;
+      private:
 
-        typedef typename allocator_type::const_pointer const_pointer;
+        using matrix_type::nrow_;
 
-        typedef typename allocator_type::reference reference;
-
-        typedef typename allocator_type::const_reference const_reference;
-
-        typedef range<size_type> range_type;
-
-        typedef subvector<value_type, allocator_type> subvector_type;
-
-        typedef matrix<value_type, allocator_type> matrix_type;
+        using matrix_type::ncol_;
 
 
       private:
@@ -285,8 +266,10 @@ namespace mcs
 	submatrix&
 	operator =(const matrix_type& mat);
 
-	submatrix&
-	operator =(matrix_type&& mat);
+        submatrix&
+        operator =(matrix_type&& mat);
+
+        using matrix_type::copy;
 
       };
 

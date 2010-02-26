@@ -32,7 +32,7 @@ namespace mcs
 
       template<typename Value,
 	       size_t Align>
-      ALIGNED_ALLOC::aligned_allocator(const ALIGNED_ALLOC& alloc)
+      ALIGNED_ALLOC::aligned_allocator(const aligned_allocator& alloc)
       {
       }
 
@@ -40,7 +40,7 @@ namespace mcs
       template<typename Value,
 	       size_t Align>
       template<typename U>
-      ALIGNED_ALLOC::aligned_allocator(const aligned_allocator<U, ALIGNED_ALLOC::ALIGNMENT>& alloc)
+      ALIGNED_ALLOC::aligned_allocator(const aligned_allocator<U, Align>& alloc)
       {
       }
 
@@ -56,7 +56,7 @@ namespace mcs
 	       size_t Align>
       template<typename U>
       ALIGNED_ALLOC&
-      ALIGNED_ALLOC::operator =(const aligned_allocator<U, ALIGNED_ALLOC::ALIGNMENT>& alloc)
+      ALIGNED_ALLOC::operator =(const aligned_allocator<U, Align>& alloc)
       {
 	return *this;
       }
@@ -82,7 +82,7 @@ namespace mcs
       template<typename Value,
 	       size_t Align>
       typename ALIGNED_ALLOC::pointer
-      ALIGNED_ALLOC::allocate(const typename ALIGNED_ALLOC::size_type num,
+      ALIGNED_ALLOC::allocate(const size_type num,
 			      const void*)
       {
 	void* mem = malloc(num * sizeof(value_type) + ALIGNMENT + sizeof(void*));
@@ -95,8 +95,8 @@ namespace mcs
       template<typename Value,
 	       size_t Align>
       void
-      ALIGNED_ALLOC::deallocate(const typename ALIGNED_ALLOC::pointer ptr,
-				const typename ALIGNED_ALLOC::size_type num)
+      ALIGNED_ALLOC::deallocate(const pointer ptr,
+				const size_type num)
       {
 	free(((void**) ptr)[-1]);
       }
@@ -105,8 +105,8 @@ namespace mcs
       template<typename Value,
 	       size_t Align>
       void
-      ALIGNED_ALLOC::construct(const typename ALIGNED_ALLOC::pointer ptr,
-			       typename ALIGNED_ALLOC::const_reference val)
+      ALIGNED_ALLOC::construct(const pointer ptr,
+			       const_reference val)
       {
 	new ((void*) ptr) value_type(val);
       }
@@ -115,7 +115,7 @@ namespace mcs
       template<typename Value,
 	       size_t Align>
       void
-      ALIGNED_ALLOC::destroy(const typename ALIGNED_ALLOC::pointer ptr)
+      ALIGNED_ALLOC::destroy(const pointer ptr)
       {
 	ptr->~value_type();
       }

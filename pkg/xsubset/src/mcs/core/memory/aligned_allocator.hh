@@ -64,14 +64,14 @@ namespace mcs
 	aligned_allocator(const aligned_allocator& alloc);
 
 	template<typename U>
-	aligned_allocator(const aligned_allocator<U, aligned_allocator::ALIGNMENT>& alloc);
+	aligned_allocator(const aligned_allocator<U, Align>& alloc);
 
 	~aligned_allocator();
 
 
 	template<typename U>
 	aligned_allocator&
-	operator =(const aligned_allocator<U, aligned_allocator::ALIGNMENT>& alloc);
+	operator =(const aligned_allocator<U, Align>& alloc);
 
 	pointer
 	address(reference ref) const;

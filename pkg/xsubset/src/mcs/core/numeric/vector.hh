@@ -28,12 +28,7 @@ namespace mcs
 
 
       template<typename Value,
-	       typename Alloc>
-      class matrix;
-
-
-      template<typename Value,
-               typename Alloc = std::allocator<Value> >
+               typename Alloc = std::allocator<Value>>
       class vector
       {
 
@@ -65,26 +60,15 @@ namespace mcs
 
       private:
 
-        struct vector_impl : public allocator_type
-        {
+        allocator_type alloc_;
 
-          pointer stor;
+        pointer stor_;
 
-          pointer base;
+        pointer base_;
 
-          size_type inc;
+        size_type inc_;
 
-          size_type len;
-
-
-          vector_impl();
-
-          vector_impl(const allocator_type& alloc);
-
-        };
-
-
-        vector_impl impl_;
+        size_type len_;
 
 
       public:
@@ -94,8 +78,13 @@ namespace mcs
         explicit
         vector(size_type len);
 
+        template<typename V>
         vector(size_type len,
-               value_type val);
+               V val);
+
+        template<typename V>
+        vector(size_type len,
+               const V* data);
 
         vector(const vector& vec);
 
@@ -119,7 +108,13 @@ namespace mcs
         ~vector();
 
         vector&
-        operator =(vector vec);
+        operator =(const vector& vec);
+
+        vector&
+        operator =(vector&& vec);
+
+        vector&
+        operator =(subvector_type&& vec);
 
         reference
         operator ()(size_type pos);
@@ -139,8 +134,13 @@ namespace mcs
         size_type
         len() const;
 
+        template<typename V>
         void
-        fill(value_type val);
+        fill(V val);
+
+        template<typename V>
+        void
+        fill(const V* data);
 
         void
         copy(const vector& vec);
@@ -158,6 +158,11 @@ namespace mcs
 
 
       template<typename Value,
+	       typename Alloc>
+      class matrix;
+
+
+      template<typename Value,
                typename Alloc>
       class subvector : public vector<Value, Alloc>
       {
@@ -166,27 +171,18 @@ namespace mcs
 	friend class matrix<Value, Alloc>;
 
 
-      public:
+      private:
 
-        typedef Value value_type;
+        typedef vector<Value, Alloc> vector_type;
 
-        typedef Alloc allocator_type;
+        typedef typename vector_type::size_type size_type;
 
-        typedef typename allocator_type::size_type size_type;
+        typedef typename vector_type::pointer pointer;
 
-        typedef typename allocator_type::difference_type difference_type;
 
-        typedef typename allocator_type::pointer pointer;
+      private:
 
-        typedef typename allocator_type::const_pointer const_pointer;
-
-        typedef typename allocator_type::reference reference;
-
-        typedef typename allocator_type::const_reference const_reference;
-
-        typedef range<size_type> range_type;
-
-        typedef vector<value_type, allocator_type> vector_type;
+        using vector_type::len_;
 
 
       private:
@@ -205,6 +201,8 @@ namespace mcs
 
         subvector&
         operator =(vector_type&& vec);
+
+        using vector_type::copy;
 
       };
 

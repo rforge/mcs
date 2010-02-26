@@ -4,8 +4,8 @@
  * @author Marc Hofmann
  */
 
-#ifndef _MCS_CORE_NUMERIC_RANGE_HH_
-#define _MCS_CORE_NUMERIC_RANGE_HH_
+#ifndef MCS_CORE_NUMERIC_RANGE_HH
+#define MCS_CORE_NUMERIC_RANGE_HH
 
 
 #include <limits>
@@ -86,6 +86,9 @@ namespace mcs
   }
 
 }
+
+
+#undef MAX_LEN
 
 
 #endif
