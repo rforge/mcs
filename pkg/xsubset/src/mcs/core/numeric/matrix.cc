@@ -189,6 +189,9 @@ namespace mcs
       MATRIX&
       MATRIX::operator =(const matrix& mat)
       {
+	MCS_ASSERT(mat.nrow_ == nrow_);
+	MCS_ASSERT(mat.ncol_ == ncol_);
+
 	copy(mat);
 
 	return *this;
@@ -211,6 +214,9 @@ namespace mcs
       MATRIX&
       MATRIX::operator =(submatrix_type&& mat)
       {
+	MCS_ASSERT(mat.nrow_ == nrow_);
+	MCS_ASSERT(mat.ncol_ == ncol_);
+
 	copy(mat);
 
 	return *this;

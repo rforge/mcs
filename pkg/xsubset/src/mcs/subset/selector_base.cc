@@ -28,7 +28,7 @@ namespace mcs
       lm_(lm),
       mark_(mark),
       node_container_(lm.get_regressor_count(),
-		      Node(lm.get_regressor_count())),
+		      lm.get_regressor_count()),
       current_node_(lm.get_regressor_count())
     {
     }
@@ -149,7 +149,9 @@ namespace mcs
 
       subset_type s(n, lm_.rss());
 
-      *node_stack_top_ = Node(s, lm_.get_rz(), k);
+      auto nd = Node(s, lm_.get_rz(), k);
+      // WTF: "*node_stack_top_ = nd" doesn't work
+      node_stack_top_->swap(nd);
       ++node_stack_top_;
 
       node_count_ = 0;

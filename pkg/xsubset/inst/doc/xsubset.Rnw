@@ -20,7 +20,7 @@
 \Keywords{linear regression, model selection, variable selection, best subset regression, \proglang{R}}
 \Plainkeywords{linear regression, model selection, variable selection, best subset regression, R}
 
-\SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
+\SweaveOpts{engine = R, eps = FALSE, kep.source = TRUE}
 %\VignetteIndexEntry{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
 %\VignetteDepends{stats}
 %\VignetteKeywords{linear regression, model selection, variable selection, best subset regression, R}
@@ -128,25 +128,25 @@ summary(xs)
 extract information (by default for best BIC model)
 @
 <<deviance>>=
-deviance(xs)
-logLik(xs)
-AIC(xs)
-AIC(xs, k = log(nrow(AirPollution)))
+#deviance(xs)
+#logLik(xs)
+#AIC(xs)
+#AIC(xs, k = log(nrow(AirPollution)))
 @
 %
 extract information for all subsets fitted
 %
 <<deviance-all>>=
-deviance(xs, size = 1:16)
-AIC(xs, size = 1:16)
-AIC(xs, size = 1:16, k = log(nrow(AirPollution)))
+#deviance(xs, size = 1:16)
+#AIC(xs, size = 1:16)
+#AIC(xs, size = 1:16, k = log(nrow(AirPollution)))
 @
 %
 refit model (best BIC by default)
 %
 <<refit>>=
-lm5 <- refit(xs)
-summary(lm5)
+#lm5 <- refit(xs)
+#summary(lm5)
 @
 
 (Note that the $p$~values are not valid due to model selection.)

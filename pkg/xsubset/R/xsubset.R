@@ -12,7 +12,7 @@
 ## Args:
 ##   object  - (matrix) model matrix
 ##   y       - (~matrix = NULL) response variable
-##   ... - arguments forwarded to 'xsubset.data.frame'
+##   ...     - arguments forwarded to 'xsubset.data.frame'
 ##
 ## Rval: (list)
 ##   (see 'xsubset.default')
@@ -41,16 +41,16 @@ xsubset.matrix <- function (object, y = NULL, ...) {
   }
   y <- as.matrix(y)
   if (!is.numeric(x)) {
-    stop ("'object' (model matrix) must be numeric")
+    stop ("'object' (model matrix 'x') must be numeric")
   }
   if (!is.numeric(y)) {
     stop ("'y' must be numeric")
   }
   if (nrow(x) != nrow(y)) {
-    stop ("'object' (model matrix) and 'y' are non-conforming")
+    stop ("'object' (model matrix 'x') and 'y' are non-conforming")
   }
   if (ncol(y) > 1) {
-    warning ("dropping redundant response variables")
+    warning ("dropping superfluous columns from 'y'")
     y <- y[, 1, drop = FALSE]
   }
   nobs <- nrow(x)
@@ -73,9 +73,9 @@ xsubset.matrix <- function (object, y = NULL, ...) {
 ## method for data fame objects
 ##
 ## Args:
-##   object  - (data.frame) data frame
-##   y - (integer|character = 1) index of response variable
-##   ... - arguments forwarded to 'xsubset.formula'
+##   object - (data.frame) data frame
+##   y      - (integer|character = 1) index of response variable
+##   ...    - arguments forwarded to 'xsubset.formula'
 ##
 ## Rval: (list)
 ##   (see 'xsubset.default')
@@ -112,17 +112,17 @@ xsubset.data.frame <- function (object, y = 1, ...) {
 ## standard formula interface
 ##
 ## Args:
-##   object - (formula) 'lm''s 'formula' argument
-##   data - (data.frame = NULL)
+##   object     - (formula) 'lm''s 'formula' argument
+##   data       - (data.frame = NULL)
 ##   row.subset - (vector = NULL) 'lm''s 'subset' argument
-##   weights - (numeric[] = NULL)
-##   na.action - (function)
-##   model - (logical)
-##   x - (logical)
-##   y - (logical)
-##   contrasts - (numeric[])
-##   offset - (numeric[])
-##   ... - arguments forwarded to 'xsubset.lm'
+##   weights    - (numeric[] = NULL)
+##   na.action  - (function = na.omit)
+##   model      - (logical = TRUE)
+##   x          - (logical = FALSE)
+##   y          - (logical = FALSE)
+##   contrasts  - (numeric[] = NULL)
+##   offset     - (numeric[] = NULL)
+##   ...        - arguments forwarded to 'xsubset.lm'
 ##
 ## Rval: (list)
 ##   (see 'xsubset.default')
@@ -172,7 +172,7 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL, weights = N
 ## interface for fitted lm regression
 ##
 ## Args:
-##   lm - (lm)
+##   lm  - (lm)
 ##   ... - arguments forwarded to 'xsubset.default'
 ##
 ## Rval:
@@ -200,25 +200,26 @@ xsubset.lm <- function (object, ...)
 ## workhorse method
 ##
 ## Args:
-##   object - (lm)
-##   include - (integer[] = NULL)
-##   exclude - (integer[] = NULL)
-##   size - (integer[] = NULL)
+##   object    - (lm)
+##   include   - (integer[] = NULL)
+##   exclude   - (integer[] = NULL)
+##   size      - (integer[] = NULL)
 ##   tolerance - (numeric[] = 0)
-##   pradius - (integer)
-##   precision - (character)
-##   ... - ignored
+##   pradius   - (integer = NULL)
+##   precision - (character = "double")
+##   ...       - ignored
 ##
 ## Rval: (list)
-##   call - (call)
-##   lm   - (lm)
-##   nreg - (integer)
-##   include - (integer[])
-##   exclude - (integer[])
-##   size - (integer[])
-##   which - (list)
-##   rss - (numeric[])
+##   call      - (call)
+##   lm        - (lm)
+##   nreg      - (integer)
+##   include   - (integer[])
+##   exclude   - (integer[])
+##   size      - (integer[])
+##   which     - (list)
+##   rss       - (numeric[])
 ##   intercept - (logical)
+##
 ##
 ## All the fun happens here.
 ##

@@ -33,6 +33,11 @@ namespace mcs
 
     private:
 
+      typedef typename matrix_type::range_type range_type;
+
+
+    private:
+
       const size_type observation_count_;
 
       const size_type regressor_count_;

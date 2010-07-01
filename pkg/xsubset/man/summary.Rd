@@ -65,7 +65,7 @@
 
 }
 
-\seealso{\code{\link{xsubset}}, \code{\link{xselect}}, \link{methods}}.}
+\seealso{\code{\link{xsubset}}, \code{\link{xselect}}, \link{methods}.}
 
 \examples{
 

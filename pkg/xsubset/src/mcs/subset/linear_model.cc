@@ -56,7 +56,10 @@ namespace mcs
     typename LINEAR_MODEL::matrix_type
     LINEAR_MODEL::get_rz() const
     {
-      return rz_;
+      const size_type n = regressor_count_;
+
+      return rz_(range_type(0, n + 1),
+                 range_type(0, n + 1));
     }
 
 

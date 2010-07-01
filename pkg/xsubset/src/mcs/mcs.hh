@@ -24,10 +24,11 @@
 #endif
 
 
-//#define NDEBUG  // disable asserts
+#define NDEBUG  // disable asserts
 
 #define MCS_ASSERT(expr) \
   assert(expr)
+
 
 
 

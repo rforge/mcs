@@ -87,7 +87,9 @@ namespace mcs
 	value(const Value n,
 	      const Value rss) const
 	{
-	  return log_m_ * n + m_ * (log_2pi_ - log_m_ + std::log(rss));
+          const Value p = n + 1;
+
+	  return log_m_ * p + m_ * (log_2pi_ - log_m_ + std::log(rss));
 	}
 
       };
@@ -137,7 +139,9 @@ namespace mcs
 	value(const Value n,
 	      const Value rss) const
 	{
-	  return 2 * n + m_ * (log_2pi_ + std::log(rss) - log_m_ + 1);
+          const Value p = n + 1;
+
+	  return 2 * p + m_ * (log_2pi_ + std::log(rss) - log_m_ + 1);
 	}
 
       };
@@ -375,6 +379,8 @@ namespace mcs
 	value(const Value n,
 	      const Value rss) const
 	{
+          const Value p = n + 1;
+
 	  return penalty_ * n - 2 * logL_.value(rss);
 	}
 
