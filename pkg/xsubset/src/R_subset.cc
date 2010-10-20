@@ -156,9 +156,10 @@ R_subset(const char** const precision, const int* const observation_count,
 {
   if (std::strcmp(*precision, "single") == 0)
     {
-      subset<float>(*observation_count, *regressor_count, ay,
-		    *mark, tolerances, *preordering_radius,
-		    values, which, *node_count);
+      // ERROR:  single precision LAPACK routines fail to link
+      // subset<float>(*observation_count, *regressor_count, ay,
+      //   	    *mark, tolerances, *preordering_radius,
+      //   	    values, which, *node_count);
     }
   else if (std::strcmp(*precision, "double") == 0)
     {
@@ -179,9 +180,10 @@ R_select(const char** const precision, const char** const criterion,
 {
   if (std::strcmp(*precision, "single") == 0)
     {
-      select_helper<float>(*criterion, *penalty, *observation_count,
-			   *regressor_count, ay, *mark, *tolerance,
-			   *preordering_radius, *value, which, *node_count);
+      // ERROR:  single precision LAPACK routines fail to link
+      // select_helper<float>(*criterion, *penalty, *observation_count,
+      //   		   *regressor_count, ay, *mark, *tolerance,
+      //   		   *preordering_radius, *value, which, *node_count);
     }
   else if (std::strcmp(*precision, "double") == 0)
     {
