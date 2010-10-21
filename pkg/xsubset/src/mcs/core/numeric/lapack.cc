@@ -41,12 +41,13 @@ extern "C"
 	  double* b, const int* ldb);
 
 
-  void
-  sgeqrf_(const int* m, const int* n,
-	  float* a, const int* lda,
-	  float* tau,
-	  float* work, const int* lwork,
-	  int* info);
+  // FIXME: sgeqrf_ fails to link
+  // void
+  // sgeqrf_(const int* m, const int* n,
+  //         float* a, const int* lda,
+  //         float* tau,
+  //         float* work, const int* lwork,
+  //         int* info);
 
 
   void
@@ -134,17 +135,18 @@ namespace mcs
 	}
 
 
-	void
-	geqrf(const int m, const int n, float& a, const int lda, float& tau,
-	      float& work, const int lwork)
-	{
-	  MCS_ASSERT(m >= 0);
-	  MCS_ASSERT(n >= 0);
-	  MCS_ASSERT(lda >= std::max(1, m));
-	  MCS_ASSERT(lwork >= std::max(1, n));
+        // FIXME: sgeqrf_ fails to link
+	// void
+	// geqrf(const int m, const int n, float& a, const int lda, float& tau,
+	//       float& work, const int lwork)
+	// {
+	//   MCS_ASSERT(m >= 0);
+	//   MCS_ASSERT(n >= 0);
+	//   MCS_ASSERT(lda >= std::max(1, m));
+	//   MCS_ASSERT(lwork >= std::max(1, n));
 
-	  sgeqrf_(&m, &n, &a, &lda, &tau, &work, &lwork, &detail::info);
-	}
+	//   sgeqrf_(&m, &n, &a, &lda, &tau, &work, &lwork, &detail::info);
+	// }
 
 
 	void
