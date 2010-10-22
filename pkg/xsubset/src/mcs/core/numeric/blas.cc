@@ -105,16 +105,18 @@ namespace mcs
       {
 
 
-	void
-	copy(const int n, const float& x, const int incx,
-	     float& y, const int incy)
-	{
-	  MCS_ASSERT(n >= 0);
-	  MCS_ASSERT(incx > 0);
-	  MCS_ASSERT(incy > 0);
+        // FIXME: single precision routines fail to link
+        //   with RLapack
+	// void
+	// copy(const int n, const float& x, const int incx,
+	//      float& y, const int incy)
+	// {
+	//   MCS_ASSERT(n >= 0);
+	//   MCS_ASSERT(incx > 0);
+	//   MCS_ASSERT(incy > 0);
 
-	  scopy_(&n, &x, &incx, &y, &incy);
-	}
+	//   scopy_(&n, &x, &incx, &y, &incy);
+	// }
 
 
 	void
@@ -153,20 +155,22 @@ namespace mcs
 	}
 
 
-	void
-	gemv(const char* const trans, const int m, const int n, const float alpha,
-	     const float& a, const int lda, const float& x, const int incx,
-	     const float beta, float& y, const int incy)
-	{
-	  MCS_ASSERT(m >= 0);
-	  MCS_ASSERT(n >= 0);
-	  MCS_ASSERT(lda > 0);
-	  MCS_ASSERT(incx > 0);
-	  MCS_ASSERT(incy > 0);
+        // FIXME: single precision routines fail to link
+        //   with RLapack
+	// void
+	// gemv(const char* const trans, const int m, const int n, const float alpha,
+	//      const float& a, const int lda, const float& x, const int incx,
+	//      const float beta, float& y, const int incy)
+	// {
+	//   MCS_ASSERT(m >= 0);
+	//   MCS_ASSERT(n >= 0);
+	//   MCS_ASSERT(lda > 0);
+	//   MCS_ASSERT(incx > 0);
+	//   MCS_ASSERT(incy > 0);
 
-	  sgemv_(trans, &m, &n, &alpha, &a, &lda,
-		 &x, &incx, &beta, &y, &incy);
-	}
+	//   sgemv_(trans, &m, &n, &alpha, &a, &lda,
+	// 	 &x, &incx, &beta, &y, &incy);
+	// }
 
 
 	void
@@ -200,14 +204,16 @@ namespace mcs
 	}
 
 
-	void
-	rot(const int n, float& x, const int incx, float& y, const int incy,
-	    const float c, const float s)
-	{
-	  MCS_ASSERT(n >= 0);
+        // FIXME: single precision routines fail to link
+        //   with RLapack
+	// void
+	// rot(const int n, float& x, const int incx, float& y, const int incy,
+	//     const float c, const float s)
+	// {
+	//   MCS_ASSERT(n >= 0);
 
-	  srot_(&n, &x, &incx, &y, &incy, &c, &s);
-	}
+	//   srot_(&n, &x, &incx, &y, &incy, &c, &s);
+	// }
 
 	void
 	rot(const int n, double& x, const int incx, double& y, const int incy,
@@ -259,11 +265,13 @@ namespace mcs
 	}
 
 
-	void
-	rotg(float& x, float& y, float& c, float& s)
-	{
-	  srotg_(&x, &y, &c, &s);
-	}
+        // FIXME: single precision routines fail to link
+        //   with RLapack
+	// void
+	// rotg(float& x, float& y, float& c, float& s)
+	// {
+	//   srotg_(&x, &y, &c, &s);
+	// }
 
 
 	void

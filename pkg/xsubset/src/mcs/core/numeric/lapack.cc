@@ -85,18 +85,20 @@ namespace mcs
 	}
 
 
-	void
-	lacpy(const char* uplo, const int m, const int n,
-	      const float& a, const int lda,
-	      float& b, const int ldb)
-	{
-	  MCS_ASSERT(m >= 0);
-	  MCS_ASSERT(n >= 0);
-	  MCS_ASSERT(lda >= std::max(1, m));
-	  MCS_ASSERT(ldb >= std::max(1, m));
+        // FIXME: single precision routines fail to link
+        //   with RLapack
+	// void
+	// lacpy(const char* uplo, const int m, const int n,
+	//       const float& a, const int lda,
+	//       float& b, const int ldb)
+	// {
+	//   MCS_ASSERT(m >= 0);
+	//   MCS_ASSERT(n >= 0);
+	//   MCS_ASSERT(lda >= std::max(1, m));
+	//   MCS_ASSERT(ldb >= std::max(1, m));
 
-	  slacpy_(uplo, &m, &n, &a, &lda, &b, &ldb);
-	}
+	//   slacpy_(uplo, &m, &n, &a, &lda, &b, &ldb);
+	// }
 
 
 	void
