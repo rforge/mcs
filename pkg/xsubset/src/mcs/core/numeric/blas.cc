@@ -25,10 +25,12 @@ extern "C"
 {
 
 
-  void
-  scopy_(const int* n,
-	 const float* x, const int* incx,
-	 float* y, const int* incy);
+  // FIXME: single precision routines fail to link
+  //   with RLapack
+  // void
+  // scopy_(const int* n,
+  //        const float* x, const int* incx,
+  //        float* y, const int* incy);
 
 
   void
@@ -37,14 +39,16 @@ extern "C"
 	 double* y, const int* incy);
 
 
-  void
-  sgemv_(const char* trans,
-	 const int* m, const int* n,
-	 const float* alpha,
-	 const float* a, const int* lda,
-	 const float* x, const int* incx,
-	 const float* beta,
-	 float* y, const int* incy);
+  // FIXME: single precision routines fail to link
+  //   with RLapack
+  // void
+  // sgemv_(const char* trans,
+  //        const int* m, const int* n,
+  //        const float* alpha,
+  //        const float* a, const int* lda,
+  //        const float* x, const int* incx,
+  //        const float* beta,
+  //        float* y, const int* incy);
 
 
   void
@@ -57,11 +61,13 @@ extern "C"
 	 double* y, const int* incy);
 
 
-  void
-  srot_(const int* n,
-	float* x, const int* incx,
-	float* y, const int* incy,
-	const float* c, const float* s);
+  // FIXME: single precision routines fail to link
+  //   with RLapack
+  // void
+  // srot_(const int* n,
+  //       float* x, const int* incx,
+  //       float* y, const int* incy,
+  //       const float* c, const float* s);
 
 
   void
@@ -71,9 +77,11 @@ extern "C"
 	const double* c, const double* s);
 
 
-  void
-  srotg_(float* x, float* y,
-	 float* c, float *s);
+  // FIXME: single precision routines fail to link
+  //   with RLapack
+  // void
+  // srotg_(float* x, float* y,
+  //        float* c, float *s);
 
 
   void

@@ -27,11 +27,13 @@ extern "C"
 {
 
 
-  void
-  slacpy_(const char* uplo,
-	  const int* m, const int* n,
-	  const float* a, const int* lda,
-	  float* b, const int* ldb);
+  // FIXME: single precision routines fail to link
+  //   with RLapack
+  // void
+  // slacpy_(const char* uplo,
+  //         const int* m, const int* n,
+  //         const float* a, const int* lda,
+  //         float* b, const int* ldb);
 
 
   void
