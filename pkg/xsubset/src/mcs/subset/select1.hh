@@ -26,7 +26,7 @@ namespace mcs
     subset_table1<Value, Size, Criterion>
     select1(const lm<Value, Size>& x,
             Size mark,
-            const std::vector<Value>& tau,
+            const Value tau,
             Size prad,
             Size nbest,
             unsigned long& nodes);
@@ -41,7 +41,7 @@ namespace mcs
     select1(const lm<Value, Size>& x,
             Size mark,
             const Criterion<Value, Size>& crit,
-            const std::vector<Value>& tau,
+            const Value tau,
             Size prad,
             Size nbest,
             unsigned long& nodes);

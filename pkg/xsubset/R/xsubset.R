@@ -447,7 +447,7 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
                tolerance.computed = tolerance.computed,
                value = value,
                which = which,
-               .nodes = rval$count)
+               .nodes = rval$nodes)
   class(rval) <- "xsubset"
 
   # done

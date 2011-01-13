@@ -54,7 +54,7 @@ void
 do_select1(const mcs::subset::lm<double, int>& lm,
            const int mark,
            const Criterion<double, int>& crit,
-           const std::vector<double>& tau,
+           const double tau,
            const int prad,
            const int nbest,
            double* value,
@@ -72,7 +72,8 @@ do_select1(const mcs::subset::lm<double, int>& lm,
     {
       std::tuple<double, int, std::vector<int> > x = t.get(i);
       value[i] = std::get<0>(x);
-      std::copy_n(std::get<2>(x).begin(), std::get<1>(x), which);
+      for (int k = 0; k < std::get<1>(x); k++)
+        which[std::get<2>(x)[k]] = 1;
       which += nvar;
     }
 }
@@ -88,23 +89,36 @@ R_select(const int* const nobs, const int* const nvar,
 {
   mcs::subset::lm<double, int> lm(*nobs, *nvar, xy);
 
-  std::vector<double> tau(*nvar + 1, 0);
-  std::transform(tolerance, tolerance + *nvar, tau.begin() + 1,
-                 std::bind2nd(std::plus<double>(), 1));
-
   unsigned long xnodes = 0;
 
   if (std::strcmp(*criterion, "rss") == 0)
-    do_select(lm, *mark, tau, *pradius, *nbest, value, which, xnodes);
-  else if (std::strcmp(*criterion, "aic") == 0)
-    do_select1(lm, *mark, mcs::subset::aic<double, int>(), tau, *pradius,
-               *nbest, value, which, xnodes);
-  else if (std::strcmp(*criterion, "bic") == 0)
-    do_select1(lm, *mark, mcs::subset::aic<double, int>(std::log(*nobs)),
-               tau, *pradius, *nbest, value, which, xnodes);
-  else if (std::strcmp(*criterion, "cp") == 0)
-    do_select1(lm, *mark, mcs::subset::cp<double, int>(), tau, *pradius,
-               *nbest, value, which, xnodes);
+    {
+      std::vector<double> tau(*nvar + 1, 0);
+      std::transform(tolerance, tolerance + *nvar, tau.begin() + 1,
+                     std::bind2nd(std::plus<double>(), 1));
 
+      do_select(lm, *mark, tau, *pradius, *nbest, value, which, xnodes);
+    }
+  else if (std::strcmp(*criterion, "aic") == 0)
+    {
+      double tau = *tolerance + 1;
+
+      do_select1(lm, *mark, mcs::subset::aic<double, int>(), tau, *pradius,
+                 *nbest, value, which, xnodes);
+    }
+  else if (std::strcmp(*criterion, "bic") == 0)
+    {
+      double tau = *tolerance + 1;
+
+      do_select1(lm, *mark, mcs::subset::aic<double, int>(std::log(*nobs)),
+                 tau, *pradius, *nbest, value, which, xnodes);
+    }
+  else if (std::strcmp(*criterion, "cp") == 0)
+    {
+      double tau = *tolerance + 1;
+
+      do_select1(lm, *mark, mcs::subset::cp<double, int>(), tau, *pradius,
+                 *nbest, value, which, xnodes);
+    }
   *nodes = xnodes;
 }

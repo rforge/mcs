@@ -30,7 +30,7 @@ namespace mcs
     subset_table1<Value, Size, Criterion>
     select1(const lm<Value, Size>& x,
             const Size mark,
-            const std::vector<Value>& tau,
+            const Value tau,
             const Size prad,
             const Size nbest,
             unsigned long& nodes)
@@ -51,7 +51,7 @@ namespace mcs
     select1(const lm<Value, Size>& x,
             const Size mark,
             const Criterion<Value, Size>& crit,
-            const std::vector<Value>& tau,
+            const Value tau,
             const Size prad,
             const Size nbest,
             unsigned long& nodes)
@@ -90,7 +90,7 @@ namespace mcs
           for (Size n = w.nvar(); (--n) - k; )
             {
               // cut
-              if ((tau[n] * c.value(n, b)) >= t.max_val())
+              if ((tau * c.value(n, b)) >= t.max_val())
                 continue;
 
               // spawn
