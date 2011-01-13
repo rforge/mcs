@@ -1,17 +1,13 @@
 ##
 ## File:  xsubset.R
 ##
-## Author:  Achim Zeileis
-##
-## Modified by:  Marc Hofmann
-##
 
 
 ## method for matrix objects
 ##
 ## Args:
 ##   object  - (matrix) model matrix
-##   y       - (~matrix = NULL) response variable
+##   y       - (numeric[]) response variable
 ##   ...     - arguments forwarded to 'xsubset.data.frame'
 ##
 ## Rval: (list)
@@ -41,20 +37,19 @@ xsubset.matrix <- function (object, y = NULL, ...) {
   }
   y <- as.matrix(y)
   if (!is.numeric(x)) {
-    stop ("'object' (model matrix 'x') must be numeric")
+    stop ("'object' (model matrix) must be numeric")
   }
   if (!is.numeric(y)) {
     stop ("'y' must be numeric")
   }
   if (nrow(x) != nrow(y)) {
-    stop ("'object' (model matrix 'x') and 'y' are non-conforming")
+    stop ("'object' (model matrix) and 'y' are non-conforming")
   }
   if (ncol(y) > 1) {
-    warning ("dropping superfluous columns from 'y'")
-    y <- y[, 1, drop = FALSE]
+    stop ("'y' must have one column only")
   }
   nobs <- nrow(x)
-  nreg <- ncol(x)
+  nvar <- ncol(x)
 
   ## construct data frame
   df <- as.data.frame(cbind(y, x))
@@ -73,9 +68,9 @@ xsubset.matrix <- function (object, y = NULL, ...) {
 ## method for data fame objects
 ##
 ## Args:
-##   object - (data.frame) data frame
-##   y      - (integer|character = 1) index of response variable
-##   ...    - arguments forwarded to 'xsubset.formula'
+##   object  - (data.frame) data frame
+##   y.which - (integer|character) index of response variable
+##   ...     - arguments forwarded to 'xsubset.formula'
 ##
 ## Rval: (list)
 ##   (see 'xsubset.default')
@@ -84,16 +79,16 @@ xsubset.matrix <- function (object, y = NULL, ...) {
 ## object ('formula(object, env = NULL)') and forwards
 ## the call to 'xsubset.formula'.
 ##
-xsubset.data.frame <- function (object, y = 1, ...) {
+xsubset.data.frame <- function (object, y.which = 1, ...) {
   ## keep call (of generic)
   call <- match.call()
   call[[1]] <- as.name("xsubset")
 
   ## rearrange data frame
-  if (is.character(y)) {
-    y <- match(y, names(object))
+  if (is.character(y.which)) {
+    y.which <- match(y.which, names(object))
   }
-  df <- data.frame(object[y], object[-y])
+  df <- data.frame(object[y.which], object[-y.which])
 
   ## extract formula
   f <- formula(df, env = NULL)
@@ -113,15 +108,15 @@ xsubset.data.frame <- function (object, y = 1, ...) {
 ##
 ## Args:
 ##   object     - (formula) 'lm''s 'formula' argument
-##   data       - (data.frame = NULL)
-##   row.subset - (vector = NULL) 'lm''s 'subset' argument
-##   weights    - (numeric[] = NULL)
-##   na.action  - (function = na.omit)
-##   model      - (logical = TRUE)
-##   x          - (logical = FALSE)
-##   y          - (logical = FALSE)
-##   contrasts  - (numeric[] = NULL)
-##   offset     - (numeric[] = NULL)
+##   data       - (data.frame)
+##   row.subset - (numeric[]) 'lm''s 'subset' argument
+##   weights    - (numeric[])
+##   na.action  - (function)
+##   model      - (logical)
+##   x.return   - (logical)
+##   y.return   - (logical)
+##   contrasts  - (numeric[])
+##   offset     - (numeric[])
 ##   ...        - arguments forwarded to 'xsubset.lm'
 ##
 ## Rval: (list)
@@ -133,8 +128,9 @@ xsubset.data.frame <- function (object, y = 1, ...) {
 ## Note:  arguments
 ## The named arguments are passed to 'lm'.
 ##
-xsubset.formula <- function (object, data = NULL, row.subset = NULL, weights = NULL,
-                             na.action = na.omit, model = TRUE, x = FALSE, y = FALSE,
+xsubset.formula <- function (object, data = NULL, row.subset = NULL,
+                             weights = NULL, na.action = na.omit, model = TRUE,
+                             x.return = FALSE, y.return = FALSE,
                              contrasts = NULL, offset = NULL, ...)
 {
   ## keep call (of generic)
@@ -142,19 +138,18 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL, weights = N
   call[[1]] <- as.name("xsubset")
 
   ## construct lm object
-  ##
-  ## TODO:  'keep.order'
-  ## Is it necessary to freeze the order of the terms
-  ## by way of 'terms(formula, keep.order = TRUE)'?
-  ##
   cl <- match.call(expand.dots = FALSE)
   ma <- match(c("object", "data", "row.subset", "weights", "na.action",
-                "model", "x", "y", "contrasts", "offset"), names(cl), 0)
+                "model", "x.return", "y.return", "contrasts", "offset"),
+              names(cl), 0)
   cl <- cl[c(1, ma)]
   cl$formula <- cl$object
   cl$object <- NULL
   cl$subset <- cl$row.subset
   cl$row.subset <- NULL
+  cl$x <- cl$x.return
+  cl$y <- cl$y.return
+  cl$x.return <- cl$y.return <- NULL
   cl[[1]] <- as.name("lm")
   lm <- eval(cl, parent.frame())
 
@@ -172,8 +167,8 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL, weights = N
 ## interface for fitted lm regression
 ##
 ## Args:
-##   lm  - (lm)
-##   ... - arguments forwarded to 'xsubset.default'
+##   object - (lm)
+##   ...    - arguments forwarded to 'xsubset.default'
 ##
 ## Rval:
 ##   (see 'xsubset.default')
@@ -197,16 +192,17 @@ xsubset.lm <- function (object, ...)
 }
 
 
-## workhorse method
+## default method
 ##
 ## Args:
 ##   object    - (lm)
-##   include   - (integer[] = NULL)
-##   exclude   - (integer[] = NULL)
-##   size      - (integer[] = NULL)
-##   tolerance - (numeric[] = 0)
-##   pradius   - (integer = NULL)
-##   precision - (character = "double")
+##   include   - (integer[])
+##   exclude   - (integer[])
+##   size      - (integer[])
+##   criterion - (character)
+##   tolerance - (numeric[])
+##   pradius   - (integer)
+##   nbest     - (integer)
 ##   ...       - ignored
 ##
 ## Rval: (list)
@@ -224,8 +220,8 @@ xsubset.lm <- function (object, ...)
 ## All the fun happens here.
 ##
 xsubset.default <- function (object, include = NULL, exclude = NULL,
-                             size = NULL, tolerance = 0, ...,
-                             pradius = NULL, precision = "double")
+                             size = NULL, criterion = "rss", tolerance = 0,
+                             pradius = NULL, nbest = 1, ...)
 {
   ## keep call (of generic)
   call <- match.call()
@@ -237,7 +233,7 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
 
   ## dimensions
   nobs <- nrow(x)
-  nreg <- ncol(x)
+  nvar <- ncol(x)
 
   ## extract weights and offset
   w <- model.weights(object)
@@ -249,7 +245,7 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
   }
   wnz <- w != 0
   x.computed <- sqrt(w[wnz]) * x[wnz, , drop = FALSE]
-  y.computed <- sqrt(w[wnz]) * y[wnz, drop = FALSE]
+  y.computed <- sqrt(w[wnz]) * y[wnz,   drop = FALSE]
 
   ## handle offset
   if (is.null(o)) {
@@ -278,7 +274,7 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
   }
   ## remove NAs
   if (any(is.na(include.computed))) {
-    warning ("omitting non-existing columns in 'include'")
+    warning ("omitting non-existing variables in 'include'")
     include.computed <- na.omit(include.computed)
   }
   ## remove non-positive indices
@@ -287,9 +283,9 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
     include.computed <- include.computed[include.computed > 0]
   }
   ## handle index overflow
-  if (any(include.computed > nreg)) {
+  if (any(include.computed > nvar)) {
     warning ("'include' indexes too large; fixing 'include'")
-    include.computed <- include.computed[include.computed <= nreg]
+    include.computed <- include.computed[include.computed <= nvar]
   }
   ## canonicalize include
   include.computed <- sort(unique(round(include.computed)))
@@ -309,35 +305,35 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
     }
     ## remove NAs
     if (any(is.na(exclude.computed))) {
-      warning ("non-existing columns selected in 'exclude'")
+      warning ("omitting non-existing variables selected in 'exclude'")
       exclude.computed <- na.omit(exclude.computed)
     }
     ## handle index underflow
     if (any(exclude.computed <= 0)) {
-      warning ("'exclude' indexes must be positive")
+      warning ("omitting non-positive indexes in 'exclude'")
       exclude.computed <- exclude.computed[exclude.computed > 0]
     }  
     ## handle index overflow
-    if (any(exclude.computed > nreg)) {
+    if (any(exclude.computed > nvar)) {
       warning ("'exclude' indexes too large; fixing 'exclude'")
-      exclude.computed <- exclude.computed[exclude.computed <= nreg]
+      exclude.computed <- exclude.computed[exclude.computed <= nvar]
     }
-    ## canonicalize indices
+    ## canonicalize exclude
     exclude.computed <- sort(unique(round(exclude.computed)))
   }
 
   ## include/exclude non-overlapping
   if (any(intersect(include.computed, exclude.computed))) {
-    warning ("'include' and 'exclude' must not overlap; fixing 'exclude'")
+    warning ("'include' and 'exclude' overlap; fixing 'exclude'")
     exclude.computed <- setdiff(exclude.computed, include.computed)
   }
 
   ## handle intercept
   intercept.computed <- x.names[1] == "(Intercept)"
   if (intercept.computed) {
-    if (is.element(1, include.computed)) {
+    if (any(include.computed == 1)) {
       ## OK, already selected
-    } else if (is.element(1, exclude.computed)) {
+    } else if (any(exclude.computed == 1)) {
       ## not selected
       intercept.computed <- FALSE
     } else {
@@ -347,103 +343,111 @@ xsubset.default <- function (object, include = NULL, exclude = NULL,
   }
 
   ## include/exclude columns
-  free <- setdiff(1:nreg, c(include.computed, exclude.computed))
-  column.index <- c(include.computed, free)
-  x.computed <- x.computed[, column.index, drop = FALSE]
-  nreg.computed <- ncol(x.computed)
+  variable.index <- setdiff(1:nvar, exclude.computed)
+  x.computed <- x.computed[, variable.index, drop = FALSE]
+  nvar.computed <- ncol(x.computed)
 
   ## mark included columns      
   mark.computed <- length(include.computed)
 
   ## process size
-  size.computed <- process.size(size, size.default = (mark.computed + 1):nreg.computed,
-                                size.allow = (mark.computed + 1):nreg.computed,
+  size.computed <- process.size(size, size.default = (mark.computed + 1):nvar.computed,
+                                size.allow = (mark.computed + 1):nvar.computed,
                                 allow.vector = TRUE, canonicalize = TRUE)
-  nsize <- length(size.computed)
-  size.mask <- 1:nreg.computed %in% size.computed
+  size.length <- length(size.computed)
+  size.mask <- 1:nvar.computed %in% size.computed
 
   ## process tolerance
   if (!is.numeric(tolerance)) {
     stop ("'tolerance' must be numeric")
   }
-  if (length(tolerance) > nsize) {
-    warning ("redundant values in 'tolerance'; truncating 'tolerance'")
-    tolerance <- tolerance[1:nsize]
-  }
-  tolerance <- rep(tolerance, length.out = nsize)
-  tolerance.computed <- rep(0, nreg.computed)
-  tolerance.computed[size.mask] <- tolerance
+  tolerance.computed <- rep(tolerance, length.out = nvar)
+  tolerance.computed <- tolerance.computed[variable.index]
   tolerance.computed[!size.mask] <- .Machine$double.xmax
 
   ## process pradius
   pradius.computed <- pradius
   if (is.null(pradius.computed)) {
-    pradius.computed <- round(nreg.computed/3)
+    pradius.computed <- round(nvar.computed/3)
   }
   if (!is.numeric(pradius.computed)) {
     stop ("'pradius' must be numeric")
   }
   if (length(pradius.computed) > 1) {
-    pradius <- pradius.computed[1]
-    warning ("redundant values in 'pradius'; using ", pradius.computed)
+    pradius.computed <- pradius.computed[1]
+    warning ("too many values in 'pradius'; using ", pradius.computed)
   }
   pradius.rounded <- round(pradius.computed)
   if (pradius.computed != pradius.rounded) {
-    warning ("'pradius' must be integer; rounding 'pradius'")
+    warning ("'pradius' is not integer; rounding 'pradius'")
     pradius.computed <- pradius.rounded
   }
 
-  ## precision
-  precision.computed <- precision
-  if (length(precision.computed) > 1) {
-    precision.computed <- precision.computed[1]
-    warning ("redundant values in 'precision'; using ", precision.computed)
+  ## process nbest
+  nbest.computed <- nbest
+  if (!is.numeric(nbest.computed)) {
+    stop ("'nbest' must be numeric")
   }
-  if (!(precision.computed %in% c("single", "double"))) {
-    stop ("'precision' must be \"single\" or \"double\"")
+  if (length(nbest.computed) > 1) {
+    nbest.computed <- nbest.computed[1]
+    warning ("too many values in 'nbest'; using ", nbest.computed)
+  }
+  nbest.rounded <- round(nbest.computed)
+  if (nbest.computed != nbest.rounded) {
+    warning ("'nbest' is not integer; rounding 'nbest'")
+    nbest.computed <- nbest.rounded
   }
 
-  ## call underlying C code
-  C_args <- list(## in
-                 precision = as.character(precision.computed),
-                 nobs      = as.integer(nobs.computed),
-                 nreg      = as.integer(nreg.computed),
-                 xy        = as.double(cbind(x.computed, y.computed)),
-                 mark      = as.integer(mark.computed),
-                 tolerance = as.double(tolerance.computed),
-                 pradius   = as.integer(pradius.computed),
-                 ## out
-                 rss   = double(nreg.computed),
-                 which = integer(nreg.computed * nreg.computed),
-                 count = integer(1))
-  C_rval <- do.call(".C", c(name = "R_subset", C_args))
+  ## process criterion
+  if (!is.character(criterion)) {
+    stop ("'criterion' must be character")
+  }
+  criterion.computed <- tolower(criterion)
+  if (!(criterion.computed %in% c("rss", "aic", "bic", "cp"))) {
+    stop ("'criterion' must be one of \"RSS\", \"AIC\", \"BIC\" or \"Cp\"")
+  }
 
+  ## call workhorse method
+  rval <- xselect(nobs.computed, nvar.computed,
+                  x.computed, y.computed, mark.computed,
+                  criterion.computed, tolerance.computed,
+                  pradius.computed, nbest.computed)
 
-  ## extract selected regressors
-  which <- lapply(size.computed, function (sz) {
-    first <- (sz - 1) * nreg.computed + 1
-    last <- first + sz - 1
-    which <- C_rval$which[first:last] + 1
-    column.index[which]
-  })
-
-  ## extract RSS
-  rss <- C_rval$rss[size.computed]
-  
-  ## names
-  names(which) <- names(rss) <- size.computed
-
+  ## extract value & subsets
+  if (criterion.computed == "rss") {
+    value <- rval$value[, size.mask,   drop = FALSE]
+    which <- rval$which[, , size.mask, drop = FALSE]
+    dimnames(value) <- list(paste("rank=", 1:nbest.computed, sep = ""),
+                            paste("size=", size.computed, sep = ""))
+    dimnames(which) <- list(x.names[variable.index],
+                            paste("rank=", 1:nbest.computed, sep = ""),
+                            paste("size=", size.computed, sep = ""))
+  } else {
+    value <- rval$value
+    which <- array(rval$which, dim = c(nbest.computed, nvar.computed))
+  }
+ 
   # return value
-  rval <- list(call      = call,
-               lm        = object,
-               nreg      = nreg,
-               include   = include.computed,
-               exclude   = exclude.computed,
-               size      = size.computed,
-               which     = which,
-               rss       = rss,
-               intercept = intercept.computed,
-               .nodes = C_rval$count)
+  rval <- list(call = call,
+               lm   = object,
+               nobs      = nobs,
+               nvar      = nvar,
+               include   = include,
+               exclude   = exclude,
+               size      = size,
+               criterion = criterion,
+               tolerance = tolerance,
+               nobs.computed      = nobs.computed,
+               nvar.computed      = nvar.computed,
+               intercept.computed = intercept.computed,
+               include.computed   = include.computed,
+               exclude.computed   = exclude.computed,
+               size.computed      = size.computed,
+               criterion.computed = criterion.computed,
+               tolerance.computed = tolerance.computed,
+               value = value,
+               which = which,
+               .nodes = rval$count)
   class(rval) <- "xsubset"
 
   # done
@@ -466,20 +470,24 @@ print.xsubset <- function (x, ...)
   catln("Call:")
   catln(deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
 
-  ## format include, exclude, size
-  size.pretty <- pretty.integer(x$size)
-  include.pretty <- pretty.integer(x$include)
-  exclude.pretty <- pretty.integer(x$exclude)
+  ## format include, exclude, size, criterion
+  include.pretty <- pretty.integer(x$include.computed)
+  exclude.pretty <- pretty.integer(x$exclude.computed)
+  size.pretty <- pretty.integer(x$size.computed)
+  criterion.pretty <- switch(which(c("rss", "aic", "bic", "cp")
+                                   %in% x$criterion.computed),
+                             "RSS", "AIC", "BIC", "Cp")
 
-  ## format nreg and intercept
-  nreg.pretty <- format(x$nreg)
-  intercept.pretty <- if (x$intercept) "YES" else "NO"
+  ## format nvar and intercept
+  nvar.pretty <- format(x$nvar.computed)
+  intercept.pretty <- if (x$intercept.computed) "YES" else "NO"
   
-  val <- as.matrix(c(nreg.pretty, include.pretty, exclude.pretty,
-                     size.pretty, intercept.pretty), ncol = 1)
+  val <- as.matrix(c(nvar.pretty, include.pretty, exclude.pretty,
+                     size.pretty, criterion.pretty, intercept.pretty),
+                   ncol = 1)
   colnames(val) <- ""
-  rownames(val) <- c("Number of regressors:","Include:", "Exclude:",
-                     "Subset sizes assessed:", "Intercept:")
+  rownames(val) <- c("Number of regressors:", "Include:", "Exclude:",
+                     "Subset sizes assessed:", "Criterion:", "Intercept:")
   print(val, quote = FALSE)
   
   invisible(x)

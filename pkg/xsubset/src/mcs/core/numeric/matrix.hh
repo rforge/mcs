@@ -1,14 +1,12 @@
 /**
  * @file matrix.hh
- *
- * @author Marc Hofmann
  */
-
 #ifndef MCS_CORE_NUMERIC_MATRIX_HH
 #define MCS_CORE_NUMERIC_MATRIX_HH
 
 
-#include <memory>
+#include "slice.hh"
+#include "matrix_base.hh"
 
 
 namespace mcs
@@ -21,255 +19,71 @@ namespace mcs
     {
 
 
-      template<typename Size>
-      class range;
-
-
       template<typename Value,
-	       typename Alloc>
-      class subvector;
-
-
-      template<typename Value,
-	       typename Alloc>
-      class submatrix;
-
-
-      template<typename Value,
-	       typename Alloc = std::allocator<Value>>
-      class matrix
+               typename Size>
+      class matrix : public matrix_base<Value, Size, matrix>
       {
 
-	friend class submatrix<Value, Alloc>;
-
-
       public:
 
-	typedef Value value_type;
+        matrix() = delete;
 
-        typedef Alloc allocator_type;
+        matrix(Size nrow,
+               Size ncol);
 
-        typedef typename allocator_type::size_type size_type;
+        matrix(Size nrow,
+               Size ncol,
+               Value x);
 
-        typedef typename allocator_type::difference_type difference_type;
+        matrix(Size nrow,
+               Size ncol,
+               const Value* x);
 
-        typedef typename allocator_type::pointer pointer;
+        matrix(const matrix<Value, Size>& x);
 
-        typedef typename allocator_type::const_pointer const_pointer;
+        matrix(matrix<Value, Size>&& x);
 
-        typedef typename allocator_type::reference reference;
+        matrix(matrix_base<Value, Size, numeric::matrix>&& x);
 
-        typedef typename allocator_type::const_reference const_reference;
+        template<template<typename V,
+                          typename S>
+                 class D>
+        matrix(const matrix_base<Value, Size, D>& x);
 
-        typedef range<size_type> range_type;
+        ~matrix();
 
-        typedef subvector<value_type, allocator_type> subvector_type;
+        void
+        copy(const matrix<Value, Size>& x);
 
-        typedef submatrix<value_type, allocator_type> submatrix_type;
+        void
+        copy(const slice_matrix<Value, Size>& x);
 
+        template<template<typename V,
+                          typename S>
+                 class D>
+        void
+        copy(const matrix_base<Value, Size, D>& x);
 
-      private:
+        void
+        swap(matrix<Value, Size>&& x);
 
-        allocator_type alloc_;
+        void
+        swap(slice_matrix<Value, Size>&& x);
 
-	pointer stor_;
+        template<template<typename V,
+                          typename S>
+                 class D>
+        void
+        swap(matrix_base<Value, Size, D>&& x);
 
-	pointer base_;
+        void
+        fill(Value x);
 
-	size_type ldim_;
+        matrix<Value, Size>&
+        operator =(matrix<Value, Size> x);
 
-	size_type nrow_;
-
-	size_type ncol_;
-
-
-      public:
-
-	matrix();
-
-	matrix(size_type nrow,
-	       size_type ncol);
-
-	template<typename V>
-	matrix(size_type nrow,
-	       size_type ncol,
-	       V val);
-
-	template<typename V>
-	matrix(size_type nrow,
-	       size_type ncol,
-	       const V* data);
-
-	matrix(const matrix& mat);
-
-	matrix(matrix&& mat);
-
-	matrix(submatrix_type&& mat);
-
-
-      private:
-
-	matrix(pointer stor,
-	       size_type nrow,
-	       size_type ncol);
-
-	matrix(pointer base,
-	       size_type ldim,
-	       size_type nrow,
-	       size_type ncol);
-
-
-      public:
-
-	~matrix();
-
-	matrix&
-	operator =(const matrix& mat);
-
-        matrix&
-        operator =(matrix&& mat);
-
-        matrix&
-        operator =(submatrix_type&& mat);
-
-	reference
-	operator ()(size_type irow,
-		    size_type icol);
-
-	const_reference
-	operator ()(size_type irow,
-		    size_type icol) const;
-
-	subvector_type
-	operator ()(size_type irow,
-		    range_type rcol);
-
-	const subvector_type
-	operator ()(size_type irow,
-		    range_type rcol) const;
-
-	subvector_type
-	operator ()(range_type rrow,
-		    size_type icol);
-
-	const subvector_type
-	operator ()(range_type rrow,
-		    size_type icol) const;
-
-	submatrix_type
-	operator ()(range_type rrow,
-		    range_type rcol);
-
-	const submatrix_type
-	operator ()(range_type rrow,
-		    range_type rcol) const;
-
-	size_type
-	ldim() const;
-
-	size_type
-	nrow() const;
-
-	size_type
-	ncol() const;
-
-	subvector_type
-	row(size_type irow);
-
-	const subvector_type
-	row(size_type irow) const;
-
-	subvector_type
-	col(size_type icol);
-
-	const subvector_type
-	col(size_type icol) const;
-
-	submatrix_type
-	row(range_type rrow);
-
-	const submatrix_type
-	row(range_type rrow) const;
-
-	submatrix_type
-	col(range_type rcol);
-
-	const submatrix_type
-	col(range_type rcol) const;
-
-	subvector_type
-	diag();
-
-	const subvector_type
-	diag() const;
-
-	template<typename V>
-	void
-	fill(V val);
-
-	template<typename V>
-	void
-	fill(const V* val);
-
-	void
-	copy(const matrix& mat);
-
-	void
-	swap(matrix& mat);
-
-
-      private:
-
-	reference
-	at(size_type irow,
-	   size_type icol) const;
-
-      };
-
-
-      template<typename Value,
-	       typename Alloc>
-      class submatrix : public matrix<Value, Alloc>
-      {
-
-	friend class matrix<Value, Alloc>;
-
-
-      private:
-
-        typedef matrix<Value, Alloc> matrix_type;
-
-        typedef typename matrix_type::size_type size_type;
-
-        typedef typename matrix_type::pointer pointer;
-
-
-      private:
-
-        using matrix_type::nrow_;
-
-        using matrix_type::ncol_;
-
-
-      private:
-
-	submatrix(pointer base,
-		  size_type ldim,
-		  size_type nrow,
-		  size_type ncol);
-
-
-      public:
-
-	~submatrix();
-
-	submatrix&
-	operator =(const matrix_type& mat);
-
-        submatrix&
-        operator =(matrix_type&& mat);
-
-        using matrix_type::copy;
+        matrix<Value, Size>&
+        operator =(Value x);
 
       };
 
@@ -281,23 +95,18 @@ namespace mcs
 }
 
 
-#define MATRIX mcs::core::numeric::matrix<Value, Alloc>
-
-
 namespace std
 {
 
 
   template<typename Value,
-	   typename Alloc>
+           typename Size>
   void
-  swap(MATRIX& x, MATRIX& y);
+  swap(mcs::core::numeric::matrix<Value, Size>& a,
+       mcs::core::numeric::matrix<Value, Size>& b);
 
 
 }
-
-
-#undef MATRIX
 
 
 #include "matrix.cc"

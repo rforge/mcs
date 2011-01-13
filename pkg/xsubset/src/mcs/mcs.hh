@@ -1,14 +1,10 @@
 /**
- * @file mcs/mcs.hh
+ * @file mcs.hh
  *
  * @brief General definitions for the MCS namespace.
- *
- * @author Marc Hofmann
  */
-
-
-#ifndef _MCS_HH_
-#define _MCS_HH_
+#ifndef MCS_HH
+#define MCS_HH
 
 
 #include <cassert>
@@ -24,11 +20,39 @@
 #endif
 
 
+/**
+ * Disable degug.
+ */
 #define NDEBUG  // disable asserts
 
-#define MCS_ASSERT(expr) \
-  assert(expr)
 
+/**
+ * Custom assert.
+ *
+ * @see http://efreedom.com/Question/1-3767869/Adding-Message-Assert
+ */
+#ifndef NDEBUG
+#define MCS_ASSERT(cond, msg)                                           \
+  do { if (!(cond)) {                                                   \
+      std::cerr << "MCS: " << __FILE__ << ": line " << __LINE__ << ": " \
+                << "Assertion `"#cond"' failed: " << msg << std::endl   \
+                << "Aborted" << std::endl;                              \
+      std::exit(EXIT_FAILURE);                                          \
+    } } while (0)
+#else
+#define MCS_ASSERT(cond, mgs) do { } while (0)
+#endif
+
+
+/**
+ * Fortran interface.
+ */
+#ifndef MCS_F77_NAME
+#define MCS_F77_NAME(name) name ## _
+#endif
+#ifndef MCS_F77_CALL
+#define MCS_F77_CALL(name) name ## _
+#endif
 
 
 

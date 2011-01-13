@@ -1,21 +1,23 @@
 /**
  * @file vector.cc
- *
- * @author Marc Hofmann
  */
-
 #ifndef MCS_CORE_NUMERIC_VECTOR_CC
 #define MCS_CORE_NUMERIC_VECTOR_CC
 
 
+#include <algorithm>
+#include <utility>
+
 #include "../../mcs.hh"
 
-#include "range.hh"
+#include "slice.hh"
+#include "vector_base.hh"
 #include "vector.hh"
+#include "slice_vector.hh"
 
 
-#define VECTOR vector<Value, Alloc>
-#define SUBVECTOR subvector<Value, Alloc>
+#define VECTOR vector<Value,                    \
+                      Size>
 
 
 namespace mcs
@@ -29,350 +31,275 @@ namespace mcs
 
 
       template<typename Value,
-               typename Alloc>
-      VECTOR::vector() :
-        alloc_(),
-        stor_(0),
-        base_(0),
-        inc_(0),
-        len_(0)
+               typename Size>
+      VECTOR::vector(const Size len) :
+        vector_base<Value, Size, numeric::vector>(new Value[len], len)
       {
+        //std::cout << "vector::vector(Size)" << std::endl;
+
+        MCS_ASSERT(len >= 0, "invalid argument");
       }
 
 
       template<typename Value,
-               typename Alloc>
-      VECTOR::vector(const size_type len) :
-        alloc_(),
-        stor_(alloc_.allocate(len)),
-        base_(stor_),
-        inc_(1),
-        len_(len)
+               typename Size>
+      VECTOR::vector(const Size len,
+                     const Value x) :
+        vector_base<Value, Size, numeric::vector>(new Value[len], len)
       {
-        MCS_ASSERT(len >= 0);
+        //std::cout << "vector::vector(Size, Value)" << std::endl;
+
+        MCS_ASSERT(len >= 0, "invalid argument");
+
+        fill(x);
       }
 
 
       template<typename Value,
-               typename Alloc>
-      template<typename V>
-      VECTOR::vector(const size_type len,
-                     const V val) :
-        alloc_(),
-        stor_(alloc_.allocate(len)),
-        base_(stor_),
-        inc_(1),
-        len_(len)
+               typename Size>
+      VECTOR::vector(const vector<Value, Size>& x) :
+        vector_base<Value, Size, numeric::vector>(new Value[x.len_], x.len_)
       {
-        MCS_ASSERT(len >= 0);
+        //std::cout << "vector::vector(const vector&)" << std::endl;
 
-        fill(val);
+        copy(x);
       }
 
 
       template<typename Value,
-               typename Alloc>
-      template<typename V>
-      VECTOR::vector(const size_type len,
-                     const V* const data) :
-        alloc_(),
-        stor_(alloc_.allocate(len)),
-        base_(stor_),
-        inc_(1),
-        len_(len)
+               typename Size>
+      VECTOR::vector(vector<Value, Size>&& x) :
+        vector_base<Value, Size, numeric::vector>()
       {
-        MCS_ASSERT(len >= 0);
+        //std::cout << "vector::vector(vector&&)" << std::endl;
 
-        fill(data);
+        swap(std::move(x));
       }
 
 
       template<typename Value,
-               typename Alloc>
-      VECTOR::vector(const vector& vec) :
-        alloc_(),
-        stor_(alloc_.allocate(vec.len_)),
-        base_(stor_),
-        inc_(1),
-        len_(vec.len_)
+               typename Size>
+      VECTOR::vector(vector_base<Value, Size, numeric::vector>&& x) :
+        vector_base<Value, Size, numeric::vector>()
       {
-        copy(vec);
+        //std::cout << "vector::vector(vector_base&&)" << std::endl;
+
+        swap(std::move(x));
       }
 
-
+                     
       template<typename Value,
-               typename Alloc>
-      VECTOR::vector(vector&& vec) :
-        alloc_(),
-        stor_(0),
-        base_(0),
-        inc_(1),
-        len_(0)
+               typename Size>
+      template<template<typename V,
+                        typename S>
+               class D>
+      VECTOR::vector(const vector_base<Value, Size, D>& x) :
+        vector_base<Value, Size, numeric::vector>(new Value[x.len_], x.len_)
       {
-        swap(vec);
-      }
+        //std::cout << "vector::vector(const vector_base&)" << std::endl;
 
+        copy(x);
+      }
+      
 
       template<typename Value,
-               typename Alloc>
-      VECTOR::vector(subvector_type&& vec) :
-        alloc_(),
-        stor_(alloc_.allocate(vec.len_)),
-        base_(stor_),
-        inc_(1),
-        len_(vec.len_)
-      {
-        copy(vec);
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      VECTOR::vector(const pointer stor,
-                     const size_type len) :
-        alloc_(),
-        stor_(stor),
-        base_(stor_),
-        inc_(1),
-        len_(len)
-      {
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      VECTOR::vector(const pointer base,
-                     const size_type inc,
-                     const size_type len) :
-        alloc_(),
-        stor_(0),
-        base_(base),
-        inc_(inc),
-        len_(len)
-      {
-      }
-
-
-      template<typename Value,
-               typename Alloc>
+               typename Size>
       VECTOR::~vector()
       {
-        if (stor_)
+        //std::cout << "vector::~vector()" << std::endl;
+
+        if (this->base_)
           {
-            alloc_.deallocate(stor_, len_);
+            delete [] this->base_;
+            this->base_ = 0;
           }
       }
 
 
       template<typename Value,
-               typename Alloc>
-      VECTOR&
-      VECTOR::operator =(const vector& vec)
-      {
-        copy(vec);
-
-        return *this;
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      VECTOR&
-      VECTOR::operator =(vector&& vec)
-      {
-        swap(vec);
-
-        return *this;
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      VECTOR&
-      VECTOR::operator =(subvector_type&& vec)
-      {
-        copy(vec);
-
-        return *this;
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      typename VECTOR::reference
-      VECTOR::operator ()(const size_type pos)
-      {
-        MCS_ASSERT(pos <= len_);
-
-        return at(pos);
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      typename VECTOR::const_reference
-      VECTOR::operator ()(const size_type pos) const
-      {
-        MCS_ASSERT(pos <= len_);
-
-        return at(pos);
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      typename VECTOR::subvector_type
-      VECTOR::operator ()(const range_type rng)
-      {
-        const size_type pos = rng.pos();
-        const size_type len = rng.open()? len_ - pos: rng.len();
-
-        MCS_ASSERT((pos + len) <= len_);
-
-        return subvector_type(&at(pos), inc_, len);
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      const typename VECTOR::subvector_type
-      VECTOR::operator ()(const range_type rng) const
-      {
-        const size_type pos = rng.pos();
-        const size_type len = rng.open()? len_ - pos: rng.len();
-
-        MCS_ASSERT((pos + len) <= len_);
-
-        return subvector_type(&at(pos), inc_, len);
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      typename VECTOR::size_type
-      VECTOR::len() const
-      {
-        return len_;
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      typename VECTOR::size_type
+               typename Size>
+      Size
       VECTOR::inc() const
       {
-        return inc_;
+        return 1;
       }
 
 
       template<typename Value,
-               typename Alloc>
-      template<typename V>
-      void
-      VECTOR::fill(const V val)
+               typename Size>
+      Value&
+      VECTOR::at(const Size pos)
       {
-	pointer ptr = base_;
-        for (size_type i = 0; i < len_; ++i)
+        MCS_ASSERT((pos >= 0) && (pos < this->len_), "index out of range");
+
+        return this->base_[pos];
+      }
+
+
+      template<typename Value,
+               typename Size>
+      const Value&
+      VECTOR::at(const Size pos) const
+      {
+        MCS_ASSERT((pos >= 0) && (pos < this->len_), "index out of range");
+
+        return this->base_[pos];
+      }
+
+
+      template<typename Value,
+               typename Size>
+      slice_vector<Value, Size>
+      VECTOR::at(const slice<Size>& s)
+      {
+        MCS_ASSERT(s.pos_ + s.len_ <= this->len_, "index out of range");
+
+        return slice_vector<Value, Size>(this->base_ + s.pos_, 1, s.len_);
+      }
+
+
+      template<typename Value,
+               typename Size>
+      const slice_vector<Value, Size>
+      VECTOR::at(const slice<Size>& s) const
+      {
+        MCS_ASSERT(s.pos_ + s.len_ <= this->len_, "index out of range");
+
+        return slice_vector<Value, Size>(this->base_ + s.pos_, 1, s.len_);
+      }
+
+
+      template<typename Value,
+               typename Size>
+      void
+      VECTOR::copy(const vector<Value, Size>& x)
+      {
+        //std::cout << "vector::copy(const vector&)" << std::endl;
+
+        MCS_ASSERT(this->len_ == x.len_, "invalid argument");
+
+        std::copy(x.base_, x.base_ + this->len_, this->base_);
+      }
+
+
+      template<typename Value,
+               typename Size>
+      void
+      VECTOR::copy(const slice_vector<Value, Size>& x)
+      {
+        //std::cout << "vector::copy(const slice_vector&)" << std::endl;
+
+        MCS_ASSERT(this->len_ == x.len_, "invalid argument");
+
+        const Value* src = x.base_;
+        Value* dst = this->base_;
+        const Value* last = this->base_ + this->len_;
+
+        while (dst != last)
           {
-            *ptr = static_cast<value_type>(val);
-	    ptr += inc_;
+            *dst = *src;
+            src += x.inc_;
+            ++dst;
           }
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      template<typename V>
+               typename Size>
+      template<template<typename V,
+                        typename S>
+               class D>
       void
-      VECTOR::fill(const V* data)
+      VECTOR::copy(const vector_base<Value, Size, D>& x)
       {
-	pointer ptr = base_;
-	for (size_type i = 0; i < len_; ++i)
-	  {
-            ptr = static_cast<value_type>(*data++);
-            ptr += inc_;
-	  }
+        //std::cout << "vector::copy(const vector_base&)" << std::endl;
+
+        copy(*static_cast<const D<Value, Size>*>(&x));
       }
 
 
       template<typename Value,
-               typename Alloc>
+               typename Size>
       void
-      VECTOR::copy(const vector& vec)
+      VECTOR::swap(vector<Value, Size>&& x)
       {
-        MCS_ASSERT(len_ == vec.len_);
+        //std::cout << "vector::swap(vector&&)" << std::endl;
 
-	const_pointer src = vec.base_;
-	pointer dst = base_;
-        for (size_type i = 0; i < len_; ++i)
+        std::swap(this->base_, x.base_);
+        std::swap(this->len_, x.len_);
+      }
+
+
+      template<typename Value,
+               typename Size>
+      void
+      VECTOR::swap(slice_vector<Value, Size>&& x)
+      {
+        //std::cout << "vector::swap(slice_vector&&)" << std::endl;
+
+        MCS_ASSERT(this->len_ == x.len_, "invalid argument");
+
+        Value* ptr1 = x.base_;
+        Value* ptr2 = this->base_;
+        const Value* last = this->base_ + this->len_;
+
+        while (ptr2 != last)
           {
-	    *dst = *src;
-	    src += vec.inc_;
-	    dst += inc_;
+            std::swap(*ptr1, *ptr2);
+            ptr1 += x.inc_;
+            ++ptr2;
           }
       }
 
 
       template<typename Value,
-               typename Alloc>
+               typename Size>
+      template<template<typename V,
+                        typename S>
+               class D>
       void
-      VECTOR::swap(vector& vec)
+      VECTOR::swap(vector_base<Value, Size, D>&& x)
       {
-	// TODO: swap allocator
-        std::swap(stor_, vec.stor_);
-        std::swap(base_, vec.base_);
-        std::swap(inc_, vec.inc_);
-        std::swap(len_, vec.len_);
+        //std::cout << "vector::swap(vector_base&&)" << std::endl;
+
+        swap(std::move(*static_cast<const D<Value, Size>*>(&x)));
       }
 
 
       template<typename Value,
-               typename Alloc>
-      typename VECTOR::reference
-      VECTOR::at(const size_type pos) const
+               typename Size>
+      void
+      VECTOR::fill(const Value x)
       {
-        return base_[pos * inc_];
+        //std::cout << "vector::fill(Value)" << std::endl;
+
+        std::fill_n(this->base_, this->len_, x);
       }
 
 
       template<typename Value,
-               typename Alloc>
-      SUBVECTOR::subvector(pointer base,
-                           size_type inc,
-                           size_type len)
-        : vector_type(base, inc, len)
+               typename Size>
+      vector<Value, Size>&
+      VECTOR::operator =(vector<Value, Size> x)
       {
-      }
+        //std::cout << "vector::operator =(vector)" << std::endl;
 
+        MCS_ASSERT(this->len_ == x.len_, "invalid argument");
 
-      template<typename Value,
-               typename Alloc>
-      SUBVECTOR::~subvector()
-      {
-      }
-
-
-      template<typename Value,
-               typename Alloc>
-      SUBVECTOR&
-      SUBVECTOR::operator =(const vector_type& vec)
-      {
-        MCS_ASSERT(len_ == vec.len_);
-
-        copy(vec);
+        swap(x);
 
         return *this;
       }
 
 
       template<typename Value,
-               typename Alloc>
-      SUBVECTOR&
-      SUBVECTOR::operator =(vector_type&& vec)
+               typename Size>
+      vector<Value, Size>&
+      VECTOR::operator =(const Value x)
       {
-        MCS_ASSERT(len_ == vec.len_);
+        //std::cout << "vector::operator =(Value)" << std::endl;
 
-        copy(vec);
+        fill(x);
 
         return *this;
       }
@@ -386,11 +313,6 @@ namespace mcs
 
 
 #undef VECTOR
-#undef SUBVECTOR
-
-
-#define VECTOR mcs::core::numeric::vector<Value, Alloc>
-#define SUBVECTOR mcs::core::numeric::subvector<Value, Alloc>
 
 
 namespace std
@@ -398,19 +320,16 @@ namespace std
 
 
   template<typename Value,
-	   typename Alloc>
+           typename Size>
   void
-  swap(VECTOR& x, VECTOR& y)
+  swap(mcs::core::numeric::vector<Value, Size>& x,
+       mcs::core::numeric::vector<Value, Size>& y)
   {
     x.swap(y);
   }
 
 
 }
-
-
-#undef VECTOR
-#undef SUBVECTOR
 
 
 #endif

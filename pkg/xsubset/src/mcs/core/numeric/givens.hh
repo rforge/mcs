@@ -1,15 +1,13 @@
 /**
  * @file givens.hh
- *
- * @author Marc Hofmann
  */
-
 #ifndef MCS_CORE_NUMERIC_GIVENS_HH
 #define MCS_CORE_NUMERIC_GIVENS_HH
 
 
-#define RANGE range<Size>
-#define VECTOR vector<value_type, Alloc>
+#include "slice.hh"
+#include "vector.hh"
+#include "matrix.hh"
 
 
 namespace mcs
@@ -22,110 +20,151 @@ namespace mcs
     {
 
 
-      template<typename Size>
-      class range;
-
-
-      template<typename Value,
-	       typename Alloc>
-      class vector;
-
-
       template<typename Value>
       class givens
       {
 
-      public:
-
-	typedef Value value_type;
-
-	typedef value_type& reference;
-
-	typedef const value_type& const_reference;
-
-	typedef value_type* pointer;
-
-	typedef const value_type* const_pointer;
-
-	typedef size_t size_type;
-
-
       private:
 
-	value_type r_;
+	Value r_;
 
-	value_type c_;
+	Value c_;
 
-	value_type s_;
+	Value s_;
 
 
       public:
 
 	givens();
 
-	givens(value_type dx, value_type dy);
+	givens(Value dx, Value dy);
 
 
-	value_type
+        Value
 	r() const;
 
-	value_type
+        Value
 	c() const;
 
-	value_type
+        Value
 	s() const;
 
 	void
-	gen(value_type dx, value_type dy);
+	gen(Value dx, Value dy);
 
 	void
-	rot(reference x, reference y);
+	rot(Value& x, Value& y);
 
+        template<typename Size>
 	void
-	rot(size_type n,
-	    reference x, size_type incx,
-	    reference y, size_type incy);
+	rot(Size n,
+	    Value& x, Size incx,
+	    Value& y, Size incy);
 
+        template<typename Size>
 	void
-	rot(size_type n,
-	    const_reference x, size_type incx,
-	    const_reference y, size_type incy,
-	    reference xx, size_type incxx,
-	    reference yy, size_type incyy);
-
-	template<typename Alloc>
+	rot(Size n,
+	    const Value& x, Size incx,
+	    const Value& y, Size incy,
+	    Value& xx, Size incxx,
+	    Value& yy, Size incyy);
+        
+	template<typename Size,
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2>
 	void
-	rot(VECTOR&& x, VECTOR&& y);
-
-	template<typename Alloc>
-	void
-	rot(const VECTOR& x, const VECTOR& y,
-	    VECTOR&& xx, VECTOR&& yy);
-
-
-	template<typename Alloc>
-	static
-	void
-	zero(VECTOR&& x, VECTOR&& y);
+        rot(vector_base<Value, Size, Derived1>&& x,
+            vector_base<Value, Size, Derived2>&& y);
 
 	template<typename Size,
-		 typename Alloc>
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2,
+                 template<typename V,
+                          typename S>
+                 class Derived3,
+                 template<typename V,
+                          typename S>
+                 class Derived4>
+	void
+	rot(const vector_base<Value, Size, Derived1>& x,
+            const vector_base<Value, Size, Derived2>& y,
+	    vector_base<Value, Size, Derived3>&& xx,
+            vector_base<Value, Size, Derived4>&& yy);
+        
+        template<typename Size,
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2>
 	static
 	void
-	zero(RANGE r, VECTOR&& x, VECTOR&& y);
+	zero(vector_base<Value, Size, Derived1>&& x,
+             vector_base<Value, Size, Derived2>&& y);
 
-	template<typename Alloc>
+        template<typename Size,
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2>
 	static
 	void
-	zero(const VECTOR& x, const VECTOR& y,
-	     VECTOR&& xx, VECTOR&& yy);
+	zero(const slice<Size>& s,
+             vector_base<Value, Size, Derived1>&& x,
+             vector_base<Value, Size, Derived2>&& y);
 
 	template<typename Size,
-		 typename Alloc>
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2,
+                 template<typename V,
+                          typename S>
+                 class Derived3,
+                 template<typename V,
+                          typename S>
+                 class Derived4>
 	static
 	void
-	zero(RANGE r, const VECTOR& x, const VECTOR& y,
-	     RANGE rr, VECTOR&& xx, VECTOR&& yy);
+	zero(const vector_base<Value, Size, Derived1>& x,
+             const vector_base<Value, Size, Derived2>& y,
+	     vector_base<Value, Size, Derived3>&& xx,
+             vector_base<Value, Size, Derived4>&& yy);
+        
+        template<typename Size,
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2,
+                 template<typename V,
+                          typename S>
+                 class Derived3,
+                 template<typename V,
+                          typename S>
+                 class Derived4>
+	static
+	void
+	zero(const slice<Size>& s,
+             const vector_base<Value, Size, Derived1>& x,
+             const vector_base<Value, Size, Derived2>& y,
+             const slice<Size>& ss,
+	     vector_base<Value, Size, Derived3>&& xx,
+             vector_base<Value, Size, Derived4>&& yy);
 		 
       };
 
@@ -135,10 +174,6 @@ namespace mcs
   }
 
 }
-
-
-#undef RANGE
-#undef VECTOR
 
 
 #include "givens.cc"

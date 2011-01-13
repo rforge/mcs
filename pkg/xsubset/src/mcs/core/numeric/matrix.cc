@@ -1,24 +1,22 @@
 /**
  * @file matrix.cc
- *
- * @author Marc Hofmann
  */
-
 #ifndef MCS_CORE_NUMERIC_MATRIX_CC
 #define MCS_CORE_NUMERIC_MATRIX_CC
 
 
 #include <algorithm>
+#include <utility>
 
 #include "../../mcs.hh"
 
-#include "range.hh"
-#include "vector.hh"
+#include "slice.hh"
+#include "matrix_base.hh"
 #include "matrix.hh"
+#include "slice_matrix.hh"
 
 
-#define MATRIX matrix<Value, Alloc>
-#define SUBMATRIX submatrix<Value, Alloc>
+#define MATRIX matrix<Value, Size>
 
 
 namespace mcs
@@ -32,600 +30,219 @@ namespace mcs
 
 
       template<typename Value,
-	       typename Alloc>
-      MATRIX::matrix() :
-	alloc_(),
-	stor_(0),
-	base_(0),
-	ldim_(0),
-	nrow_(0),
-	ncol_(0)
+               typename Size>
+      MATRIX::matrix(const Size nrow,
+                     const Size ncol) :
+        matrix_base<Value, Size, numeric::matrix>(new Value[nrow * ncol],
+                                                  nrow, nrow, ncol)
       {
+        MCS_ASSERT(nrow >= 0, "invalid argument");
+        MCS_ASSERT(ncol >= 0, "invalid argument");
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      MATRIX::matrix(const size_type nrow,
-		     const size_type ncol) :
-	alloc_(),
-	stor_(alloc_.allocate(nrow * ncol)),
-	base_(stor_),
-	ldim_(nrow),
-	nrow_(nrow),
-	ncol_(ncol)
+               typename Size>
+      MATRIX::matrix(const Size nrow,
+                     const Size ncol,
+                     const Value x) :
+        matrix_base<Value, Size, numeric::matrix>(new Value[nrow * ncol],
+                                                  nrow, nrow, ncol)
       {
-	MCS_ASSERT(nrow >= 0);
-	MCS_ASSERT(ncol >= 0);
-     }
+        MCS_ASSERT(nrow >= 0, "invalid argument");
+        MCS_ASSERT(ncol >= 0, "invalid argument");
 
-
-      template<typename Value,
-	       typename Alloc>
-      template<typename V>
-      MATRIX::matrix(const size_type nrow,
-		     const size_type ncol,
-		     const V val) :
-	alloc_(),
-	stor_(alloc_.allocate(nrow * ncol)),
-	base_(stor_),
-	ldim_(nrow),
-	nrow_(nrow),
-	ncol_(ncol)
-      {
-	MCS_ASSERT(nrow >= 0);
-	MCS_ASSERT(ncol >= 0);
-
-	fill(val);
+        fill(x);
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      template<typename V>
-      MATRIX::matrix(const size_type nrow,
-		     const size_type ncol,
-		     const V* data) :
-	alloc_(),
-	stor_(alloc_.allocate(nrow * ncol)),
-	base_(stor_),
-	ldim_(nrow),
-	nrow_(nrow),
-	ncol_(ncol)
+               typename Size>
+      MATRIX::matrix(const Size nrow,
+                     const Size ncol,
+                     const Value* const x) :
+        matrix_base<Value, Size, numeric::matrix>(new Value[nrow * ncol],
+                                                  nrow, nrow, ncol)
       {
-	MCS_ASSERT(nrow >= 0);
-	MCS_ASSERT(ncol >= 0);
+        MCS_ASSERT(nrow >= 0, "invalid argument");
+        MCS_ASSERT(ncol >= 0, "invalid argument");
 
-	fill(data);
+        std::copy(x, x + nrow * ncol, this->base_);
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      MATRIX::matrix(const pointer stor,
-		     const size_type nrow,
-		     const size_type ncol) :
-	alloc_(),
-	stor_(stor),
-	base_(stor),
-	ldim_(nrow),
-	nrow_(nrow),
-	ncol_(ncol)
+               typename Size>
+      MATRIX::matrix(const matrix<Value, Size>& x) :
+        matrix_base<Value, Size, numeric::matrix>(new Value[x.nrow_ * x.ncol_],
+                                                  x.nrow_, x.nrow_, x.ncol_)
       {
+        copy(x);
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      MATRIX::matrix(const pointer base,
-		     const size_type ldim,
-		     const size_type nrow,
-		     const size_type ncol) :
-	alloc_(),
-	stor_(0),
-	base_(base),
-	ldim_(ldim),
-	nrow_(nrow),
-	ncol_(ncol)
+               typename Size>
+      MATRIX::matrix(matrix<Value, Size>&& x) :
+        matrix_base<Value, Size, numeric::matrix>()
       {
+        swap(std::move(x));
       }
 
-
+      
       template<typename Value,
-	       typename Alloc>
-      MATRIX::matrix(const matrix& mat) :
-	alloc_(),
-	stor_(alloc_.allocate(mat.nrow_ * mat.ncol_)),
-	base_(stor_),
-	ldim_(mat.nrow_),
-	nrow_(mat.nrow_),
-	ncol_(mat.ncol_)
+               typename Size>
+      MATRIX::matrix(matrix_base<Value, Size, numeric::matrix>&& x) :
+        matrix_base<Value, Size, numeric::matrix>()
       {
-	copy(mat);
+        swap(std::move(x));
       }
-
-
+      
+      
       template<typename Value,
-	       typename Alloc>
-      MATRIX::matrix(matrix&& mat) :
-	alloc_(),
-	stor_(0),
-	base_(0),
-	ldim_(1),
-	nrow_(0),
-	ncol_(0)
+               typename Size>
+      template<template<typename V,
+                        typename S>
+               class D>
+      MATRIX::matrix(const matrix_base<Value, Size, D>& x) :
+        matrix_base<Value, Size, numeric::matrix>(new Value[x.nrow_ * x.ncol_],
+                                                  x.nrow_, x.nrow_, x.ncol_)
       {
-	swap(mat);
+        copy(x);
       }
-
+      
 
       template<typename Value,
-	       typename Alloc>
-      MATRIX::matrix(submatrix_type&& mat) :
-	alloc_(),
-	stor_(alloc_.allocate(mat.nrow_ * mat.ncol_)),
-	base_(stor_),
-	ldim_(mat.nrow_),
-	nrow_(mat.nrow_),
-	ncol_(mat.ncol_)
-      {
-	copy(mat);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
+               typename Size>
       MATRIX::~matrix()
       {
-	if (stor_)
-	  {
-	    alloc_.deallocate(stor_, nrow_ * ncol_);
-	  }
+        if (this->base_)
+          {
+            delete [] this->base_;
+            this->base_ = 0;
+          }
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      MATRIX&
-      MATRIX::operator =(const matrix& mat)
-      {
-	MCS_ASSERT(mat.nrow_ == nrow_);
-	MCS_ASSERT(mat.ncol_ == ncol_);
-
-	copy(mat);
-
-	return *this;
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      MATRIX&
-      MATRIX::operator =(matrix&& mat)
-      {
-	swap(mat);
-
-	return *this;
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      MATRIX&
-      MATRIX::operator =(submatrix_type&& mat)
-      {
-	MCS_ASSERT(mat.nrow_ == nrow_);
-	MCS_ASSERT(mat.ncol_ == ncol_);
-
-	copy(mat);
-
-	return *this;
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::reference
-      MATRIX::operator ()(const size_type irow,
-			  const size_type icol)
-      {
-	MCS_ASSERT((irow >= 0) && (irow < nrow_));
-	MCS_ASSERT((icol >= 0) && (icol < ncol_));
-
-	return at(irow, icol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::const_reference
-      MATRIX::operator ()(const size_type irow,
-			  const size_type icol) const
-      {
-	MCS_ASSERT((irow >= 0) && (irow < nrow_));
-	MCS_ASSERT((icol >= 0) && (icol < ncol_));
-
-	return at(irow, icol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::subvector_type
-      MATRIX::operator ()(const size_type irow,
-			  const range_type rcol)
-      {
-	const size_type icol = rcol.pos();
-	const size_type ncol = rcol.open()? ncol_ - icol: rcol.len();
-
-	MCS_ASSERT((irow >= 0) && (irow < nrow_));
-	MCS_ASSERT((icol + ncol) <= ncol_);
-
-	return subvector_type(&at(irow, icol), ldim_, ncol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::subvector_type
-      MATRIX::operator ()(const size_type irow,
-			  const range_type rcol) const
-      {
-	const size_type icol = rcol.pos();
-	const size_type ncol = rcol.open()? ncol_ - icol: rcol.len();
-
-	MCS_ASSERT((irow >= 0) && (irow < nrow_));
-	MCS_ASSERT((icol + ncol) <= ncol_);
-
-	return subvector_type(&at(irow, icol), ldim_, ncol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::subvector_type
-      MATRIX::operator ()(const range_type rrow,
-			  const size_type icol)
-      {
-	const size_type irow = rrow.pos();
-	const size_type nrow = rrow.open()? nrow_ - irow: rrow.len();
-
-	MCS_ASSERT((irow + nrow) <= nrow_);
-	MCS_ASSERT((icol >= 0) && (icol < ncol_));
-
-	return subvector_type(&at(irow, icol), 1, nrow);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::subvector_type
-      MATRIX::operator ()(const range_type rrow,
-			  const size_type icol) const
-      {
-	const size_type irow = rrow.pos();
-	const size_type nrow = rrow.open()? nrow_ - irow: rrow.len();
-
-	MCS_ASSERT((irow + nrow) <= nrow_);
-	MCS_ASSERT((icol >= 0) && (icol < ncol_));
-
-	return subvector_type(&at(irow, icol), 1, nrow);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::submatrix_type
-      MATRIX::operator ()(const range_type rrow,
-			  const range_type rcol)
-      {
-	const size_type irow = rrow.pos();
-	const size_type nrow = rrow.open()? nrow_ - irow: rrow.len();
-
-	const size_type icol = rcol.pos();
-	const size_type ncol = rcol.open()? ncol_ - icol: rcol.len();
-
-	MCS_ASSERT((irow + nrow) <= nrow_);
-	MCS_ASSERT((icol + ncol) <= ncol_);
-
-	return submatrix_type(&at(irow, icol), ldim_, nrow, ncol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::submatrix_type
-      MATRIX::operator ()(const range_type rrow,
-			  const range_type rcol) const
-      {
-	const size_type irow = rrow.pos();
-	const size_type nrow = rrow.open()? nrow_ - irow: rrow.len();
-
-	const size_type icol = rcol.pos();
-	const size_type ncol = rcol.open()? ncol_ - icol: rcol.len();
-
-	MCS_ASSERT((irow + nrow) <= nrow_);
-	MCS_ASSERT((icol + ncol) <= ncol_);
-
-	return submatrix_type(&at(irow, icol), ldim_, nrow, ncol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::size_type
-      MATRIX::ldim() const
-      {
-	return ldim_;
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::size_type
-      MATRIX::nrow() const
-      {
-	return nrow_;
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::size_type
-      MATRIX::ncol() const
-      {
-	return ncol_;
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::subvector_type
-      MATRIX::row(const size_type irow)
-      {
-	MCS_ASSERT((irow >= 0) && (irow < nrow_));
-
-	return subvector_type(&at(irow, 0), ldim_, ncol_);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::subvector_type
-      MATRIX::row(const size_type irow) const
-      {
-	MCS_ASSERT((irow >= 0) && (irow < nrow_));
-
-	return subvector_type(&at(irow, 0), ldim_, ncol_);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::subvector_type
-      MATRIX::col(const size_type icol)
-      {
-	MCS_ASSERT((icol >= 0) && (icol < ncol_));
-
-	return subvector_type(&at(0, icol), 1, nrow_);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::subvector_type
-      MATRIX::col(size_type icol) const
-      {
-	MCS_ASSERT((icol >= 0) && (icol < ncol_));
-
-	return subvector_type(&at(0, icol), 1, nrow_);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::submatrix_type
-      MATRIX::row(const range_type rrow)
-      {
-	const size_type irow = rrow.pos();
-	const size_type nrow = rrow.open()? nrow_ - irow: rrow.len();
-
-	MCS_ASSERT((irow + nrow) <= nrow_);
-
-	return submatrix_type(&at(irow, 0), ldim_, nrow, ncol_);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::submatrix_type
-      MATRIX::row(const range_type rrow) const
-      {
-	const size_type irow = rrow.pos();
-	const size_type nrow = rrow.open()? nrow_ - irow: rrow.len();
-
-	MCS_ASSERT((irow + nrow) <= nrow_);
-
-	return submatrix_type(&at(irow, 0), ldim_, nrow, ncol_);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::submatrix_type
-      MATRIX::col(const range_type rcol)
-      {
-	const size_type icol = rcol.pos();
-	const size_type ncol = rcol.open()? ncol_ - icol: rcol.len();
-
-	MCS_ASSERT((icol + ncol) <= ncol_);
-
-	return submatrix_type(&at(0, icol), ldim_, nrow_, ncol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::submatrix_type
-      MATRIX::col(const range_type rcol) const
-      {
-	const size_type icol = rcol.pos();
-	const size_type ncol = rcol.open()? ncol_ - icol: rcol.len();
-
-	MCS_ASSERT((icol + ncol) <= ncol_);
-
-	return submatrix_type(at(0, icol), ldim_, nrow_, ncol);
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      typename MATRIX::subvector_type
-      MATRIX::diag()
-      {
-	return subvector_type(base_, ldim_ + 1, std::min(nrow_, ncol_));
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      const typename MATRIX::subvector_type
-      MATRIX::diag() const
-      {
-	return subvector_type(base_, ldim_ + 1, std::min(nrow_, ncol_));
-      }
-
-
-      template<typename Value,
-	       typename Alloc>
-      template<typename V>
+               typename Size>
       void
-      MATRIX::fill(const V val)
+      MATRIX::copy(const matrix<Value, Size>& x)
       {
-	pointer ptr = base_;
-	for (size_type j = 0; j < ncol_; ++j)
-	  {
-	    for (size_type i = 0; i < nrow_; ++i)
-	      {
-		ptr[i] = static_cast<value_type>(val);
-	      }
-	    ptr += ldim_;
-	  }
+        MCS_ASSERT(x.nrow_ == this->nrow_, "invalid argument");
+        MCS_ASSERT(x.ncol_ == this->ncol_, "invalid argument");
+
+        std::copy(x.base_, x.base_ + this->nrow_ * this->ncol_, this->base_);
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      template<typename V>
+               typename Size>
       void
-      MATRIX::fill(const V* data)
+      MATRIX::copy(const slice_matrix<Value, Size>& x)
       {
-	pointer ptr = base_;
-	for (size_type j = 0; j < ncol_; ++j)
-	  {
-	    for (size_type i = 0; i < nrow_; ++i)
-	      {
-		ptr[i] = static_cast<value_type>(*data++);
-	      }
-	    ptr += ldim_;
-	  }
+        MCS_ASSERT(x.nrow_ == this->nrow_, "invalid argument");
+        MCS_ASSERT(x.ncol_ == this->ncol_, "invalid argument");
+
+        const Value* src = x.base_;
+        Value* dst = this->base_;
+        const Value* last = this->base_ + this->nrow_ * this->ncol_;
+
+        while (dst != last)
+          {
+            dst = std::copy(src, src + this->nrow_, dst);
+            src += x.ldim_;
+          }
       }
 
 
       template<typename Value,
-	       typename Alloc>
+               typename Size>
+      template<template<typename V,
+                        typename S>
+               class D>
       void
-      MATRIX::copy(const matrix& mat)
+      MATRIX::copy(const matrix_base<Value, Size, D>& x)
       {
-	MCS_ASSERT(nrow_ == mat.nrow_);
-	MCS_ASSERT(ncol_ == mat.ncol_);
-
-	const size_type lsrc = mat.ldim_;
-	const size_type ldst = ldim_;
-	const size_type nrow = nrow_;
-	const size_type ncol = ncol_;
-
-	const_pointer src = mat.base_;
-	pointer dst = base_;
-	for (size_type j = 0; j < ncol; ++j)
-	  {
-	    for (size_type i = 0; i < nrow; ++i)
-	      {
-		dst[i] = src[i];
-	      }
-	    src += lsrc;
-	    dst += ldst;
-	  }
+        copy(*static_cast<const D<Value, Size>*>(&x));
       }
 
 
       template<typename Value,
-	       typename Alloc>
+               typename Size>
       void
-      MATRIX::swap(matrix& mat)
+      MATRIX::swap(matrix<Value, Size>&& x)
       {
-        // TODO: swap allocator
-	std::swap(stor_, mat.stor_);
-	std::swap(base_, mat.base_);
-	std::swap(ldim_, mat.ldim_);
-	std::swap(nrow_, mat.nrow_);
-	std::swap(ncol_, mat.ncol_);
+	std::swap(this->base_, x.base_);
+	std::swap(this->ldim_, x.ldim_);
+	std::swap(this->nrow_, x.nrow_);
+	std::swap(this->ncol_, x.ncol_);
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      typename MATRIX::reference
-      MATRIX::at(const size_type irow,
-		 const size_type icol) const
+               typename Size>
+      void
+      MATRIX::swap(slice_matrix<Value, Size>&& x)
       {
-	return base_[irow + icol * ldim_];
+        MCS_ASSERT(this->nrow_ == x.nrow_, "invalid argument");
+        MCS_ASSERT(this->ncol_ == x.ncol_, "invalid argument");
+
+        const Value* ptr1 = x.base_;
+        Value* ptr2 = this->base_;
+        const Value* last = this->base_ + this->nrow_ * this->ncol_;
+
+        while (ptr2 != last)
+          {
+            ptr2 = std::swap_ranges(ptr1, ptr1 + this->nrow_, ptr2);
+            ptr1 += x.ldim_;
+          }
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      SUBMATRIX::submatrix(const pointer base,
-			   const size_type ldim,
-			   const size_type nrow,
-			   const size_type ncol)
-	: matrix_type(base, ldim, nrow, ncol)
+               typename Size>
+      template<template<typename V,
+                        typename S>
+               class D>
+      void
+      MATRIX::swap(matrix_base<Value, Size, D>&& x)
       {
+        swap(std::move(*static_cast<const D<Value, Size>*>(&x)));
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      SUBMATRIX::~submatrix()
+               typename Size>
+      void
+      MATRIX::fill(const Value x)
       {
+        std::fill_n(this->base_, this->nrow_ * this->ncol_, x);
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      SUBMATRIX&
-      SUBMATRIX::operator =(const matrix_type& mat)
+               typename Size>
+      matrix<Value, Size>&
+      MATRIX::operator =(matrix<Value, Size> x)
       {
-	MCS_ASSERT(mat.nrow_ == nrow_);
-	MCS_ASSERT(mat.ncol_ == ncol_);
+        MCS_ASSERT(this->nrow_ == x.nrow_, "invalid argument");
+        MCS_ASSERT(this->ncol_ == x.ncol_, "invalid argument");
 
-	copy(mat);
+        swap(x);
 
-	return *this;
+        return *this;
       }
 
 
       template<typename Value,
-	       typename Alloc>
-      SUBMATRIX&
-      SUBMATRIX::operator =(matrix_type&& mat)
+               typename Size>
+      matrix<Value, Size>&
+      MATRIX::operator =(const Value x)
       {
-	MCS_ASSERT(mat.nrow_ == nrow_);
-	MCS_ASSERT(mat.ncol_ == ncol_);
+        fill(x);
 
-	copy(mat);
-
-	return *this;
+        return *this;
       }
 
 
@@ -637,11 +254,6 @@ namespace mcs
 
 
 #undef MATRIX
-#undef SUBMATRIX
-
-
-#define MATRIX mcs::core::numeric::matrix<Value, Alloc>
-#define SUBMATRIX mcs::core::numeric::submatrix<Value, Alloc>
 
 
 namespace std
@@ -649,19 +261,16 @@ namespace std
 
 
   template<typename Value,
-	   typename Alloc>
+           typename Size>
   void
-  swap(MATRIX& x, MATRIX& y)
+  swap(mcs::core::numeric::matrix<Value, Size>& a,
+       mcs::core::numeric::matrix<Value, Size>& b)
   {
-    x.swap(y);
+    a.swap(b);
   }
 
 
 }
-
-
-#undef MATRIX
-#undef SUBMATRIX
 
 
 #endif

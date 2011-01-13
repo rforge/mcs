@@ -1,16 +1,13 @@
 /**
  * @file lapack.hh
- *
- * @author Marc Hofmann
  */
-
 #ifndef MCS_CORE_NUMERIC_LAPACK_HH
 #define MCS_CORE_NUMERIC_LAPACK_HH
 
 
-#define RANGE range<Size>
-#define VECTOR vector<Value, Alloc>
-#define MATRIX matrix<Value, Alloc>
+#include "slice.hh"
+#include "vector.hh"
+#include "matrix.hh"
 
 
 namespace mcs
@@ -21,21 +18,6 @@ namespace mcs
 
     namespace numeric
     {
-
-
-      template<typename Size>
-      class range;
-
-
-      template<typename Value,
-	       typename Alloc>
-      class vector;
-
-
-      template<typename Value,
-	       typename Alloc>
-      class matrix;
-
 
       namespace lapack
       {
@@ -51,43 +33,66 @@ namespace mcs
 	lacpy(const char* uplo, int m, int n,
 	      const double& a, int lda,
 	      double& b, int ldb);
+        
+        
+	template<typename Value,
+		 typename Size,
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2>
+        void
+        lacpy(const char* uplo,
+              const matrix_base<Value, Size, Derived1>& a,
+              matrix_base<Value, Size, Derived2>&& b);
 
 
 	template<typename Value,
-		 typename Alloc>
+		 typename Size,
+                 template<typename V,
+                          typename S>
+                 class Derived1,
+                 template<typename V,
+                          typename S>
+                 class Derived2>
 	void
-	lacpy(const char* uplo, const MATRIX& a, MATRIX&& b);
-
-
-	template<typename Size,
-		 typename Value,
-		 typename Alloc>
-	void
-	lacpy(const char* uplo, RANGE r1, RANGE r2,
-	      const MATRIX& a, MATRIX&& b);
+	lacpy(const char* uplo,
+              const slice<Size>& s1, const slice<Size>& s2,
+	      const matrix_base<Value, Size, Derived1>& a,
+              matrix_base<Value, Size, Derived2>&& b);
 
 
 	void
-	geqrf(int m, int n, float& a, int lda, float& tau,
+	geqrf(int m, int n,
+              float& a, int lda, float& tau,
 	      float& work, int lwork);
 
 
 	void
-	geqrf(int m, int n, double& a, int lda, double& tau,
+	geqrf(int m, int n,
+              double& a, int lda, double& tau,
 	      double& work, int lwork);
 
 
 	template<typename Value,
-		 typename Alloc>
-	void
-	geqrf(MATRIX&& a);
+		 typename Size,
+                 template<typename V,
+                          typename S>
+                 class Derived>
+        void
+        geqrf(matrix_base<Value, Size, Derived>&& a);
 
 
-	template<typename Size,
-		 typename Value,
-		 typename Alloc>
+	template<typename Value,
+		 typename Size,
+		 template<typename V,
+                          typename S>
+                 class Derived>
 	void
-	geqrf(RANGE r, MATRIX&& a);
+        geqrf(const slice<Size>& s,
+              matrix_base<Value, Size, Derived>&& a);
 
 
       }
@@ -97,11 +102,6 @@ namespace mcs
   }
 
 }
-
-
-#undef RANGE
-#undef VECTOR
-#undef MATRIX
 
 
 #include "lapack.cc"

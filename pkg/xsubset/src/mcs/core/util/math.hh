@@ -1,14 +1,8 @@
 /**
  * @file math.hh
- *
- * @author Marc Hofmann
  */
-
 #ifndef MCS_CORE_UTIL_MATH_HH
 #define MCS_CORE_UTIL_MATH_HH
-
-
-#define PI 3.14159265358979323846264338327
 
 
 namespace mcs
@@ -24,21 +18,21 @@ namespace mcs
       {
 
 
+        template<typename Value>
+        Value
+	sign(const Value dx);
+
+
 	template<typename Value>
 	Value
-	sqr(Value val)
-	{
-	  return val * val;
-	}
+	sqr(Value val);
 
 
 	template<typename Value>
 	struct constants
 	{
 
-	  typedef Value value_type;
-
-	  static const value_type pi = PI;
+	  static const Value pi;
 
 	};
 
@@ -52,7 +46,5 @@ namespace mcs
 }
 
 
-#undef PI
-
-
+#include "math.cc"
 #endif

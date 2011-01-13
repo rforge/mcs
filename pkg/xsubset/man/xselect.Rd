@@ -1,11 +1,6 @@
 \name{xselect}
 
 \alias{xselect}
-\alias{xselect.matrix}
-\alias{xselect.data.frame}
-\alias{xselect.formula}
-\alias{xselect.lm}
-\alias{xselect.default}
 
 \title{Best-Subset Selection}
 
@@ -18,98 +13,58 @@
 
 \usage{
 
-  xselect(object, \dots)
-
-  \method{xselect}{matrix}(object, y, \ldots)
-
-  \method{xselect}{data.frame}(object, y = 1, \dots)
-
-  \method{xselect}{formula}(object, data = NULL, row.subset = NULL,
-    weights = NULL, na.action = na.omit, model = TRUE, x = FALSE,
-    y = FALSE, contrasts = NULL, offset = NULL, \ldots)
-
-  \method{xselect}{lm}(object, \dots)
-
-  \method{xselect}{default}(object, include = NULL, exclude = NULL,
-    tolerance = 0, criterion = NULL, \ldots, pradius = NULL, precision =
-    "double")
+  xselect(nobs, nvar, x, y, mark, criterion, tolerance, pradius, nbest)
 
 }
 
 \arguments{
 
-  \item{object}{An R object.}
+  \item{nobs, nvar}{Number of observations (rows) and regressors
+  (columns), respectively.}
 
-  \item{data, row.subset, weights, na.action, model, x, contrasts,
-    offset}{Arguments forwarded to \code{\link[stats]{lm}}.}
+  \item{x, y}{Model matrix and dependent variable, respectively.}
 
-  \item{y}{A numeric vector representing the response variable \eqn{y}
-    for \code{xselect.matrix}, the index (numeric or character) of the
-    response variable in the data frame for \code{xselect.data.frame},
-    or a logical for \code{xselect.formula} (see \code{\link[stats]{lm}}
-    for details).}
+  \item{mark}{The first \code{mark} columns of \code{x} are forced into
+    the model.}
 
-  \item{include, exclude}{Index vectors designating variables that are
-    forced into or out of the model, respectively.  The vectors can
-    consist of (integer) indexes, (character) names, or (logical) bits
-    selecting the desired columns.  All variables are included by
-    default.}
+  \item{criterion}{Information criterion.  Available criteria are
+    \code{"RSS"} (default), \code{"AIC"}, \code{"BIC"} and \code{"Cp"}.}
+
+  \item{tolerance}{The tolerance, where \code{tolerance[j]} is the
+    tolerance employed for subsets of size \code{j}.}
 
   \item{pradius}{Preordering radius, by default \code{round(nreg/3)},
     where \code{nreg} is the number of regressors.}
 
-  \item{tolerance}{The tolerance.}
-
-  \item{criterion}{Criterion name (\code{"AIC"}, \code{"AICc"},
-    \code{"AICc2"}, \code{"AICu"}, \code{"BIC"}, or \code{"Cp"}) or
-    penalty for modified AIC.}
-
-  \item{precision}{Use either single (\code{"single"}) or double
-    (\code{"double"}) precision arithmetics.}
-
-  \item{\dots}{Ignored.}
+  \item{nbest}{Number of subsets to report for every size.}
 
 }
 
 \details{
 
-  These methods serve the same purpose as the \code{xsubset} family of
-  methods.  However, a specified criterion is employed during the
-  search.  The result of the search is the best subset model over all
-  sizes.
-
-  The criterion can be one of "AIC", "AICc", "AICc2", "AICu", "BIC", or
-  "mAIC".  The latter is given by the numeric value of the penalty to be
-  used in the modified AIC criterion.
-
-  See \code{\link[stats]{lm}} for more information.
+  This is a low-level routine.  For a more convenient calling interface
+  see \code{\link{xsubset}}.
 
 }
 
 
 \value{
 
-  An object of class \code{"xselect"}, i.e. a list with the following
-  components:
+  A list with the following components:
 
-  \item{call}{The original function call.}
+  \item{nobs, nvar}{TODO}
 
-  \item{lm}{An object of type \code{lm} representing the full model.}
+  \item{mark}{TODO}
   
-  \item{nreg}{The (original) number of regressors.}
+  \item{criterion}{TODO}
 
-  \item{include}{The (computed) index of included variables.}
+  \item{tolerance}{TODO}
 
-  \item{exclude}{The (computed) index of excluded variables.}
+  \item{nbest}{TODO}
 
-  \item{best}{The size of the best subset.}
+  \item{value}{TODO}
 
-  \item{which}{A vector of length \code{best} indicating the selected
-    variables.}
-
-  \item{value}{The value of the criterion for the best subset.}
-
-  \item{intercept}{Whether an intercept is included in the regression.}
+  \item{which}{TODO}
 
 }
 

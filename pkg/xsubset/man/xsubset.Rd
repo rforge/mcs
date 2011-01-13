@@ -16,20 +16,21 @@
 
 \usage{
 
-  xsubset(object, \dots)
+xsubset(object, \dots)
 
-  \method{xsubset}{matrix}(object, y, \ldots)
+\method{xsubset}{matrix}(object, y = NULL, \ldots)
 
-  \method{xsubset}{data.frame}(object, y = 1, \dots)
+\method{xsubset}{data.frame}(object, y.which = 1, \dots)
 
-  \method{xsubset}{formula}(object, data = NULL, row.subset = NULL,
-    weights = NULL, na.action = na.omit, model = TRUE, x = FALSE,
-    y = FALSE, contrasts = NULL, offset = NULL, \ldots)
+\method{xsubset}{formula}(object, data = NULL, row.subset = NULL,
+weights = NULL, na.action = na.omit, model = TRUE, x.return = FALSE,
+y.return = FALSE, contrasts = NULL, offset = NULL, \ldots)
 
-  \method{xsubset}{lm}(object, \dots)
+\method{xsubset}{lm}(object, \dots)
 
-  \method{xsubset}{default}(object, include = NULL, exclude = NULL,
-    size = NULL, tolerance = 0, \ldots, pradius = NULL, precision = "double")
+\method{xsubset}{default}(object, include = NULL, exclude = NULL, size =
+NULL, criterion = "rss", tolerance = 0, pradius = NULL, nbest = 1,
+\ldots)
 
 }
 
@@ -40,31 +41,35 @@
   \item{data, row.subset, weights, na.action, model, x, contrasts,
     offset}{Arguments forwarded to \code{\link[stats]{lm}}.}
 
-  \item{y}{A numeric vector representing the response variable \eqn{y}
-    for \code{xsubset.matrix}, the index (numeric or character) of the
-    response variable in the data frame for \code{xsubset.data.frame},
-    or a logical for \code{xsubset.formula} (see \code{\link[stats]{lm}}
+  \item{y}{A numeric vector representing the response variable.}
+
+  \item{y.which}{The index (numeric or character) of the
+    response variable in the data frame.}
+
+  \item{x.return, y.return}{Logical (see \code{\link[stats]{lm}}
     for details).}
 
   \item{include, exclude}{Index vectors designating variables that are
-    forced into or out of the model, respectively.  The vectors can
+    forced into or out of the model, respectively.  The vectors may
     consist of (integer) indexes, (character) names, or (logical) bits
-    selecting the desired columns.  All variables are included by
-    default.}
+    selecting the desired columns.  By default, all variables are
+    included.  The intercept is included if present in the model.}
 
-  \item{size}{Vector of subset sizes (number of variables including the
-    intercept, if any) to be evaluated.  The default is to include all
-    possible sizes.  If not specified, the value of \code{size} is
+  \item{size}{Vector of subset sizes (counting the intercept, if any) to
+    be evaluated.  If not specified, the value of \code{size} is
     determined from \code{include} and \code{exclude}.}
 
-  \item{pradius}{Preordering radius, by default \code{round(nreg/3)},
-    where \code{nreg} is the number of regressors.}
+  \item{criterion}{The information criterion to use.  Available criteria
+  are \code{"RSS"}, \code{"AIC"}, \code{"BIC"} and \code{"Cp"}.}
 
-  \item{tolerance}{The tolerance, where \code{tolerance[i]} is the
-    tolerance employed for subset size \code{size[i]}.}
+  \item{tolerance}{The tolerance, where \code{tolerance[j]} is the
+    tolerance employed for subsets of size \code{j}.}
 
-  \item{precision}{Use either \code{"single"} or \code{"double"}
-    precision arithmetics.}
+  \item{pradius}{Preordering radius, by default \code{round(nvar/3)},
+    where \code{nvar} is the number of regressors.}
+
+  \item{nbest}{Number of best subsets to report for each size (number of
+    ranks).}
 
   \item{\dots}{Ignored.}
 
@@ -75,12 +80,12 @@
 
   The function \code{xsubset} computes all variable-subsets for linear
   regression models.  The function is generic and provides various
-  methods to conveniently specify the regressor and response variable.
-  Either the standard \code{formula} interface as in
-  \code{\link[stats]{lm}} can be used, or the information can be
-  extracted from an already fitted \code{lm} object.  The regressor
-  matrix and response variable can also be passed in directly.  In all
-  cases, the default method is eventually called.
+  methods to conveniently specify the regressor and response variables.
+  The standard \code{formula} interface (see \code{\link[stats]{lm}})
+  can be used, or the information can be extracted from an already
+  fitted \code{lm} object.  The regressor matrix and response variable
+  can also be passed in directly.  In all cases, the default method is
+  eventually called.
 
   The number of observations (rows) has to be larger than the number of
   variables (columns).  By default, the best subset model is derived for
@@ -89,23 +94,22 @@
 
   \bold{Preordering:} The function will preorder the variables to reduce
   execution times if \code{pradius}\eqn{>0} (\code{pradius}\eqn{\le n}),
-  where \eqn{n} is the number of regressors.  Best execution times are
-  usually attained for approximately \code{pradius}\eqn{=n/3}, which is
-  the default value.
+  where \eqn{n} is the total number of regressors.  Best execution times
+  are usually attained for approximately \code{pradius}\eqn{=n/3}, which
+  is the default value.
 
   \bold{Heuristic:} If the exact solution is not needed, a tolerance
   \code{tolerance}\eqn{>0} can be specified for each subset size
   (expanded if necessary) to speed up the procedure.  The solution
-  satisfies RSS\eqn{(k)\le(1+\tau_k)}RSS\eqn{^*(k)}, where RSS\eqn{(k)}
-  is the residual sum of squares (RSS) of the subset of size \eqn{k},
+  satisfies RSS\eqn{(j)\le(1+\tau_j)}RSS\eqn{^*(j)}, where RSS\eqn{(j)}
+  is the residual sum of squares (RSS) of the subset of size \eqn{j},
   RSS\eqn{^*} is the (theoretical) RSS of the exact solution, and
-  \eqn{\tau_k} the tolerance for subset size \eqn{k}.  Specifically,
-  \code{tolerance[i]} is the tolerance for subsets of size
-  \code{size[i]}.
+  \eqn{\tau_j} the tolerance for subset size \eqn{j}.  Specifically,
+  \code{tolerance[j]} is the tolerance for subsets of size
+  \code{j}.
 
-  \bold{Precision:} Specify whether \code{"single"} or \code{"double"}
-  precision arithmetic should be used by the underlying C procedure.
-  The default is \code{"double"}.
+  After the input arguments have been processed, the call is forwarded
+  to \code{\link{xselect}}.
   
   A set of standard extractor functions for fitted model objects is
   available for objects of class \code{"xsubset"}.  See

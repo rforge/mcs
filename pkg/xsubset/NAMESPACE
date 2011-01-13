@@ -2,7 +2,7 @@ import("stats", "graphics")
 
 useDynLib("xsubset")
 
-## new generics
+## new methods
 export("xsubset",
        "xselect",
        "refit",
@@ -30,13 +30,6 @@ S3method("xsubset", "formula")
 S3method("xsubset", "lm")
 S3method("xsubset", "default")
 
-## 'xselect' generator methods
-S3method("xselect", "matrix")
-S3method("xselect", "data.frame")
-S3method("xselect", "formula")
-S3method("xselect", "lm")
-S3method("xselect", "default")
-
 ## extractor methods for 'xsubset' objects
 S3method("print", "xsubset")
 S3method("plot", "xsubset")
@@ -60,20 +53,3 @@ S3method("AIC", "xsubset")
 S3method("summary", "xsubset")
 S3method("print", "summary.xsubset")
 S3method("plot", "summary.xsubset")
-
-## extractor methods for 'xselect' objects
-S3method("print", "xselect")
-S3method("variable.names", "xselect")
-S3method("formula", "xselect")
-S3method("model.matrix", "xselect")
-S3method("terms", "xselect")
-S3method("refit", "xselect")
-S3method("coef", "xselect")
-S3method("vcov", "xselect")
-S3method("fitted", "xselect")
-S3method("residuals", "xselect")
-S3method("deviance", "xselect")
-S3method("logLik", "xselect")
-S3method("AIC", "xselect")
-S3method("summary", "xselect")
-S3method("print", "summary.xselect")
