@@ -123,21 +123,24 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL,
   if (is.logical(s)) {
     s <- which(s)
   }
+  x <- x[s, , drop = FALSE]
+  y <- y[s]
 
   ## weights
-  w <- weights
-  if (is.null(w)) {
+  if (is.null(weights)) {
     w <- rep(1, NROW(x))
+  }  else {
+    w <- weights[s]
   }
-  w[-s] <- 0
 
   x0 <- sqrt(w[w != 0]) * x[w != 0, , drop = FALSE]
   y0 <- sqrt(w[w != 0]) * y[w != 0,   drop = FALSE]
 
   ## offset
-  o <- offset
-  if (is.null(o)) {
+  if (is.null(offset)) {
     o <- rep(0, NROW(data))
+  } else {
+    o <- offset[s]
   }
   y0 <- y0 - o[w != 0]
 
@@ -150,13 +153,12 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL,
   ## update return value
   rval$call <- call
   rval$terms <- t
-  rval$row.subset <- row.subset
-  rval$weights <- weights
+  if (!is.null(weights)) rval$weights <- w
   if (model) rval$model <- mf
   if (x.return) rval$x <- x
   if (y.return) rval$y <- y
   rval$constrasts <- constrasts
-  rval$offset <- offset
+  if (!is.null(offset)) rval$offset <- o
   rval$y.name <- deparse(attr(t, "variables")[[attr(t, "response") + 1]])
 
   ## done
@@ -1263,7 +1265,7 @@ deviance.xsubset <- function (object, size = NULL, rank = 1, ...) {
   if (is.null(size)) {
     size <- object$size
   }
-  object$rss[rank, size]
+  object$value[rank, size]
 }
 
 
@@ -1280,7 +1282,7 @@ deviance.xsubset <- function (object, size = NULL, rank = 1, ...) {
 ## subset size and rank.
 ##
 deviance.xselect <- function (object, rank = 1, ...) {
-  object$aic[rank]
+  object$value[rank]
 }
 
 
