@@ -308,6 +308,7 @@ xsubset.default <- function (object, y, include = NULL, exclude = NULL,
                value     = NULL,
                which     = NULL,
                .nodes = C_rval$nodes)
+  class(rval) <- "xsubset0"
 
   ## extract value & subsets
   if (penalty == 0) {
@@ -322,7 +323,7 @@ xsubset.default <- function (object, y, include = NULL, exclude = NULL,
                         dimnames = list(x.names, 1:nbest, 1:nvar))
     rval$which[which0, , 1:nvar0] <- C_rval$which
     ## class
-    class(rval) <- "xsubset"
+    class(rval) <- c("xsubset", class(rval))
   } else {
     rval$tolerance <- tolerance[1]
     ## aic
@@ -332,8 +333,11 @@ xsubset.default <- function (object, y, include = NULL, exclude = NULL,
                         dimnames = list(x.names, 1:nbest))
     rval$which[which0, ] <- C_rval$which[1:(nvar0 * nbest)]
     ## class
-    class(rval) <- "xselect"
+    class(rval) <- c("xsubset2", class(rval))
   }
+
+  ## FIXME: enhance C code to mark uninitialized entries
+  rval$value[rval$value == .Machine$double.xmax] <- NA
 
   # done
   rval
@@ -375,15 +379,15 @@ print.xsubset <- function (x, ...)
 }
 
 
-## print method for 'xselect' objects
+## print method for 'xsubset2' objects
 ##
 ## Args:
-##   x   - (xselect)
+##   x   - (xsubset2)
 ##   ... - ignored
 ##
-## Rval: (xsubset) invisible
+## Rval: (xsubset2) invisible
 ##
-print.xselect <- function (x, ...)
+print.xsubset2 <- function (x, ...)
 {
   catln <- function (...) base::cat(..., "\n", sep = "")
   
@@ -462,10 +466,10 @@ plot.xsubset <- function (x, size = NULL, rank = 1, type = "b",
 }
 
 
-## plot method for 'xselect' objects
+## plot method for 'xsubset2' objects
 ##
 ## Args:
-##   x      - (xselect)
+##   x      - (xsubset2)
 ##   rank   - (integer[])
 ##   type   - (character)
 ##   main   - (character)
@@ -476,11 +480,11 @@ plot.xsubset <- function (x, size = NULL, rank = 1, type = "b",
 ##   legend - (logical)
 ##   ...    - passed ot 'plot.default'
 ##
-## Rval: (xsubset) invisible
+## Rval: (xsubset2) invisible
 ##
 ## Graphical arguments are passed to 'plot.default'.
 ##
-plot.xselect <- function (x, rank = NULL, type = "b", main = "Deviance",
+plot.xsubset2 <- function (x, rank = NULL, type = "b", main = "Deviance",
                           xlab = NULL, ylab = "", col = "blue", lty = 1,
                           legend = TRUE, ...)
 {
@@ -518,15 +522,15 @@ plot.xselect <- function (x, rank = NULL, type = "b", main = "Deviance",
 }
 
 
-## extract environment
+## extract environment (base method)
 ##
 ## Args:
-##   object - (xsubset)
-##   ...    - passed to 'environment.default'
+##   object - (xsubset0)
+##   ...    - forwarded
 ##
 ## Rval: (environment)
 ##
-environment.xsubset <- function (object, ...) {
+environment.xsubset0 <- function (object, ...) {
   ## formula interface?
   if (is.null(object$terms)) {
     return (NULL)
@@ -540,19 +544,26 @@ environment.xsubset <- function (object, ...) {
 ## extract environment
 ##
 ## Args:
-##   object - (xselect)
-##   ...    - passed to 'environment.default'
+##   object - (xsubset)
+##   ...    - forwarded
 ##
 ## Rval: (environment)
 ##
-environment.xselect <- function (object, ...) {
-  ## formula interface?
-  if (is.null(object$terms)) {
-    return (NULL)
-  }
-  
-  ## extract environment
-  environment(object$terms, ...)
+environment.xsubset <- function (object, ...) {
+  NextMethod(.Generic, object, ...)
+}
+
+
+## extract environment
+##
+## Args:
+##   object - (xsubset2)
+##   ...    - forwarded
+##
+## Rval: (environment)
+##
+environment.xsubset2 <- function (object, ...) {
+  NextMethod(.Generic, object, ...)
 }
 
 
@@ -585,14 +596,14 @@ variable.names.xsubset <- function (object, size, rank = 1, ...,
 ## extract variable names
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   rank   - (integer)
 ##   ...    - ignored
 ##   full   - (logical)
 ##
 ## Rval: (character[]) variable names
 ##
-variable.names.xselect <- function (object, rank = 1, ..., full = FALSE) {
+variable.names.xsubset2 <- function (object, rank = 1, ..., full = FALSE) {
   ## trivial
   if (full) {
     return (object$x.names)
@@ -606,90 +617,81 @@ variable.names.xselect <- function (object, rank = 1, ..., full = FALSE) {
 }
 
 
+## extract formula (base method)
+##
+## Args:
+##   x    - (xsubset0)
+##   ...  - forwarded
+##   full - (logical)
+##
+## Rval: (formula)
+##
+formula.xsubset0 <- function (x, ..., full = FALSE) {
+  ## formula interface?
+  if (is.null(x$terms)) {
+    return (NULL)
+  }
+  
+  ## extract variable names
+  y.name <- x$y.name
+  x.names <- variable.names(x, ..., full = full)
+
+  ## handle intercept
+  if (x$intercept) {
+    x.names <- x.names[-1]
+  }
+
+  ## construct formula
+  f <- paste(y.name, "~")
+  f <- paste(f, paste(x.names, collapse = "+"))
+  f <- paste(f, if (x$intercept) "+1" else "-1")
+
+  ## done
+  as.formula(f, environment(x, ...))
+}
+
+
 ## extract formula
 ##
 ## Args:
 ##   x    - (xsubset)
 ##   size - (integer)
 ##   rank - (integer)
-##   ...  - passed to 'variable.names.xsubset'
+##   ...  - forwarded
 ##   full - (logical)
 ##
 ## Rval: (formula)
 ##
 formula.xsubset <- function (x, size, rank = 1, ..., full = FALSE) {
-  ## formula interface?
-  if (is.null(x$terms)) {
-    return (NULL)
-  }
-  
-  ## extract variable names
-  y.name <- x$y.name
-  x.names <- variable.names(x, size = size, rank = rank, ..., full = full)
-
-  ## handle intercept
-  if (x$intercept) {
-    x.names <- x.names[-1]
-  }
-
-  ## construct formula
-  f <- paste(y.name, "~")
-  f <- paste(f, paste(x.names, collapse = "+"))
-  f <- paste(f, if (x$intercept) "+1" else "-1")
-
-  ## done
-  as.formula(f, environment(x))
+  NextMethod(.Generic, x, size = size, rank = rank, ..., full = full)
 }
 
 
 ## extract formula
 ##
 ## Args:
-##   x    - (xselect)
+##   x    - (xsubset2)
 ##   rank - (integer)
-##   ...  - passed to 'variable.names.xselect'
+##   ...  - forwarded
 ##   full - (logical)
 ##
 ## Rval: (formula)
 ##
-formula.xselect <- function (x, rank = 1, ..., full = FALSE) {
-  ## formula interface?
-  if (is.null(x$terms)) {
-    return (NULL)
-  }
-  
-  ## extract variable names
-  y.name <- x$y.name
-  x.names <- variable.names(x, rank = rank, ..., full = full)
-
-  ## handle intercept
-  if (x$intercept) {
-    x.names <- x.names[-1]
-  }
-
-  ## construct formula
-  f <- paste(y.name, "~")
-  f <- paste(f, paste(x.names, collapse = "+"))
-  f <- paste(f, if (x$intercept) "+1" else "-1")
-
-  ## done
-  as.formula(f, environment(x))
+formula.xsubset2 <- function (x, rank = 1, ..., full = FALSE) {
+  NextMethod(.Generic, x, rank = rank, ..., full = full)
 }
 
 
-## extract model frame
+## extract model frame (base method)
 ##
 ## Args:
-##   formula - (xsubset)
-##   size    - (integer)
-##   rank    - (integer)
-##   ...     - passed to 'formula.xsubset'
+##   formula - (xsubset0)
+##   ...     - forwarded
 ##   full    - (logical)
 ##
 ## Rval: (data.frame)
 ##
-model.frame.xsubset <- function (formula, size, rank = 1, ...,
-                                 full = FALSE) {
+model.frame.xsubset0 <- function (formula, size, rank = 1, ..., full = FALSE) {
   ## did we keep the model?
   if (is.null(formula$model)) {
     return (NULL)
@@ -704,52 +706,51 @@ model.frame.xsubset <- function (formula, size, rank = 1, ...,
   f <- formula(formula, size = size, rank = rank, ...)
 
   ## done
-  model.frame(f, data = formula$model)
+  model.frame(f, data = formula$model, ...)
 }
 
 
 ## extract model frame
 ##
 ## Args:
-##   formula - (xselect)
+##   formula - (xsubset)
+##   size    - (integer)
 ##   rank    - (integer)
-##   ...     - passed to 'formula.xselect'
+##   ...     - forwarded
 ##   full    - (logical)
 ##
 ## Rval: (data.frame)
 ##
-model.frame.xselect <- function (formula, rank = 1, ..., full = FALSE) {
-  ## did we keep the model?
-  if (is.null(formula$model)) {
-    return (NULL)
-  }
-
-  ## full model
-  if (full) {
-    return (formula$model)
-  }
-
-  ## extract formula
-  f <- formula(formula, rank = rank, ...)
-
-  ## done
-  model.frame(f, data = formula$model)
+model.frame.xsubset <- function (formula, size, rank = 1, ..., full = FALSE) {
+  NextMethod(.Generic, formula, size = size, rank = rank, ..., full = full)
 }
 
 
-## extract model matrix
+## extract model frame
 ##
 ## Args:
-##   object - (xsubset)
-##   size   - (integer)
-##   rank   - (integer)
-##   ...    - forwarded to 'variable.names' and 'formula'
+##   formula - (xsubset2)
+##   rank    - (integer)
+##   ...     - forwarded
+##   full    - (logical)
+##
+## Rval: (data.frame)
+##
+model.frame.xsubset2 <- function (formula, rank = 1, ..., full = FALSE) {
+  NextMethod(.Generic, formula, rank = rank, ..., full = full)
+}
+
+
+## extract model matrix (base method)
+##
+## Args:
+##   object - (xsubset0)
+##   ...    - forwarded
 ##   full   - (logical)
 ##
 ## Rval: (matrix)
 ##
-model.matrix.xsubset <- function (object, size, rank = 1, ...,
-                                  full = FALSE) {
+model.matrix.xsubset0 <- function (object, ..., full = FALSE) {
   ## did we keep the model matrix?
   if (!is.null(object[["x"]])) {
     ## full model
@@ -758,7 +759,7 @@ model.matrix.xsubset <- function (object, size, rank = 1, ...,
     }
 
     ## extract names
-    x.names <- variable.names(object, size = size, rank = rank, ...)
+    x.names <- variable.names(object, ...)
 
     ## done
     return (object$x[, x.names])
@@ -770,48 +771,65 @@ model.matrix.xsubset <- function (object, size, rank = 1, ...,
   }
   
   ## exract formula
-  f <- formula(object, size = size, rank = rank, ..., full = full)
+  f <- formula(object, ..., full = full)
 
   ## done
-  model.matrix(f, data = model.frame(object, full = TRUE))
+  model.matrix(f, data = model.frame(object, full = TRUE), ...)
 }
 
 
 ## extract model matrix
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset)
+##   size   - (integer)
 ##   rank   - (integer)
-##   ...    - forwarded to 'variable.names' and 'formula'
+##   ...    - forwarded
 ##   full   - (logical)
 ##
 ## Rval: (matrix)
 ##
-model.matrix.xselect <- function (object, rank = 1, ..., full = FALSE) {
-  ## did we keep the model matrix?
-  if (!is.null(object[["x"]])) {
-    ## full model
-    if (full) {
-      return (object$x)
-    }
+model.matrix.xsubset <- function (object, size, rank = 1, ..., full = FALSE) {
+  NextMethod(.Generic, object, size = size, rank = rank, ..., full = full)
+}
 
-    ## extract names
-    x.names <- variable.names(object, rank = rank, ...)
 
-    ## done
-    return (object$x[, x.names])
+## extract model matrix
+##
+## Args:
+##   object - (xsubset2)
+##   rank   - (integer)
+##   ...    - forwarded
+##   full   - (logical)
+##
+## Rval: (matrix)
+##
+model.matrix.xsubset2 <- function (object, rank = 1, ..., full = FALSE) {
+  NextMethod(.Generic, object, rank = rank, ..., full = full)
+}
+
+
+## extract response variable (base method)
+##
+## Args:
+##   object - (xsubset0)
+##   ...    - forwarded
+##
+## Rval: (numeric[])
+##
+model.response.xsubset0 <- function (object, ...) {
+  ## did we keep the response variable?
+  if (!is.null(object[["y"]])) {
+    return (object$y)
   }
 
-  ## formula interface?
-  if (is.null(object$terms)) {
+  ## did we keep the model frame?
+  if (is.null(object$model)) {
     return (NULL)
   }
 
-  ## exract formula
-  f <- formula(object, rank = rank, ..., full = full)
-
   ## done
-  model.matrix(f, data = model.frame(object, full = TRUE))
+  model.response(object$model, ...)
 }
 
 
@@ -819,47 +837,25 @@ model.matrix.xselect <- function (object, rank = 1, ..., full = FALSE) {
 ##
 ## Args:
 ##   object - (xsubset)
-##   ...    - passed to 'model.response'
+##   ...    - forwarded
 ##
 ## Rval: (numeric[])
 ##
 model.response.xsubset <- function (object, ...) {
-  ## did we keep the response variable?
-  if (!is.null(object[["y"]])) {
-    return (object$y)
-  }
-
-  ## did we keep the model frame?
-  if (is.null(object$model)) {
-    return (NULL)
-  }
-
-  ## done
-  model.response(object$model, ...)
+  NextMethod(.Generic, object, ...)
 }
 
 
 ## extract response variable
 ##
 ## Args:
-##   object - (xselect)
-##   ...    - passed to 'model.response'
+##   object - (xsubset2)
+##   ...    - forwarded
 ##
 ## Rval: (numeric[])
 ##
-model.response.xselect <- function (object, ...) {
-  ## did we keep the response variable?
-  if (!is.null(object[["y"]])) {
-    return (object$y)
-  }
-
-  ## did we keep the model frame?
-  if (is.null(object$model)) {
-    return (NULL)
-  }
-
-  ## done
-  model.response(object$model, ...)
+model.response.xsubset2 <- function (object, ...) {
+  NextMethod(.Generic, object, ...)
 }
 
 
@@ -879,12 +875,12 @@ model.weights.xsubset <- function (object, ...) {
 ## extract model weights
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   ...    - ignored
 ##
 ## Rval: (numeric[])
 ##
-model.weights.xselect <- function (object, ...) {
+model.weights.xsubset2 <- function (object, ...) {
   object$weights
 }
 
@@ -905,13 +901,41 @@ model.offset.xsubset <- function (object, ...) {
 ## extract model offset
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   ...    - ignored
 ##
 ## Rval: (numeric[])
 ##
-model.offset.xselect <- function (object, ...) {
+model.offset.xsubset2 <- function (object, ...) {
   object$offset
+}
+
+
+## extract terms object (base method)
+##
+## Args:
+##   x    - (xsubset0)
+##   ...  - forwarded
+##   full - (logical)
+##
+## Rval: (terms)
+##
+terms.xsubset0 <- function (x, ..., full = FALSE) {
+  ## formula interface?
+  if (is.null(x$terms)) {
+    return (NULL)
+  }
+
+  ## trivial
+  if (full) {
+    return (x$terms)
+  }
+
+  ## extract formula
+  f <- formula(x, ...)
+
+  ## done
+  terms(f, ...)
 }
 
 
@@ -927,60 +951,30 @@ model.offset.xselect <- function (object, ...) {
 ## Rval: (terms)
 ##
 terms.xsubset <- function (x, size, rank = 1, ..., full = FALSE) {
-  ## formula interface?
-  if (is.null(x$terms)) {
-    return (NULL)
-  }
-
-  ## trivial
-  if (full) {
-    return (x$terms)
-  }
-
-  ## extract formula
-  f <- formula(x, size = size, rank = rank, ...)
-
-  ## done
-  terms(f, ...)
+  NextMethod(.Generic, x, size = size, rank = rank, ..., full = full)
 }
 
 
 ## extract terms object
 ##
 ## Args:
-##   x    - (xselect)
+##   x    - (xsubset2)
 ##   rank - (integer)
-##   ...  - passed to 'terms.formula'
+##   ...  - forwarded
 ##   full - (logical)
 ##
 ## Rval: (terms)
 ##
-terms.xselect <- function (x, rank = 1, ..., full = FALSE) {
-  ## formula interface?
-  if (is.null(x$terms)) {
-    return (NULL)
-  }
-
-  ## trivial
-  if (full) {
-    return (x$terms)
-  }
-
-  ## extract formula
-  f <- formula(x, rank = rank, ...)
-
-  ## done
-  terms(f, ...)
+terms.xsubset2 <- function (x, rank = 1, ..., full = FALSE) {
+  NextMethod(.Generic, x, rank = rank, ..., full = full)
 }
 
 
-## refit associated 'lm' object
+## refit (base method)
 ##
 ## Args:
-##   object - (xsubset)
-##   size   - (integer)
-##   rank   - (integer)
-##   ...    - forwarded
+##   object    - (xsubset)
+##   ...       - forwarded
 ##   mask.call - (logical) used internally
 ##
 ## Rval: (lm)
@@ -988,14 +982,14 @@ terms.xselect <- function (x, rank = 1, ..., full = FALSE) {
 ## Note:  'mask.call'
 ## Reconstruct 'call' object for pretty printing.
 ##
-refit.xsubset <- function (object, size, rank = 1, ..., mask.call = TRUE) {
+refit.xsubset0 <- function (object, ..., mask.call = TRUE) {
   ## formula interface?
   if (is.null(object$terms)) {
     return (NULL)
   }
 
   ## extract formula
-  f <- formula(object, size = size, rank = rank, ...)
+  f <- formula(object, ...)
 
   if (mask.call) {
     ## extract call to object
@@ -1034,13 +1028,13 @@ refit.xsubset <- function (object, size, rank = 1, ..., mask.call = TRUE) {
 }
 
 
-## refit associated 'lm' object
+## refit
 ##
 ## Args:
-##   object - (xselect)
-##   size   - (integer)
-##   rank   - (integer)
-##   ...    - forwarded to 'formula'
+##   object    - (xsubset)
+##   size      - (integer)
+##   rank      - (integer)
+##   ...       - forwarded
 ##   mask.call - (logical) used internally
 ##
 ## Rval: (lm)
@@ -1048,48 +1042,27 @@ refit.xsubset <- function (object, size, rank = 1, ..., mask.call = TRUE) {
 ## Note:  'mask.call'
 ## Reconstruct 'call' object for pretty printing.
 ##
-refit.xselect <- function (object, rank = 1, ..., mask.call = TRUE) {
-  ## formula interface?
-  if (is.null(object$terms)) {
-    return (NULL)
-  }
+refit.xsubset <- function (object, size, rank = 1, ..., mask.call = TRUE) {
+  NextMethod(.Generic, object, size = size, rank = rank, ...,
+             mask.call = mask.call)
+}
 
-  ## extract formula
-  f <- formula(object, rank = rank, ...)
 
-  if (mask.call) {
-    ## extract call to object
-    cl <- match.call(expand.dots = FALSE)
-    obj.call <- cl$object
-
-    ## construct call to model frame
-    mf.call <- call("model.frame")
-    mf.call$formula <- obj.call
-
-    ## construct call to model weights
-    w.call <- call("model.weights")
-    w.call$object <- obj.call
-
-    ## construct call to model offset
-    o.call <- call("model.offset")
-    o.call$object <- obj.call
-
-    ## construct call to lm
-    lm.call <- call("lm")
-    lm.call$formula <- f
-    lm.call$data <- mf.call
-    lm.call$weights <- w.call
-    lm.call$offset <- o.call
-
-    ## done
-    eval(lm.call, parent.frame())
-  } else {
-    args <- list(formula = f,
-                 data = model.frame(object, full = TRUE),
-                 weights = model.weights(object),
-                 offset = model.offset(object))
-    do.call("lm", args)
-  }
+## refit
+##
+## Args:
+##   object    - (xsubset2)
+##   rank      - (integer)
+##   ...       - forwarded
+##   mask.call - (logical) used internally
+##
+## Rval: (lm)
+##
+## Note:  'mask.call'
+## Reconstruct 'call' object for pretty printing.
+##
+refit.xsubset2 <- function (object, rank = 1, ..., mask.call = TRUE) {
+  NextMethod(.Generic, object, rank = rank, ..., mask.call = mask.call)
 }
 
 
@@ -1111,13 +1084,13 @@ coef.xsubset <- function (object, size, rank = 1, ...) {
 ## extract ceofficients
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   rank   - (integer)
 ##   ...    - forwarded
 ##
 ## Rval: (numeric[])
 ##
-coef.xselect <- function (object, rank = 1, ...) {
+coef.xsubset2 <- function (object, rank = 1, ...) {
   coef(refit(object, rank = rank, ..., mask.call = FALSE), ...)
 }
 
@@ -1140,13 +1113,13 @@ vcov.xsubset <- function (object, size, rank = 1, ...) {
 ## extract variance-covariance matrix
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   rank   - (integer)
 ##   ...    - forwarded
 ##
 ## Rval: (matrix)
 ##
-vcov.xselect <- function (object, rank = 1, ...) {
+vcov.xsubset2 <- function (object, rank = 1, ...) {
   vcov(refit(object, rank = rank, ..., mask.call = FALSE), ...)
 }
 
@@ -1169,13 +1142,13 @@ fitted.xsubset <- function (object, size, rank = 1, ...) {
 ## extract fitted values
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   rank   - (integer)
 ##   ...    - forwarded
 ##
 ## Rval: (numeric[])
 ##
-fitted.xselect <- function (object, rank = 1, ...) {
+fitted.xsubset2 <- function (object, rank = 1, ...) {
   fitted(refit(object, rank = rank, ..., mask.call = FALSE), ...)
 }
 
@@ -1198,13 +1171,13 @@ residuals.xsubset <- function (object, size , rank = 1, ...) {
 ## extract residuals
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   rank   - (integer)
 ##   ...    - forwarded
 ##
 ## Rval: (numeric[])
 ##
-residuals.xselect <- function (object, rank = 1, ...) {
+residuals.xsubset2 <- function (object, rank = 1, ...) {
   residuals(refit(object, rank = rank, ..., mask.call = FALSE), ...)
 }
 
@@ -1219,8 +1192,7 @@ residuals.xselect <- function (object, rank = 1, ...) {
 ##
 ## Rval: (numeric[])
 ##
-## Returns the deviance for the specified
-## subset size and rank.
+## Returns the deviance for the specified subset size and rank.
 ##
 deviance.xsubset <- function (object, size = NULL, rank = 1, ...) {
   if (is.null(size)) {
@@ -1239,10 +1211,9 @@ deviance.xsubset <- function (object, size = NULL, rank = 1, ...) {
 ##
 ## Rval: (numeric[])
 ##
-## Returns the deviance for the specified
-## subset size and rank.
+## Returns the deviance for the specified subset size and rank.
 ##
-deviance.xselect <- function (object, rank = 1, ...) {
+deviance.xsubset2 <- function (object, rank = 1, ...) {
   object$value[rank]
 }
 
@@ -1265,13 +1236,13 @@ logLik.xsubset <- function (object, size, rank = 1, ...) {
 ## extract log-likelihood
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   rank   - (integer)
 ##   ...    - forwarded
 ##
 ## Rval: (logLik)
 ##
-logLik.xselect <- function (object, rank = 1, ...) {
+logLik.xsubset2 <- function (object, rank = 1, ...) {
   logLik(refit(object, rank = rank, ..., mask.call = FALSE), ...)
 }
 
@@ -1281,7 +1252,7 @@ logLik.xselect <- function (object, rank = 1, ...) {
 ## Args:
 ##   object - (xsubset)
 ##   size   - (integer[])
-##   rank   - (integer[])
+##   rank   - (integer)
 ##   ...    - forwarded
 ##   k      - (integer)
 ##
@@ -1318,18 +1289,14 @@ AIC.xsubset <- function (object, size = NULL, rank = 1, ..., k = 2) {
 ## compute AIC
 ##
 ## Args:
-##   object - (xselect)
+##   object - (xsubset2)
 ##   rank   - (integer[])
 ##   ...    - forwarded
 ##   k      - (integer)
 ##
 ## Rval: (numeric|data.frame)
 ##
-## Note:  'size'
-## The default behavior is to extract the AIC for
-## all selected subset sizes.
-##
-AIC.xselect <- function (object, rank = 1, ..., k = 2) {
+AIC.xsubset2 <- function (object, rank = 1, ..., k = 2) {
   ## refits
   fitted <- lapply(rank, function (rk) {
     refit(object, rank = rk, ..., mask.call = FALSE)
@@ -1409,16 +1376,16 @@ summary.xsubset <- function (object, size = NULL, rank = 1,
 }
 
 
-## summary for 'xselect' objects
+## summary for 'xsubset2' objects
 ##
 ## Args:
-##   object      - (xselect)
+##   object      - (xsubset2)
 ##   rank        - (integer[])
 ##   ...         - forwarded
 ##
-## Rval: (summary.xselect)
+## Rval: (summary.xsubset2)
 ##
-summary.xselect <- function (object, rank = NULL, ...) {
+summary.xsubset2 <- function (object, rank = NULL, ...) {
   paste <- function (...) base::paste(..., sep = "")
 
   ## extract criteria and determine best model
@@ -1447,7 +1414,7 @@ summary.xselect <- function (object, rank = NULL, ...) {
                which   = object$which[, rank],
                rss     = rss,
                aic     = aic)
-  class(rval) <- "summary.xselect"
+  class(rval) <- "summary.xsubset2"
 
   ## done
   rval
@@ -1502,16 +1469,16 @@ print.summary.xsubset <- function (x, digits = max(3, getOption("digits") - 3), 
 }
 
 
-## print 'xselect' summary
+## print 'xsubset2' summary
 ##
 ## Args:
-##   x      - (summary.xselect)
+##   x      - (summary.xsubset2)
 ##   digits - (integer)
 ##   ...    - ignored
 ##
-## Rval: (summary.xselect) invisible
+## Rval: (summary.xsubset2) invisible
 ##
-print.summary.xselect <- function (x, digits = max(3, getOption("digits") - 3), ...)
+print.summary.xsubset2 <- function (x, digits = max(3, getOption("digits") - 3), ...)
 {
   catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
   paste <- function (..., sep = "") base::paste(..., sep = sep)
@@ -1616,10 +1583,10 @@ plot.summary.xsubset <- function (x, type = "b", main = NULL, xlab = NULL,
 }
 
 
-## plot 'xselect' summary
+## plot 'xsubset2' summary
 ##
 ## Args:
-##   x      - (xselect)
+##   x      - (xsubset2)
 ##   type   - (character) plot type
 ##   main   - (character) main title
 ##   xlab   - (character) x label
@@ -1629,11 +1596,11 @@ plot.summary.xsubset <- function (x, type = "b", main = NULL, xlab = NULL,
 ##   legend - (logical) legend?
 ##   ...    - forwarded
 ##
-## Rval: (summary.xselect) invisible
+## Rval: (summary.xsubset2) invisible
 ##
 ## All arguments are passed to 'plot.default'.
 ##
-plot.summary.xselect <- function (x, type = "b", main = NULL, xlab = NULL,
+plot.summary.xsubset2 <- function (x, type = "b", main = NULL, xlab = NULL,
                                   ylab = "", col = c("blue", "red"), lty = 1,
                                   legend = TRUE, ...)
 {
