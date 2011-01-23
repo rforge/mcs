@@ -61,7 +61,7 @@ NULL, criterion = 0, tolerance = 0, pradius = NULL, nbest = 1, \ldots)
   \item{criterion}{The selection criterion.  Available criteria are
   \code{"RSS"}, \code{"AIC"}, and \code{"BIC"}.  If \code{criterion} is
   numeric, then it is interpreted as a penalty per parameter (see
-  \code{\link[stats]{AIC}).}
+  \code{\link[stats]{AIC}}).}
 
   \item{tolerance}{The tolerance, where \code{tolerance[n]} is the
     tolerance employed for subsets of size \code{n}.}

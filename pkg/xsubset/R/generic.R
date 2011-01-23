@@ -1,16 +1,36 @@
 
-xsubset <- function (object, ...) UseMethod("xsubset")
 
-refit <- function (object, ...) UseMethod("refit")
+xsubset <- function (object, ...)
+  UseMethod("xsubset")
 
-model.response <- function (object, ...) UseMethod("model.response")
-model.response.default <- function (object, ...) stats::model.response(object)
 
-model.weights <- function (object, ...) UseMethod("model.weights")
-model.weights.default <- function (object, ...) stats::model.weights(object)
+refit <- function (object, ...)
+  UseMethod("refit")
 
-model.offset <- function (object, ...) UseMethod("model.offset")
-model.offset.default <- function (object, ...) stats::model.offset(object)
 
-environment <- function (object, ...) UseMethod("environment")
-environment.default <- function (object, ...) base::environment(object)
+model.response <- function (data, ...)
+  UseMethod("model.response")
+
+model.response.default <- function(data, ...)
+  stats::model.response(data, ...)
+
+
+model.weights <- function (x, ...)
+  UseMethod("model.weights")
+
+model.weights.default <- function (x, ...)
+  stats::model.weights(x, ...)
+
+
+model.offset <- function (x, ...)
+  UseMethod("model.offset")
+
+model.offset.default <- function (x, ...)
+  stats::model.offset(x, ...)
+
+
+environment <- function (fun, ...)
+  UseMethod("environment")
+
+environment.default <- function (fun, ...)
+  base::environment(fun, ...)

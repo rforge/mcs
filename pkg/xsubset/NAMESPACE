@@ -20,7 +20,6 @@ S3method("environment", "default")
 S3method("xsubset", "data.frame")
 S3method("xsubset", "lm")
 S3method("xsubset", "formula")
-S3method("xsubset", "matrix")
 S3method("xsubset", "default")
 
 ## extractor methods for 'xsubset' objects
