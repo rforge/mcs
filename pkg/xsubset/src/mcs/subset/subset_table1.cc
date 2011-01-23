@@ -91,26 +91,28 @@ namespace mcs
                       typename S>
              class Derived>
     void
-    SUBSET_TABLE1::report(const Size n,
+    SUBSET_TABLE1::report(Size n,
                           const std::vector<Size>& s,
                           const Size k,
                           const mcs::core::numeric::vector_base<Value, Size, Derived>& z)
     {
       Value rss = 0;
-      for (Size j = n + 1; (--j) > k; )
+      //for (Size j = n + 1; (--j) - k; )
+      do
         {
-          rss += mcs::core::util::math::sqr(z(j));
-          Value val = c_.value(j, rss);
+          rss += mcs::core::util::math::sqr(z(n));
+          Value val = c_.value(n, rss);
 
           if (std::get<0>(tab_[0]) > val)
             {
               std::pop_heap(tab_.begin(), tab_.end(), entry_comp());
               std::get<0>(tab_[nbest_ - 1]) = val;
-              std::get<1>(tab_[nbest_ - 1]) = j;
-              std::copy_n(s.begin(), j, std::get<2>(tab_[nbest_ - 1]).begin());
+              std::get<1>(tab_[nbest_ - 1]) = n;
+              std::copy_n(s.begin(), n, std::get<2>(tab_[nbest_ - 1]).begin());
               std::push_heap(tab_.begin(), tab_.end(), entry_comp());
             }
         }
+      while ((--n) - k);
     }
 
 

@@ -71,24 +71,26 @@ namespace mcs
                       typename S>
              class Derived>
     void
-    SUBSET_TABLE::report(const Size n,
+    SUBSET_TABLE::report(Size n,
                          const std::vector<Size>& s,
                          const Size k,
                          const mcs::core::numeric::vector_base<Value, Size, Derived>& z)
     {
       Value rss = 0;
-      for (Size j = n + 1; (--j) - k; )
+      //for (Size j = n + 1; (--j) - k; )
+      do
         {
-          rss += mcs::core::util::math::sqr(z(j));
-          
-          if (std::get<0>(tab_[j][0]) > rss)
+          rss += mcs::core::util::math::sqr(z(n));
+
+          if (std::get<0>(tab_[n][0]) > rss)
             {
-              std::pop_heap(tab_[j].begin(), tab_[j].end(), entry_comp());
-              std::get<0>(tab_[j][nbest_ - 1]) = rss;
-              std::copy_n(s.begin(), j, std::get<1>(tab_[j][nbest_ - 1]).begin());
-              std::push_heap(tab_[j].begin(), tab_[j].end(), entry_comp());
+              std::pop_heap(tab_[n].begin(), tab_[n].end(), entry_comp());
+              std::get<0>(tab_[n][nbest_ - 1]) = rss;
+              std::copy_n(s.begin(), n, std::get<1>(tab_[n][nbest_ - 1]).begin());
+              std::push_heap(tab_[n].begin(), tab_[n].end(), entry_comp());
             }
         }
+      while ((--n) - k);
     }
 
 
@@ -97,8 +99,8 @@ namespace mcs
     void
     SUBSET_TABLE::sort()
     {
-      for (Size j = 0; j <= nvar_; ++j)
-        std::sort_heap(tab_[j].begin(), tab_[j].end(), entry_comp());
+      for (Size n = 0; n <= nvar_; ++n)
+        std::sort_heap(tab_[n].begin(), tab_[n].end(), entry_comp());
     }
 
 
@@ -108,7 +110,6 @@ namespace mcs
     SUBSET_TABLE::get(Size n,
                       Size i) const
     {
-      //return tab_[n][nbest_ - i - 1];
       return tab_[n][i];
     }
 

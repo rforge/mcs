@@ -29,8 +29,7 @@ y.return = FALSE, contrasts = NULL, offset = NULL, \ldots)
 \method{xsubset}{lm}(object, \dots)
 
 \method{xsubset}{default}(object, include = NULL, exclude = NULL, size =
-NULL, criterion = "rss", tolerance = 0, pradius = NULL, nbest = 1,
-\ldots)
+NULL, criterion = 0, tolerance = 0, pradius = NULL, nbest = 1, \ldots)
 
 }
 
@@ -43,33 +42,34 @@ NULL, criterion = "rss", tolerance = 0, pradius = NULL, nbest = 1,
 
   \item{y}{A numeric vector representing the response variable.}
 
-  \item{y.which}{The index (numeric or character) of the
-    response variable in the data frame.}
+  \item{y.which}{The index (numeric or character) of the response
+    variable in the data frame.}
 
-  \item{x.return, y.return}{Logical (see \code{\link[stats]{lm}}
-    for details).}
+  \item{x.return, y.return}{Logical (see \code{\link[stats]{lm}} for
+    details).}
 
   \item{include, exclude}{Index vectors designating variables that are
-    forced into or out of the model, respectively.  The vectors may
+    forced in or out of the model, respectively.  The vectors may
     consist of (integer) indexes, (character) names, or (logical) bits
     selecting the desired columns.  By default, all variables are
     included.  The intercept is included if present in the model.}
 
   \item{size}{Vector of subset sizes (counting the intercept, if any) to
-    be evaluated.  If not specified, the value of \code{size} is
-    determined from \code{include} and \code{exclude}.}
+    be evaluated.  By default, all possible sizes (determined by
+    \code{include} and \code{exclude}) are computed.}
 
-  \item{criterion}{The information criterion to use.  Available criteria
-  are \code{"RSS"}, \code{"AIC"}, \code{"BIC"} and \code{"Cp"}.}
+  \item{criterion}{The selection criterion.  Available criteria are
+  \code{"RSS"}, \code{"AIC"}, and \code{"BIC"}.  If \code{criterion} is
+  numeric, then it is interpreted as a penalty per parameter (see
+  \code{\link[stats]{AIC}).}
 
-  \item{tolerance}{The tolerance, where \code{tolerance[j]} is the
-    tolerance employed for subsets of size \code{j}.}
+  \item{tolerance}{The tolerance, where \code{tolerance[n]} is the
+    tolerance employed for subsets of size \code{n}.}
 
-  \item{pradius}{Preordering radius, by default \code{round(nvar/3)},
-    where \code{nvar} is the number of regressors.}
+  \item{pradius}{Preordering radius, by default \code{round(n/3)},
+    where \code{n} is the number of regressors.}
 
-  \item{nbest}{Number of best subsets to report for each size (number of
-    ranks).}
+  \item{nbest}{Number of best subsets to report for each subset size.}
 
   \item{\dots}{Ignored.}
 
@@ -87,26 +87,32 @@ NULL, criterion = "rss", tolerance = 0, pradius = NULL, nbest = 1,
   can also be passed in directly.  In all cases, the default method is
   eventually called.
 
-  The number of observations (rows) has to be larger than the number of
-  variables (columns).  By default, the best subset model is derived for
-  each number of variables, but the scope of the search can be limited
-  to certain subset sizes by setting \code{size}.
+  By default, the method computes the \code{nbest} best subset models
+  for every subset size, where the "best" models are the models with the
+  lowest RSS.  The scope of the search can be limited to certain subset
+  sizes by setting \code{size}.  Alternatively, the overall (over all
+  sizes) \code{nbest} subset models may be computed according to an
+  information criterion of the AIC family specified by \code{criterion}.
+  Note that the \code{size} argument is ignored when a criterion other
+  than the RSS is employed.
 
   \bold{Preordering:} The function will preorder the variables to reduce
-  execution times if \code{pradius}\eqn{>0} (\code{pradius}\eqn{\le n}),
+  execution time if \code{pradius}\eqn{>0} (\code{pradius}\eqn{\le n}),
   where \eqn{n} is the total number of regressors.  Best execution times
-  are usually attained for approximately \code{pradius}\eqn{=n/3}, which
+  are usually attained for \code{pradius}\eqn{=n/3} approximately, which
   is the default value.
 
-  \bold{Heuristic:} If the exact solution is not needed, a tolerance
-  \code{tolerance}\eqn{>0} can be specified for each subset size
-  (expanded if necessary) to speed up the procedure.  The solution
-  satisfies RSS\eqn{(j)\le(1+\tau_j)}RSS\eqn{^*(j)}, where RSS\eqn{(j)}
-  is the residual sum of squares (RSS) of the subset of size \eqn{j},
-  RSS\eqn{^*} is the (theoretical) RSS of the exact solution, and
-  \eqn{\tau_j} the tolerance for subset size \eqn{j}.  Specifically,
-  \code{tolerance[j]} is the tolerance for subsets of size
-  \code{j}.
+  \bold{Heuristic:} If the exact solution is not needed, a tolerance may
+  be specified for each subset size (expanded if necessary) to speed up
+  the procedure.  The solution satisfies
+  RSS\eqn{(n)\le(1+\tau_n)}RSS\eqn{^*(n)}, where RSS\eqn{(n)} is the
+  residual sum of squares (RSS) of the solution subset of size \eqn{n},
+  RSS\eqn{^*} is the RSS of the exact solution, and \eqn{\tau_n} the
+  tolerance for subset size \eqn{n}.  By default, \eqn{\tau_n=0} for all
+  \eqn{n}.  Setting \eqn{\tau_n=+\infty} effectively excludes size
+  \eqn{n} from the subset search.  If a selection criterion other than
+  RSS is used, a single tolerance value for all subset sizes is
+  employed.
 
   After the input arguments have been processed, the call is forwarded
   to \code{\link{xselect}}.
@@ -115,35 +121,25 @@ NULL, criterion = "rss", tolerance = 0, pradius = NULL, nbest = 1,
   available for objects of class \code{"xsubset"}.  See
   \code{\link{Methods}} for more details.
 
+  Note: The number of observations (rows) must be larger than the number
+  of variables (columns).
+
 }
 
 \value{
 
-  An object of class \code{"xsubset"}, i.e. a list with the following
-  components:
+  An object of class \code{"xsubset"}, i.e. a list containing the
+  unprocessed (raw) and processed (as forwarded to \code{xselect})
+  arguments, as well as
 
-  \item{call}{The original function call.}
+  \item{value}{If the selection criterion is the RSS, then \code{value}
+  is a two-dimensional array with the RSS of the \code{nbest} best
+  subset models for all subset sizes.  Otherwise, a one-dimensional
+  array with the AIC of the overall best models.}
 
-  \item{lm}{An object of type \code{lm} representing the full model.}
-  
-  \item{nreg}{The (original) number of regressors.}
-
-  \item{include}{The (computed) index of included variables.}
-
-  \item{exclude}{The (computed) index of excluded variables.}
-
-  \item{size}{A vector giving the evaluated subset sizes (computed).}
-
-  \item{which}{A list indicating the selected variables.  The component
-    \code{which[[i]]} is a numeric vector of length \code{size[i]}
-    holding the indexes of the variables that form the selected subset
-    of size \code{size[i]}.}
-
-  \item{rss}{A vector indicating the residual sum of squares (RSS) of
-    the selected subsets.  The element \code{rss[i]} is the RSS of the
-    subset of size \code{size[i]}.}
-
-  \item{intercept}{Whether an intercept is included in the regression.}
+  \item{which}{If the selection criterion is the RSS, then \code{which}
+  is three-dimensional logical array indication the composition of each
+  subset in terms of parameters.  Otherwise, a two-dimensional array.}
 
 }
 
@@ -171,7 +167,7 @@ data("AirPollution", package = "xsubset")
 #################
 
 ## simplest form
-xs <- xsubset(AirPollution, y = "mortality")
+xs <- xsubset(AirPollution, y.which = "mortality")
 
 ## which, in this case, is equivalent to
 ## (by default, 'y' is last column)

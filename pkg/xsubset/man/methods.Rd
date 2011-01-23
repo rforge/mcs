@@ -23,30 +23,12 @@
 \alias{logLik.xsubset}
 \alias{AIC.xsubset}
 
-\alias{environment.xselect}
-\alias{variable.names.xselect}
-\alias{formula.xselect}
-\alias{model.frame.xselect}
-\alias{model.matrix.xselect}
-\alias{model.response.xselect}
-\alias{model.weights.xselect}
-\alias{model.offset.xselect}
-\alias{terms.xselect}
-\alias{refit.xselect}
-\alias{coef.xselect}
-\alias{vcov.xselect}
-\alias{fitted.xselect}
-\alias{residuals.xselect}
-\alias{deviance.xselect}
-\alias{logLik.xselect}
-\alias{AIC.xselect}
 
-
-\title{Methods for xsubset and xselect objects}
+\title{Methods for xsubset objects}
 
 \description{
 
-  Methods \code{\link{xsubset}} and \code{\link{xselect}} objects.
+  Methods \code{\link{xsubset}} objects.
 
 }
 

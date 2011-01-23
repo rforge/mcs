@@ -5,11 +5,6 @@ xsubset <- function (object, ...) {
 }
 
 
-xselect <- function (object, ...) {
-  UseMethod("xselect")
-}
-
-
 refit <- function (object, ...) UseMethod("refit")
 
 
