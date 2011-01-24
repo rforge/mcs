@@ -1,7 +1,6 @@
 /**
  * @file slice_matrix.cc
  */
-
 #ifndef MCS_CORE_NUMERIC_SLICE_MATRIX_CC
 #define MCS_CORE_NUMERIC_SLICE_MATRIX_CC
 

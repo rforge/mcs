@@ -37,7 +37,7 @@ namespace mcs
     {
       Criterion<Value, Size> crit;
 
-      return select1(x, mark, crit, tau, mark, prad, nbest, nodes);
+      return select1(x, mark, crit, tau, prad, nbest, nodes);
     }
 
 

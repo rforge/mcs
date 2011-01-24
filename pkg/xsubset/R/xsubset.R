@@ -274,7 +274,9 @@ xsubset.default <- function (object, y, include = NULL, exclude = NULL,
 
   ## process tolerance
   tolerance <- rep(tolerance, length.out = nvar0)
-  tolerance[-size] <- .Machine$double.xmax
+  if (penalty == 0) {
+    tolerance[-size] <- .Machine$double.xmax
+  }
 
   ## call C function
   C_args <- list(## in
@@ -287,9 +289,9 @@ xsubset.default <- function (object, y, include = NULL, exclude = NULL,
                  pradius   = as.integer(pradius),
                  nbest     = as.integer(nbest),
                  ## out
-                 value = as.double(rep(0, nvar0 * nbest)),
-                 which = as.logical(rep(0, nvar0 * nbest * nvar0)),
-                 nodes = integer(1))
+                 value     = as.double(rep(0, nvar0 * nbest)),
+                 which     = as.logical(rep(0, nvar0 * nbest * nvar0)),
+                 nodes     = integer(1))
   C_rval <- do.call(".C", c(name = "R_select", C_args))
 
   ## return value
@@ -318,10 +320,12 @@ xsubset.default <- function (object, y, include = NULL, exclude = NULL,
     rval$value <- array(NA, dim = c(nbest, nvar),
                         dimnames = list(1:nbest, 1:nvar))
     rval$value[, 1:nvar0] <- C_rval$value
+    rval$value[, -size] <- NA
     ## sel
     rval$which <- array(NA, dim = c(nvar, nbest, nvar),
                         dimnames = list(x.names, 1:nbest, 1:nvar))
     rval$which[which0, , 1:nvar0] <- C_rval$which
+    rval$which[, , -size] <- NA
     ## class
     class(rval) <- c("xsubset", class(rval))
   } else {
@@ -335,6 +339,9 @@ xsubset.default <- function (object, y, include = NULL, exclude = NULL,
     ## class
     class(rval) <- c("xsubset2", class(rval))
   }
+
+  ## pretty tolerance
+  rval$tolerance[rval$tolerance == .Machine$double.xmax] <- +Inf
 
   ## FIXME: enhance C code to mark uninitialized entries
   rval$value[rval$value == .Machine$double.xmax] <- NA
@@ -1356,6 +1363,9 @@ summary.xsubset <- function (object, size = NULL, rank = 1, penalty = 2, ...) {
   ## names
   names(rss) <- names(aic) <- size
 
+  ## which
+  which <- object$which[, rank, ][, size, drop = FALSE]
+
   ## return value
   rval <- list(call    = object$call,
                include = object$include,
@@ -1363,7 +1373,7 @@ summary.xsubset <- function (object, size = NULL, rank = 1, penalty = 2, ...) {
                nbest   = object$nbest,
                size    = size,
                rank    = rank,
-               which   = object$which[, rank, size],
+               which   = which,
                rss     = rss,
                penalty = penalty,
                aic     = aic,
@@ -1410,7 +1420,7 @@ summary.xsubset2 <- function (object, rank = NULL, ...) {
                exclude = object$exclude,
                penalty = object$penalty,
                rank    = rank,
-               which   = object$which[, rank],
+               which   = object$which[, rank, drop = FALSE],
                rss     = rss,
                aic     = aic)
   class(rval) <- "summary.xsubset2"
