@@ -99,7 +99,7 @@ xsubset.formula <- function (object, data = NULL, row.subset = NULL,
   call[[1]] <- as.name("xsubset")
 
   ## terms
-  t <- terms(object)
+  t <- terms(object, data = data)
 
   ## data
   if (is.null(data)) {
@@ -1330,8 +1330,7 @@ AIC.xsubset2 <- function (object, rank = 1, ..., k = 2) {
 ##
 ## Rval: (summary.xsubset)
 ##
-summary.xsubset <- function (object, size = NULL, rank = 1,
-                             penalty = 2, ...) {
+summary.xsubset <- function (object, size = NULL, rank = 1, penalty = 2, ...) {
   paste <- function (...) base::paste(..., sep = "")
 
   ## default size
@@ -1348,27 +1347,27 @@ summary.xsubset <- function (object, size = NULL, rank = 1,
   ## aic
   if (length(size) > 1) {
     aic <- AIC(object, size = size, rank = rank, ..., k = penalty)$AIC
-    best.which <- match(min(aic), aic)
+    best <- size[match(min(aic), aic)]
   } else {
     aic <- AIC(object, size = size, rank = rank, ..., k = penalty)
-    best.which <- NULL
+    best <- NULL
   }
 
   ## names
   names(rss) <- names(aic) <- size
 
   ## return value
-  rval <- list(call       = object$call,
-               include    = object$include,
-               exclude    = object$exclude,
-               nbest      = object$nbest,
-               size       = size,
-               rank       = rank,
-               which      = object$which[, rank, size],
-               rss        = rss,
-               penalty    = penalty,
-               aic        = aic,
-               best.which = best.which)
+  rval <- list(call    = object$call,
+               include = object$include,
+               exclude = object$exclude,
+               nbest   = object$nbest,
+               size    = size,
+               rank    = rank,
+               which   = object$which[, rank, size],
+               rss     = rss,
+               penalty = penalty,
+               aic     = aic,
+               best    = best)
   class(rval) <- "summary.xsubset"
 
   ## done
@@ -1435,6 +1434,9 @@ print.summary.xsubset <- function (x, digits = max(3, getOption("digits") - 3), 
   catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
   paste <- function (..., sep = "") base::paste(..., sep = sep)
 
+  ## best
+  best.which <- match(x$best, x$size)
+
   ## call
   catln()
   catln("Call:")
@@ -1450,7 +1452,7 @@ print.summary.xsubset <- function (x, digits = max(3, getOption("digits") - 3), 
   which.x <- ifelse(x$which, "x", "")
   rownames(which.x)[x$include] <- paste("+", rownames(which.x)[x$include])
   rownames(which.x)[x$exclude] <- paste("-", rownames(which.x)[x$exclude])
-  colnames(which.x)[x$best.which] <- paste(colnames(which.x)[x$best.which], "*")
+  colnames(which.x)[best.which] <- paste(colnames(which.x)[best.which], "*")
   print(which.x, quote = FALSE)
 
   ## fit
@@ -1458,10 +1460,10 @@ print.summary.xsubset <- function (x, digits = max(3, getOption("digits") - 3), 
   catln("Model fit:")
   fit <- rbind(x$aic, x$rss)
   rownames(fit) <- c("AIC", "RSS")
-  colnames(fit)[x$best.which] <- paste(colnames(fit)[x$best.which], "*")
+  colnames(fit)[best.which] <- paste(colnames(fit)[best.which], "*")
   print(fit, digits = digits)
   catln()
-  catln("AIC: penalty = ", x$penalty)
+  catln("AIC: penalty = ", format(x$penalty, digits = digits))
   catln()
   catln("* best subset")
     
