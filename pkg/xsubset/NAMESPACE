@@ -6,7 +6,7 @@ import("stats", "graphics")
 useDynLib("xsubset")
 
 
-## new generics
+## export new generics
 ##
 ## do not export these generics:
 ##   model.response
@@ -18,12 +18,12 @@ export("xsubset",
        "refit")
 
 
-## misc. methods
+## default generator methods
 ##
-## S3method("model.response", "default")
-## S3method("model.weights", "default")
-## S3method("model.offset", "default")
-## S3method("environment", "default")
+S3method("model.response", "default")
+S3method("model.weights", "default")
+S3method("model.offset", "default")
+S3method("environment", "default")
 
 
 ## 'xsubset' generator methods
@@ -34,19 +34,19 @@ S3method("xsubset", "formula")
 S3method("xsubset", "default")
 
 
-## extractor methods for 'xsubset' objects
+## 'xsubset' extractor methods
 ##
 S3method("print", "xsubset")
 S3method("plot", "xsubset")
-## S3method("environment", "xsubset")
+S3method("environment", "xsubset")
 S3method("variable.names", "xsubset")
 S3method("formula", "xsubset")
 S3method("terms", "xsubset")
 S3method("model.frame", "xsubset")
 S3method("model.matrix", "xsubset")
-## S3method("model.response", "xsubset")
-## S3method("model.weights", "xsubset")
-## S3method("model.offset", "xsubset")
+S3method("model.response", "xsubset")
+S3method("model.weights", "xsubset")
+S3method("model.offset", "xsubset")
 S3method("refit", "xsubset")
 S3method("coef", "xsubset")
 S3method("vcov", "xsubset")
@@ -60,19 +60,19 @@ S3method("print", "summary.xsubset")
 S3method("plot", "summary.xsubset")
 
 
-## extractor methods for 'xsubset2' objects
+## 'xsubset2' extractor methods
 ##
 S3method("print", "xsubset2")
 S3method("plot", "xsubset2")
-## S3method("environment", "xsubset2")
+S3method("environment", "xsubset2")
 S3method("variable.names", "xsubset2")
 S3method("formula", "xsubset2")
 S3method("terms", "xsubset2")
 S3method("model.frame", "xsubset2")
 S3method("model.matrix", "xsubset2")
-## S3method("model.response", "xsubset2")
-## S3method("model.weights", "xsubset2")
-## S3method("model.offset", "xsubset2")
+S3method("model.response", "xsubset2")
+S3method("model.weights", "xsubset2")
+S3method("model.offset", "xsubset2")
 S3method("refit", "xsubset2")
 S3method("coef", "xsubset2")
 S3method("vcov", "xsubset2")
@@ -84,3 +84,14 @@ S3method("AIC", "xsubset2")
 S3method("summary", "xsubset2")
 S3method("print", "summary.xsubset2")
 S3method("plot", "summary.xsubset2")
+
+
+## 'xsubset0' extractor methods (base methods)
+##
+S3method("environment", "xsubset0")
+S3method("formula", "xsubset0")
+S3method("model.frame", "xsubset0")
+S3method("model.matrix", "xsubset0")
+S3method("model.response", "xsubset0")
+S3method("terms", "xsubset0")
+S3method("refit", "xsubset0")
