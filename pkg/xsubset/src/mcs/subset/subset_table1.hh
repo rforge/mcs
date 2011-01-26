@@ -33,8 +33,8 @@ namespace mcs
       {
 
         bool
-        operator ()(const std::tuple<Value, Size, std::vector<Size> >& x1,
-                    const std::tuple<Value, Size, std::vector<Size> >& x2);
+        operator ()(const std::tuple<Value, Size, std::vector<Size>, Value>& x1,
+                    const std::tuple<Value, Size, std::vector<Size>, Value>& x2);
 
       };
 
@@ -47,7 +47,7 @@ namespace mcs
 
       typename Criterion<Value, Size>::instance c_;
 
-      std::vector<std::tuple<Value, Size, std::vector<Size> > > tab_;
+      std::vector<std::tuple<Value, Size, std::vector<Size>, Value> > tab_;
 
 
     public:
@@ -74,7 +74,7 @@ namespace mcs
       void
       sort();
 
-      std::tuple<Value, Size, std::vector<Size> >
+      std::tuple<Value, Size, std::vector<Size>, Value>
       get(Size i) const;
 
     };

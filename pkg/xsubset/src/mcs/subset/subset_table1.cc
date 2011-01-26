@@ -34,8 +34,8 @@ namespace mcs
                       typename S>
              class Criterion>
     bool
-    SUBSET_TABLE1::entry_comp::operator ()(const std::tuple<Value, Size, std::vector<Size> >& x1,
-                                           const std::tuple<Value, Size, std::vector<Size> >& x2)
+    SUBSET_TABLE1::entry_comp::operator ()(const std::tuple<Value, Size, std::vector<Size>, Value>& x1,
+                                           const std::tuple<Value, Size, std::vector<Size>, Value>& x2)
     {
       return std::get<0>(x1) < std::get<0>(x2);
     }
@@ -52,8 +52,7 @@ namespace mcs
       nvar_(nvar),
       nbest_(nbest),
       c_(c),
-      tab_(nbest_, std::make_tuple(std::numeric_limits<Value>::max(),
-                                   Size(0), std::vector<Size>(nvar_, 0)))
+      tab_(nbest_, std::make_tuple(std::numeric_limits<Value>::max(), Size(0), std::vector<Size>(nvar_, 0), Value(0)))
     {
     }
 
@@ -109,6 +108,7 @@ namespace mcs
               std::get<0>(tab_[nbest_ - 1]) = val;
               std::get<1>(tab_[nbest_ - 1]) = n;
               std::copy_n(s.begin(), n, std::get<2>(tab_[nbest_ - 1]).begin());
+              std::get<3>(tab_[nbest_ - 1]) = rss;
               std::push_heap(tab_.begin(), tab_.end(), entry_comp());
             }
         }
@@ -133,7 +133,7 @@ namespace mcs
              template<typename V,
                       typename S>
              class Criterion>
-    std::tuple<Value, Size, std::vector<Size> >
+    std::tuple<Value, Size, std::vector<Size>, Value>
     SUBSET_TABLE1::get(Size i) const
     {
       return tab_[i];

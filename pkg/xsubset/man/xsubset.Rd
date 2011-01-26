@@ -18,15 +18,11 @@
 
 xsubset(object, \dots)
 
-\method{xsubset}{matrix}(object, y = NULL, \ldots)
+\method{xsubset}{lm}(object, \dots)
 
-\method{xsubset}{data.frame}(object, y.which = 1, \dots)
-
-\method{xsubset}{formula}(object, data = NULL, row.subset = NULL,
+\method{xsubset}{formula}(formula, data = NULL, row.subset = NULL,
 weights = NULL, na.action = na.omit, model = TRUE, x.return = FALSE,
 y.return = FALSE, contrasts = NULL, offset = NULL, \ldots)
-
-\method{xsubset}{lm}(object, \dots)
 
 \method{xsubset}{default}(object, include = NULL, exclude = NULL, size =
 NULL, criterion = 0, tolerance = 0, pradius = NULL, nbest = 1, \ldots)
@@ -35,9 +31,9 @@ NULL, criterion = 0, tolerance = 0, pradius = NULL, nbest = 1, \ldots)
 
 \arguments{
 
-  \item{object}{An R object.}
+  \item{formula,object}{An R object.}
 
-  \item{data, row.subset, weights, na.action, model, x, contrasts,
+  \item{data,row.subset, weights, na.action, model, x, contrasts,
     offset}{Arguments forwarded to \code{\link[stats]{lm}}.}
 
   \item{y}{A numeric vector representing the response variable.}
@@ -45,10 +41,10 @@ NULL, criterion = 0, tolerance = 0, pradius = NULL, nbest = 1, \ldots)
   \item{y.which}{The index (numeric or character) of the response
     variable in the data frame.}
 
-  \item{x.return, y.return}{Logical (see \code{\link[stats]{lm}} for
+  \item{x.return,y.return}{Logical (see \code{\link[stats]{lm}} for
     details).}
 
-  \item{include, exclude}{Index vectors designating variables that are
+  \item{include,exclude}{Index vectors designating variables that are
     forced in or out of the model, respectively.  The vectors may
     consist of (integer) indexes, (character) names, or (logical) bits
     selecting the desired columns.  By default, all variables are

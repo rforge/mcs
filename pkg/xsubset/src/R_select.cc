@@ -21,7 +21,7 @@ do_select(const mcs::subset::lm<double, int>& lm,
           const std::vector<double>& tau,
           const int prad,
           const int nbest,
-          double* value,
+          double* rss,
           int* which,
           unsigned long& nodes)
 {
@@ -37,12 +37,12 @@ do_select(const mcs::subset::lm<double, int>& lm,
       for (int i = 0; i < nbest; ++i)
         {
           std::tuple<double, std::vector<int> > x = t.get(n, i);
-          value[i] = std::get<0>(x);
+          rss[i] = std::get<0>(x);
           for (int k = 0; k < n; k++)
             which[std::get<1>(x)[k]] = 1;
           which += nvar;
         }
-      value += nbest;
+      rss += nbest;
     }
 }
 
@@ -57,8 +57,9 @@ do_select1(const mcs::subset::lm<double, int>& lm,
            const double tau,
            const int prad,
            const int nbest,
-           double* value,
+           double* aic,
            int* which,
+           double* rss,
            unsigned long& nodes)
 {
   const int nvar = lm.nvar();
@@ -70,11 +71,12 @@ do_select1(const mcs::subset::lm<double, int>& lm,
 
   for (int i = 0; i < nbest; ++i)
     {
-      std::tuple<double, int, std::vector<int> > x = t.get(i);
-      value[i] = std::get<0>(x);
+      std::tuple<double, int, std::vector<int>, double> x = t.get(i);
+      aic[i] = std::get<0>(x);
       for (int k = 0; k < std::get<1>(x); k++)
         which[std::get<2>(x)[k]] = 1;
       which += nvar;
+      rss[i] = std::get<3>(x);
     }
 }
 
@@ -85,7 +87,8 @@ R_select(const int* const nobs, const int* const nvar,
 	 const double* const xy, const int* const mark,
 	 const double* const penalty, const double* const tolerance,
 	 const int* const pradius, const int* const nbest,
-	 double* const value, int* const which, int* const nodes)
+	 double* const rss, double* const aic, int* const which,
+	 int* const nodes)
 {
   mcs::subset::lm<double, int> lm(*nobs, *nvar, xy);
 
@@ -97,14 +100,14 @@ R_select(const int* const nobs, const int* const nvar,
       std::transform(tolerance, tolerance + *nvar, tau.begin() + 1,
                      std::bind2nd(std::plus<double>(), 1));
 
-      do_select(lm, *mark, tau, *pradius, *nbest, value, which, xnodes);
+      do_select(lm, *mark, tau, *pradius, *nbest, rss, which, xnodes);
     }
   else
     {
       double tau = *tolerance + 1;
 
       do_select1(lm, *mark, mcs::subset::aic<double, int>(*penalty),
-                 tau, *pradius, *nbest, value, which, xnodes);
+                 tau, *pradius, *nbest, aic, which, rss, xnodes);
     }
 
   *nodes = xnodes;

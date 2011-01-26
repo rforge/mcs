@@ -1,11 +1,18 @@
 \name{summary}
 
+\alias{summary}
+
 \alias{summary.xsubset}
 \alias{print.summary.xsubset}
 \alias{plot.summary.xsubset}
+\alias{refit.summary.xsubset}
+\alias{summary.summary.xsubset}
 
-\alias{summary.xselect}
-\alias{print.summary.xselect}
+\alias{summary.xsubset2}
+\alias{print.summary.xsubset2}
+\alias{plot.summary.xsubset2}
+\alias{refit.summary.xsubset2}
+\alias{summary.summary.xsubset2}
 
 \title{Summarizing xsubset and xselect objects}
 

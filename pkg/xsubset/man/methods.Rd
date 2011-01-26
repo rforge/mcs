@@ -1,19 +1,11 @@
 \name{methods}
 
-\alias{model.response}
-\alias{model.weights}
-\alias{model.offset}
-\alias{environment}
+\alias{methods}
 
-\alias{environment.xsubset}
 \alias{variable.names.xsubset}
 \alias{formula.xsubset}
 \alias{model.frame.xsubset}
 \alias{model.matrix.xsubset}
-\alias{model.response.xsubset}
-\alias{model.weights.xsubset}
-\alias{model.offset.xsubset}
-\alias{terms.xsubset}
 \alias{refit.xsubset}
 \alias{coef.xsubset}
 \alias{vcov.xsubset}
@@ -23,83 +15,97 @@
 \alias{logLik.xsubset}
 \alias{AIC.xsubset}
 
+\alias{variable.names.xsubset2}
+\alias{formula.xsubset2}
+\alias{model.frame.xsubset2}
+\alias{model.matrix.xsubset2}
+\alias{refit.xsubset2}
+\alias{coef.xsubset2}
+\alias{vcov.xsubset2}
+\alias{fitted.xsubset2}
+\alias{residuals.xsubset2}
+\alias{deviance.xsubset2}
+\alias{logLik.xsubset2}
+\alias{AIC.xsubset2}
 
-\title{Methods for xsubset objects}
 
-\description{
+\title{Methods for \code{xsubset} objects}
 
-  Methods \code{\link{xsubset}} objects.
 
-}
+\description{Extractor methods for \code{\link{xsubset}} and
+  \code{\link{xsubset2}} objects.}
+
 
 \usage{
+\method{variable.names}{xsubset}(object, size, rank = 1, \ldots)
+\method{variable.names}{xsubset2}(object, rank = 1, \ldots)
 
-\method{refit}{xsubset}(object, size, \ldots, mask.call = TRUE)
+\method{formula}{xsubset}(object, size, rank = 1, \ldots)
+\method{formula}{xsubset2}(object, rank = 1, \ldots)
 
-\method{refit}{xselect}(object, \ldots, mask.call = TRUE)
+\method{model.frame}{xsubset}(object, size, rank = 1, \ldots)
+\method{model.frame}{xsubset2}(object, rank = 1, \ldots)
 
+\method{model.matrix}{xsubset}(object, size, rank = 1, \ldots)
+\method{model.matrix}{xsubset2}(object, rank = 1, \ldots)
 
-model.response(object, \ldots)
+\method{refit}{xsubset}(object, size, rank = 1, \ldots, mask.call = TRUE)
+\method{refit}{xsubset2}(object, rank = 1, \ldots, mask.call = TRUE)
 
-model.weights(object, \ldots)
+\method{coef}{xsubset}(object, size, rank = 1, \ldots)
+\method{coef}{xsubset2}(object, rank = 1, \ldots)
 
-model.offset(object, \ldots)
+\method{vcov}{xsubset}(object, size, rank = 1, \ldots)
+\method{vcov}{xsubset2}(object, rank = 1, \ldots)
 
-environment(object, \ldots)
+\method{fitted}{xsubset}(object, size, rank = 1, \ldots)
+\method{fitted}{xsubset2}(object, rank = 1, \ldots)
 
+\method{residuals}{xsubset}(object, size, rank = 1, \ldots)
+\method{residuals}{xsubset2}(object, rank = 1, \ldots)
 
-\ldots
+\method{deviance}{xsubset}(object, size = NULL, rank = 1, \ldots)
+\method{deviance}{xsubset2}(object, rank = 1, \ldots)
 
+\method{logLik}{xsubset}(object, size = NULL, rank = 1, \ldots)
+\method{logLik}{xsubset2}(object, rank = 1, \ldots)
+
+\method{AIC}{xsubset}(object, size = NULL, rank = 1, \ldots, k = 2)
+\method{AIC}{xsubset2}(object, rank = 1, \ldots, k = 2)
 }
+
 
 \arguments{
-
-  \item{object}{An object of class \code{xsubset}, \code{xselect}, or
-    \code{lm}.}
-
-  \item{size}{The requested size of the refitted model.}
-
+  \item{data,x,fun,object}{An object of class \code{xsubset} or \code{xsubset2}.}
+  \item{size}{The subset size.}
+  \item{rank}{The subset rank.}
   \item{mask.call}{Used internally.}
-
-  \item{\dots}{Ignored.}
-
+  \item{\dots}{Forwarded arguments.}
 }
 
+
 \details{
-
-  The method \code{refit.xsubset} refits the associated \code{lm} object
-  to the desired size.  The method \code{refit.xselect} refits to the
-  best size computed by \code{xselect} (see the \code{best} component of
-  the return value of \code{\link{xselect.default}}).
-
-  Many methods that work for \code{lm} objects also work for
-  \code{xsubset} and \code{xselect} objects.  Currently, the methods
-  include \code{\link[stats]{variable.names}},
-  \code{\link[stats]{formula}}, \code{\link[stats]{model.frame}},
-  \code{\link[stats]{model.matrix}}, \code{\link[stats]{terms}},
-  \code{\link[stats]{coef}}, \code{\link[stats]{vcov}},
-  \code{\link[stats]{fitted}}, \code{\link[stats]{residuals}},
-  \code{\link[stats]{deviance}}, \code{\link[stats]{logLik}}, and
-  \code{\link[stats]{AIC}}.  Additionally, new generics have been
-  defined.  These are \code{model.response}, \code{model.weights},
-  \code{model.offset}, and \code{environment}.
+  The extractor methods work for \code{xsubset} and \code{xsubset2}
+  objects that have been generated using the formula interface.
 
   The information is extracted from the model refitted to a given size.
   If a method is not available, \code{refit} can always be called
   explicitly to obtain a new \code{lm} object of the desired size.  Most
-  methods for \code{xsubset} objects require a \code{size} argument,
-  whereas methods for \code{xselect} objects determine the size from the
-  best subset size computed by the \code{xselect} method.  In some
-  cases, the \code{size} argument may be a vector specifying multiple
-  sizes.
+  methods for \code{xsubset} objects require a \code{size} argument and
+  an optional \code{rank} argument, whereas mose methods for
+  \code{xsubset2} objects take an optional \code{rank} argument.  In
+  some cases, the \code{size} and \code{rank} arguments may be a vector
+  specifying multiple values.
 
+  The method \code{refit} returns an \code{lm} object fitted to the
+  desired size and rank.
 }
 
-\seealso{\code{\link{xsubset}}, \code{\link{xselect}},
-  \code{\link{summary}}.}
+
+\seealso{\code{\link{xsubset}}}
+
 
 \examples{
-
 ## load data (with logs for relative potentials)
 data("AirPollution", package = "xsubset")
 for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
@@ -113,7 +119,7 @@ for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 xs <- xsubset(mortality ~ ., data = AirPollution)
 
 ## summarize BIC
-sx <- summary(xs, aic.penalty = log(nrow(AirPollution)))
+sx <- summary(xs, penalty = log(nrow(AirPollution)))
 
 ## extract information
 deviance(xs, size = sx$best)
@@ -131,7 +137,7 @@ lm5 <- refit(xs, size = sx$best)
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
 
-## extract model information
+## extract information for subset of size 3
 coef(xs, size = 3)
 vcov(xs, size = 3)
 residuals(xs, size = 3)
@@ -139,22 +145,23 @@ fitted(xs, size = 3)
 model.matrix(xs, size = 3)
 
 
-#############
-## xselect ##
-#############
+##############
+## xsubset2 ##
+##############
 
-## select best subset
-xs <- xselect(mortality ~ ., data = AirPollution, criterion = "Cp")
+## select 5 best subsets using AIC
+xs <- xsubset(mortality ~ ., data = AirPollution, penalty = 2, nbest =
+5)
 
 ## summarize
 summary(xs)
 
-## extract informaion for best model
+## extract deviance for best subset
 deviance(xs)
-logLik(xs)
-AIC(xs)
-AIC(xs, k = log(nrow(AirPollution)))
 
+## extract BIC for all subsets
+AIC(xs, rank = 1:5, k = log(nrow(AirPollution)))
 }
+
 
 \keyword{regression}
