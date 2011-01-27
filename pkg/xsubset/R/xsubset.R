@@ -1504,7 +1504,7 @@ summary.summary.xsubset2 <- function (object, ...) {
 ##
 ## Rval: (lm)
 ##
-## Refit 'xsubset' object to best subset size.
+## Refit 'xsubset' object to best subset.
 ## 
 refit.summary.xsubset <- function (object, ..., mask.call = TRUE) {
   best <- object$size[object$sum.best]
@@ -1522,7 +1522,7 @@ refit.summary.xsubset <- function (object, ..., mask.call = TRUE) {
 ##
 ## Rval: (lm)
 ##
-## Refit 'xsubset2' object to best subset size.
+## Refit 'xsubset2' object to best subset.
 ##
 refit.summary.xsubset2 <- function (object, ..., mask.call = TRUE) {
   NextMethod("summary.xsubset2", object, rank = 1, mask.call = mask.call)
