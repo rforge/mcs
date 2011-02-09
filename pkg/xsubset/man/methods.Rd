@@ -29,7 +29,7 @@
 \alias{AIC.xsubset2}
 
 
-\title{Methods for \code{xsubset} objects}
+\title{Methods for 'xsubset' objects}
 
 
 \description{Extractor methods for \code{\link{xsubset}} and
@@ -40,11 +40,11 @@
 \method{variable.names}{xsubset}(object, size, rank = 1, \ldots)
 \method{variable.names}{xsubset2}(object, rank = 1, \ldots)
 
-\method{formula}{xsubset}(object, size, rank = 1, \ldots)
-\method{formula}{xsubset2}(object, rank = 1, \ldots)
+\method{formula}{xsubset}(x, size, rank = 1, \ldots)
+\method{formula}{xsubset2}(x, rank = 1, \ldots)
 
-\method{model.frame}{xsubset}(object, size, rank = 1, \ldots)
-\method{model.frame}{xsubset2}(object, rank = 1, \ldots)
+\method{model.frame}{xsubset}(formula, \ldots)
+\method{model.frame}{xsubset2}(formula, \ldots)
 
 \method{model.matrix}{xsubset}(object, size, rank = 1, \ldots)
 \method{model.matrix}{xsubset2}(object, rank = 1, \ldots)
@@ -71,15 +71,16 @@
 \method{logLik}{xsubset2}(object, rank = 1, \ldots)
 
 \method{AIC}{xsubset}(object, size = NULL, rank = 1, \ldots, k = 2)
-\method{AIC}{xsubset2}(object, rank = 1, \ldots, k = 2)
+\method{AIC}{xsubset2}(object, rank = 1, \ldots, k = NULL)
 }
 
 
 \arguments{
-  \item{data,x,fun,object}{An object of class \code{xsubset} or \code{xsubset2}.}
+  \item{object, formula, x}{An object of class \code{xsubset} or \code{xsubset2}.}
   \item{size}{The subset size.}
   \item{rank}{The subset rank.}
   \item{mask.call}{Used internally.}
+  \item{k}{AIC penalty.}
   \item{\dots}{Forwarded arguments.}
 }
 
@@ -92,7 +93,7 @@
   If a method is not available, \code{refit} can always be called
   explicitly to obtain a new \code{lm} object of the desired size.  Most
   methods for \code{xsubset} objects require a \code{size} argument and
-  an optional \code{rank} argument, whereas mose methods for
+  an optional \code{rank} argument, whereas most methods for
   \code{xsubset2} objects take an optional \code{rank} argument.  In
   some cases, the \code{size} and \code{rank} arguments may be a vector
   specifying multiple values.
@@ -102,7 +103,7 @@
 }
 
 
-\seealso{\code{\link{xsubset}}}
+\seealso{\code{\link{xsubset}}, \code{\link{refit}}.}
 
 
 \examples{
@@ -150,8 +151,7 @@ model.matrix(xs, size = 3)
 ##############
 
 ## select 5 best subsets using AIC
-xs <- xsubset(mortality ~ ., data = AirPollution, penalty = 2, nbest =
-5)
+xs <- xsubset(mortality ~ ., data = AirPollution, penalty = 2, nbest = 5)
 
 ## summarize
 summary(xs)

@@ -1,142 +1,148 @@
 \name{xsubset}
 
 \alias{xsubset}
-\alias{xsubset.matrix}
-\alias{xsubset.data.frame}
-\alias{xsubset.formula}
 \alias{xsubset.lm}
+\alias{xsubset.formula}
 \alias{xsubset.default}
 
 \alias{print.xsubset}
 \alias{plot.xsubset}
 
+\alias{xsubset2}
+\alias{print.xsubset2}
+\alias{plot.xsubset2}
+
+
 \title{All-Subsets Regression}
+
 
 \description{All-subsets regression for linear models.}
 
-\usage{
 
+\usage{
 xsubset(object, \dots)
 
-\method{xsubset}{lm}(object, \dots)
+\method{xsubset}{lm}(object, model.return = TRUE, x.return = FALSE,
+y.return = FALSE, \dots)
 
-\method{xsubset}{formula}(formula, data = NULL, row.subset = NULL,
-weights = NULL, na.action = na.omit, model = TRUE, x.return = FALSE,
-y.return = FALSE, contrasts = NULL, offset = NULL, \ldots)
+\method{xsubset}{formula}(formula, data, row.subset, weights,
+na.action = na.omit, model.return = TRUE, x.return = FALSE,
+y.return = FALSE, contrasts = NULL, offset, \ldots)
 
-\method{xsubset}{default}(object, include = NULL, exclude = NULL, size =
-NULL, criterion = 0, tolerance = 0, pradius = NULL, nbest = 1, \ldots)
-
+\method{xsubset}{default}(object, y, weights = NULL, offset = NULL,
+include = NULL, exclude = NULL, size = NULL, penalty = 0, tolerance = 0,
+pradius = NULL, nbest = 1, \ldots)
 }
 
+
 \arguments{
-
-  \item{formula,object}{An R object.}
-
-  \item{data,row.subset, weights, na.action, model, x, contrasts,
-    offset}{Arguments forwarded to \code{\link[stats]{lm}}.}
-
-  \item{y}{A numeric vector representing the response variable.}
-
-  \item{y.which}{The index (numeric or character) of the response
-    variable in the data frame.}
-
-  \item{x.return,y.return}{Logical (see \code{\link[stats]{lm}} for
-    details).}
-
-  \item{include,exclude}{Index vectors designating variables that are
+  \item{formula, object}{An object of class \code{lm}, \code{formula} or
+    \code{matrix}.}
+  \item{data, row.subset, weights, na.action, model.return, x.return,
+    y.return, contrasts, offset}{Formula interface.  See
+    \code{\link[stats]{lm}}.}
+  \item{y}{The response variable.}
+  \item{include, exclude}{Index vectors designating variables that are
     forced in or out of the model, respectively.  The vectors may
     consist of (integer) indexes, (character) names, or (logical) bits
-    selecting the desired columns.  By default, all variables are
-    included.  The intercept is included if present in the model.}
-
-  \item{size}{Vector of subset sizes (counting the intercept, if any) to
-    be evaluated.  By default, all possible sizes (determined by
-    \code{include} and \code{exclude}) are computed.}
-
-  \item{criterion}{The selection criterion.  Available criteria are
-  \code{"RSS"}, \code{"AIC"}, and \code{"BIC"}.  If \code{criterion} is
-  numeric, then it is interpreted as a penalty per parameter (see
-  \code{\link[stats]{AIC}}).}
-
-  \item{tolerance}{The tolerance, where \code{tolerance[n]} is the
-    tolerance employed for subsets of size \code{n}.}
-
-  \item{pradius}{Preordering radius, by default \code{round(n/3)},
-    where \code{n} is the number of regressors.}
-
-  \item{nbest}{Number of best subsets to report for each subset size.}
-
+    selecting the desired columns.  The integer indexes correspond to
+    the position of the variables in the model matrix; the intercept, if
+    any, has index \code{1}.  By default, all variables are included.}
+  \item{size}{Vector of subset sizes (counting the intercept, if any).
+    By default, the best subsets are computed for each subset size (as
+    determined by way of \code{include} and \code{exclude}).  Ignored if
+    \code{penalty != 0}.}
+  \item{penalty}{Penalty per parameter (see \code{\link[stats]{AIC}}).
+    If \code{penalty == 0}, determine subsets with lowest RSS for each
+    subset size; otherwise, determine subset(s) with overall lowest
+    AIC.}
+  \item{tolerance}{If \code{penalty == 0}, a numeric vector (extended if
+    necessary), where \code{tolerance[n]} is the tolerance employed for
+    subsets of size \code{n}; otherwise, a single value indicating the
+    overall tolerance.}
+  \item{pradius}{Preordering radius.}
+  \item{nbest}{Number of best subsets to report.}
   \item{\dots}{Ignored.}
-
 }
 
 
 \details{
-
-  The function \code{xsubset} computes all variable-subsets for linear
-  regression models.  The function is generic and provides various
+  The function \code{xsubset} computes all variable-subsets regression
+  for linear models.  The function is generic and provides various
   methods to conveniently specify the regressor and response variables.
   The standard \code{formula} interface (see \code{\link[stats]{lm}})
   can be used, or the information can be extracted from an already
   fitted \code{lm} object.  The regressor matrix and response variable
-  can also be passed in directly.  In all cases, the default method is
-  eventually called.
+  can also be passed in directly.
 
   By default, the method computes the \code{nbest} best subset models
   for every subset size, where the "best" models are the models with the
-  lowest RSS.  The scope of the search can be limited to certain subset
-  sizes by setting \code{size}.  Alternatively, the overall (over all
-  sizes) \code{nbest} subset models may be computed according to an
-  information criterion of the AIC family specified by \code{criterion}.
-  Note that the \code{size} argument is ignored when a criterion other
-  than the RSS is employed.
+  lowest residual sum of squares (RSS).  The scope of the search can be
+  limited to certain subset sizes by setting \code{size}.  A tolerance
+  vector (extended if necessary) may be specified to speed up the
+  algorithm, where \code{tolerance[n]} is the tolerance applied to
+  subset models of size \code{n}.
 
-  \bold{Preordering:} The function will preorder the variables to reduce
-  execution time if \code{pradius}\eqn{>0} (\code{pradius}\eqn{\le n}),
-  where \eqn{n} is the total number of regressors.  Best execution times
-  are usually attained for \code{pradius}\eqn{=n/3} approximately, which
-  is the default value.
+  Alternatively, by specifying \code{penalty != 0}, the overall
+  (i.e. over all sizes) \code{nbest} subset models may be computed
+  according to an information criterion of the AIC family.  A single
+  tolerance value may be specified to speed up the search.
 
-  \bold{Heuristic:} If the exact solution is not needed, a tolerance may
-  be specified for each subset size (expanded if necessary) to speed up
-  the procedure.  The solution satisfies
-  RSS\eqn{(n)\le(1+\tau_n)}RSS\eqn{^*(n)}, where RSS\eqn{(n)} is the
-  residual sum of squares (RSS) of the solution subset of size \eqn{n},
-  RSS\eqn{^*} is the RSS of the exact solution, and \eqn{\tau_n} the
-  tolerance for subset size \eqn{n}.  By default, \eqn{\tau_n=0} for all
-  \eqn{n}.  Setting \eqn{\tau_n=+\infty} effectively excludes size
-  \eqn{n} from the subset search.  If a selection criterion other than
-  RSS is used, a single tolerance value for all subset sizes is
-  employed.
+  By way of \code{include} and \code{exclude}, variables may be forced
+  into or out of the regression, respectively.  If present, the
+  intercept has index \code{1}.
 
-  After the input arguments have been processed, the call is forwarded
-  to \code{\link{xselect}}.
-  
+  The function will preorder the variables to reduce execution time if
+  \code{pradius > 0}, where \code{n} is the number of regressors after
+  evaluation \code{include} and \code{exclude}.  Good execution times
+  are usually attained for approximately \code{pradius = n/3}, which is
+  the default value.
+
   A set of standard extractor functions for fitted model objects is
   available for objects of class \code{"xsubset"}.  See
   \code{\link{Methods}} for more details.
-
-  Note: The number of observations (rows) must be larger than the number
-  of variables (columns).
-
 }
 
+
 \value{
+  An object of class \code{"xsubset"} or \code{"xsubset2"}, i.e. a list
+  with the following components:
+  \item{weights}{Weights.}
+  \item{offset}{Offset.}
+  \item{nobs}{Number of observations.}
+  \item{nvar}{Number of variables (including intercept, if any).}
+  \item{x.names}{Names of all design variables.}
+  \item{y.name}{Name of response variable.}
+  \item{include}{Indexes of variables forced in.}
+  \item{exclude}{Indexes of variables forced out.}
+  \item{intercept}{\code{TRUE} if regression has an intercept term;
+    \code{FALSE} otherwise.}
+  \item{penalty}{AIC penalty.}
+  \item{nbest}{Number of best subsets.}
 
-  An object of class \code{"xsubset"}, i.e. a list containing the
-  unprocessed (raw) and processed (as forwarded to \code{xselect})
-  arguments, as well as
+  For objects of class \code{"xsubset"}:
+  \item{size}{Subset sizes.}
+  \item{tolerance}{Tolerance vector.}
+  \item{rss}{A two dimensional numeric \code{nbest x nvar} array.}
+  \item{which}{A three dimensional logical \code{nvar x nbest x nvar}
+    array.}
 
-  \item{value}{If the selection criterion is the RSS, then \code{value}
-  is a two-dimensional array with the RSS of the \code{nbest} best
-  subset models for all subset sizes.  Otherwise, a one-dimensional
-  array with the AIC of the overall best models.}
+  The entry \code{rss[i, n]} corresponds to the RSS of the \code{i}-th
+  best subset model of size \code{n}.  The entry \code{which[j, i, n]}
+  has value \code{TRUE} if the \code{i}-th best subset model of size
+  \code{n} contains the \code{j}-th variable (the intercept, if any,
+  corresponds to \code{j = 1}).
 
-  \item{which}{If the selection criterion is the RSS, then \code{which}
-  is three-dimensional logical array indication the composition of each
-  subset in terms of parameters.  Otherwise, a two-dimensional array.}
+  For objects of class \code{"xsubset2"}:
+  \item{tolerance}{Tolerance value.}
+  \item{rss}{A one dimensional numeric array of length \code{nbest}.}
+  \item{aic}{A one dimensional numeric array of length \code{nbest}.}
+  \item{which}{A two dimensional logical \code{nvar x nbest} array.}
 
+  The entries \code{rss[i]} and \code{aic[i]} correspond to the RSS and
+  AIC of the \code{i}-th best subset model, respectively.  The entry
+  \code{which[j, i]} is \code{TRUE} if the \code{i}-th best subset model
+  contains variable \code{j}.
 }
 
 \references{
@@ -151,7 +157,7 @@ NULL, criterion = 0, tolerance = 0, pradius = NULL, nbest = 1, \ldots)
   \bold{15}, 139--156.
 }
 
-\seealso{\code{\link{xselect}}, \code{\link{summary}}, \link{methods}.}
+\seealso{\code{\link{summary}}, \link{methods}.}
 
 \examples{
 
@@ -162,63 +168,39 @@ data("AirPollution", package = "xsubset")
 ## basic usage ##
 #################
 
-## simplest form
-xs <- xsubset(AirPollution, y.which = "mortality")
-
-## which, in this case, is equivalent to
-## (by default, 'y' is last column)
-xs <- xsubset(as.matrix(AirPollution))
-
 ## canonical example: fit best subsets
 xs <- xsubset(mortality ~ ., data = AirPollution)
 
 ## visualize RSS
 plot(xs)
 
-## visualize/summarize RSS and AIC
-sx_aic <- summary(xs)
-print(sx_aic)
-plot(sx_aic)
+## summarize
+summary(xs)
 
-## extract information (subset size 7)
-logLik(xs, 7)
-coef(xs, 7)
+## plot summary
+plot(summary(xs))
 
-## extract information for all subsets fitted
-deviance(xs)
-AIC(xs)
-AIC(xs, k = log(nrow(AirPollution)))
+## forced inclusion/exclusion of variables
+xs <- xsubset(mortality ~ ., data = AirPollution,
+              include = c("(Intercept)", "noncauc"),
+              exclude = "whitecollar")
 
-## refit best model
-lm8 <- refit(xs, summary(xs)$best)
-summary(lm8)
-## (Note that the p-values are not valid due to model selection.)
-
-
-#####################
-## further options ##
-#####################
-
-## summarize BIC
-sx_bic <- summary(xs, aic.penalty = log(nrow(AirPollution)))
-print(sx_bic)
-plot(sx_bic)
-
-## forced inclusion/exclusion of variables in the model
-xs_fix <- xsubset(mortality ~ ., data = AirPollution,
-  include = c("(Intercept)", "noncauc"), exclude = "whitecollar")
 ## or equivalently
-xs_fix <- xsubset(mortality ~ ., data = AirPollution,
-                  include = c(1, 10), exclude = 11)
-plot(summary(xs, size = 2:15))
+xs <- xsubset(mortality ~ ., data = AirPollution,
+              include = c(1, 10), exclude = 11)
+summary(xs)
 
-## weights (artificial example)
-set.seed(123)
-w <- runif(nrow(AirPollution), max = 3)
-w[w < 0.3] <- 0
-xs_wls <- xsubset(mortality ~ precipitation + temperature1 + age,
-                  weights = w, data = AirPollution)
+##########################
+## find best BIC models ##
+##########################
 
+## find 10 best subset models
+xs <- xsubset(mortality ~ ., data = AirPollution,
+              penalty = log(nrow(AirPollution)), nbest = 10)
+summary(xs)
+
+## visualize BIC and RSS
+plot(summary(xs))
 }
 
 \keyword{regression}

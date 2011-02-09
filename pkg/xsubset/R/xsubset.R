@@ -10,14 +10,11 @@
 ##   model.return - (logical)
 ##   x.return     - (logical)
 ##   y.return     - (logical)
-##   ...          - arguments forwarded to 'xsubset.default'
+##   ...          - forwarded to 'xsubset.default'
 ##
-## Rval:
-##   (see 'xsubset.default')
+## Rval:  (xsubset0)
+##   See 'xsubset.default'.
 ##
-## Extracts terms, model frame, model matrix, response, weights and
-## offset, and forwards the call to 'xsubset.default'.
-##   
 xsubset.lm <- function (object, model.return = TRUE, x.return = FALSE,
                         y.return = FALSE, ...)
 {
@@ -67,9 +64,9 @@ xsubset.lm <- function (object, model.return = TRUE, x.return = FALSE,
 ## standard formula interface
 ##
 ## Args:
-##   object       - (formula) 'lm''s 'formula' argument
+##   formula      - (formula)
 ##   data         - (data.frame)
-##   row.subset   - (numeric[]) 'lm''s 'subset' argument
+##   row.subset   - (numeric[])
 ##   weights      - (numeric[])
 ##   na.action    - (function)
 ##   model.return - (logical)
@@ -77,13 +74,10 @@ xsubset.lm <- function (object, model.return = TRUE, x.return = FALSE,
 ##   y.return     - (logical)
 ##   contrasts    - (numeric[])
 ##   offset       - (numeric[])
-##   ...          - arguments forwarded to 'xsubset.default'
+##   ...          - forwarded to 'xsubset.default'
 ##
-## Rval: (list)
-##   (see 'xsubset.default')
-##
-## Builds model frame, terms, model matrix, response, weights and
-## offset, and forwards the call to 'xsubset.default'.
+## Rval:  (xsubset0)
+##   See 'xsubset.default'.
 ##
 xsubset.formula <- function (formula, data, row.subset, weights,
                              na.action = na.omit, model.return = TRUE,
@@ -162,10 +156,25 @@ xsubset.formula <- function (formula, data, row.subset, weights,
 ##   nbest     - (integer) number of best subsets
 ##   ...       - ignored
 ##
-## Rval: (list)
-##   value - (numeric[]|numeric[,])  deviance
-##   which - (logical[,]|logical[,,])  subsets
-##   ...
+## Rval:  (xsubset0)
+##   call      - (FIXME)
+##   weights   - (numeric[])
+##   offset    - (numeric[])
+##   nobs      - (integer)
+##   nvar      - (integer)
+##   x.names   - (character[])
+##   y.name    - (character)
+##   include   - (integer[])
+##   exclude   - (integer[])
+##   intercept - (logical)
+##   size      - (integer)
+##   penalty   - (numeric)
+##   tolerance - (numeric[])
+##   nbest     - (integer)
+##   rss       - (array)
+##   aic       - (array)
+##   which     - (array)
+##   .nodes    - (integer)
 ##
 xsubset.default <- function (object, y, weights = NULL, offset = NULL,
                              include = NULL, exclude = NULL,
@@ -1049,7 +1058,7 @@ logLik.xsubset0 <- function (object, ..., df) {
 ##   This method returns a numeric vector of the same length as
 ##   'size' and of class 'logLik'.
 ##
-logLik.xsubset <- function (object, size, rank = 1, ...) {
+logLik.xsubset <- function (object, size = NULL, rank = 1, ...) {
   NextMethod(.Generic, object, size = size, rank = rank, df = size + 1)
 }
 
@@ -1205,16 +1214,12 @@ summary.xsubset <- function (object, rank = 1, penalty = 2, ...) {
 ##   object - (xsubset2)
 ##   ...    - ignored
 ##
-## Rval: (summary.xsubset2)
+## Rval:  (summary.xsubset2)
+##
+## Do nothing for objects of type 'xsubset2'.
 ##
 summary.xsubset2 <- function (object, ...) {
-  paste <- function (...) base::paste(..., sep = "")
-
-  ## rss
-  rss <- deviance(object, rank = NULL)
-
   ## update object
-  object$rss <- rss
   class(object) <- c("summary.xsubset2", class(object))
 
   ## done
@@ -1455,6 +1460,40 @@ plot.summary.xsubset2 <- function (x, type = "b", main = NULL, xlab = NULL,
 }
 
 
+## refit
+##
+## Args:
+##   object    - (summary.xsubset)
+##   ...       - ignored
+##   mask.call - (logical) used internally
+##
+## Rval: (lm)
+##
+## Refit 'xsubset' object to best subset.
+## 
+refit.summary.xsubset <- function (object, ..., mask.call = TRUE) {
+  best <- object$size[object$sum.best]
+  NextMethod("summary.xsubset", object, size = best,
+             rank = object$sum.rank, mask.call = mask.call)
+}
+
+
+## refit
+##
+## Args:
+##   object    - (summary.xsubset2)
+##   ...       - ignored
+##   mask.call - (logical) used internally
+##
+## Rval: (lm)
+##
+## Refit 'xsubset2' object to best subset.
+##
+refit.summary.xsubset2 <- function (object, ..., mask.call = TRUE) {
+  NextMethod("summary.xsubset2", object, rank = 1, mask.call = mask.call)
+}
+
+
 ## summary for 'summary.xsubset' objects
 ##
 ## Args:
@@ -1492,38 +1531,4 @@ summary.summary.xsubset2 <- function (object, ...) {
 
   ## done
   NextMethod(.Generic, object, ...)
-}
-
-
-## refit
-##
-## Args:
-##   object    - (summary.xsubset)
-##   ...       - ignored
-##   mask.call - (logical) used internally
-##
-## Rval: (lm)
-##
-## Refit 'xsubset' object to best subset.
-## 
-refit.summary.xsubset <- function (object, ..., mask.call = TRUE) {
-  best <- object$size[object$sum.best]
-  NextMethod("summary.xsubset", object, size = best,
-             rank = object$sum.rank, mask.call = mask.call)
-}
-
-
-## refit
-##
-## Args:
-##   object    - (summary.xsubset2)
-##   ...       - ignored
-##   mask.call - (logical) used internally
-##
-## Rval: (lm)
-##
-## Refit 'xsubset2' object to best subset.
-##
-refit.summary.xsubset2 <- function (object, ..., mask.call = TRUE) {
-  NextMethod("summary.xsubset2", object, rank = 1, mask.call = mask.call)
 }
