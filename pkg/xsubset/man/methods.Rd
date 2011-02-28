@@ -91,10 +91,10 @@
 
   The information is extracted from the model refitted to a given size.
   If a method is not available, \code{refit} can always be called
-  explicitly to obtain a new \code{lm} object of the desired size.  Most
-  methods for \code{xsubset} objects require a \code{size} argument and
-  an optional \code{rank} argument, whereas most methods for
-  \code{xsubset2} objects take an optional \code{rank} argument.  In
+  explicitly to obtain a new \code{lm} object of the desired size or
+  rank.  Most methods for \code{xsubset} objects require a \code{size}
+  argument and an optional \code{rank} argument, whereas most methods
+  for \code{xsubset2} objects take an optional \code{rank} argument.  In
   some cases, the \code{size} and \code{rank} arguments may be a vector
   specifying multiple values.
 
@@ -107,43 +107,36 @@
 
 
 \examples{
-## load data (with logs for relative potentials)
+## load data
 data("AirPollution", package = "xsubset")
-for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 
 
 #############
 ## xsubset ##
 #############
 
-## fit best subsets
-xs <- xsubset(mortality ~ ., data = AirPollution)
+## fit subsets (5 best subsets per size)
+xs <- xsubset(mortality ~ ., data = AirPollution, nbest = 5)
 
-## summarize BIC
-sx <- summary(xs, penalty = log(nrow(AirPollution)))
-
-## extract information
-deviance(xs, size = sx$best)
-logLik(xs, size = sx$best)
-AIC(xs, size = sx$best)
-AIC(xs, size = sx$best, k = log(nrow(AirPollution)))
-
-## extract information for all subsets fitted
-deviance(xs)
-AIC(xs)
-AIC(xs, k = log(nrow(AirPollution)))
-
-## refit model
-lm5 <- refit(xs, size = sx$best)
-summary(lm5)
-## (Note that the p-values are not valid due to model selection.)
-
-## extract information for subset of size 3
+## extract information (for subset of size 3)
 coef(xs, size = 3)
 vcov(xs, size = 3)
 residuals(xs, size = 3)
 fitted(xs, size = 3)
 model.matrix(xs, size = 3)
+
+## summarize (BIC)
+sx <- summary(xs, penalty = log(nrow(AirPollution)))
+
+## extract information (for best BIC subset)
+deviance(sx)
+logLik(sx)
+AIC(sx)
+
+## refit model
+lm5 <- refit(sx)
+summary(lm5)
+## (Note that the p-values are not valid due to model selection.)
 
 
 ##############

@@ -1,5 +1,6 @@
 \name{xsubset}
 
+
 \alias{xsubset}
 \alias{xsubset.lm}
 \alias{xsubset.formula}
@@ -7,8 +8,6 @@
 
 \alias{print.xsubset}
 \alias{plot.xsubset}
-
-\alias{xsubset2}
 \alias{print.xsubset2}
 \alias{plot.xsubset2}
 
@@ -18,7 +17,7 @@
 
 \description{All-subsets regression for linear models.}
 
-
+% generic
 \usage{
 xsubset(object, \dots)
 
@@ -56,7 +55,7 @@ pradius = NULL, nbest = 1, \ldots)
     If \code{penalty == 0}, determine subsets with lowest RSS for each
     subset size; otherwise, determine subset(s) with overall lowest
     AIC.}
-  \item{tolerance}{If \code{penalty == 0}, a numeric vector (extended if
+  \item{tolerance}{If \code{penalty == 0}, a numeric vector (expanded if
     necessary), where \code{tolerance[n]} is the tolerance employed for
     subsets of size \code{n}; otherwise, a single value indicating the
     overall tolerance.}
@@ -68,39 +67,39 @@ pradius = NULL, nbest = 1, \ldots)
 
 \details{
   The function \code{xsubset} computes all variable-subsets regression
-  for linear models.  The function is generic and provides various
-  methods to conveniently specify the regressor and response variables.
-  The standard \code{formula} interface (see \code{\link[stats]{lm}})
-  can be used, or the information can be extracted from an already
-  fitted \code{lm} object.  The regressor matrix and response variable
-  can also be passed in directly.
+  for ordinary linear models.  The function is generic and provides
+  various methods to conveniently specify the regressor and response
+  variables.  The standard \code{formula} interface (see
+  \code{\link[stats]{lm}}) can be used, or the information can be
+  extracted from an already fitted \code{lm} object.  The regressor
+  matrix and response variable can also be passed in directly.
 
-  By default, the method computes the \code{nbest} best subset models
-  for every subset size, where the "best" models are the models with the
-  lowest residual sum of squares (RSS).  The scope of the search can be
-  limited to certain subset sizes by setting \code{size}.  A tolerance
-  vector (extended if necessary) may be specified to speed up the
-  algorithm, where \code{tolerance[n]} is the tolerance applied to
-  subset models of size \code{n}.
+  By default (i.e. \code{penalty == 0}), the method computes the
+  \code{nbest} best subset models for every subset size, where the
+  "best" models are the models with the lowest residual sum of squares
+  (RSS).  The scope of the search can be limited to certain subset sizes
+  by setting \code{size}.  A tolerance vector (expanded if necessary)
+  may be specified to speed up the algorithm, where \code{tolerance[n]}
+  is the tolerance applied to subset models of size \code{n}.
 
-  Alternatively, by specifying \code{penalty != 0}, the overall
-  (i.e. over all sizes) \code{nbest} subset models may be computed
-  according to an information criterion of the AIC family.  A single
-  tolerance value may be specified to speed up the search.
+  Alternatively (\code{penalty > 0}), the overall (i.e. over all sizes)
+  \code{nbest} best subset models may be computed according to an
+  information criterion of the AIC family.  A single tolerance value may
+  be specified to speed up the search.
 
   By way of \code{include} and \code{exclude}, variables may be forced
   into or out of the regression, respectively.  If present, the
   intercept has index \code{1}.
 
   The function will preorder the variables to reduce execution time if
-  \code{pradius > 0}, where \code{n} is the number of regressors after
-  evaluation \code{include} and \code{exclude}.  Good execution times
-  are usually attained for approximately \code{pradius = n/3}, which is
-  the default value.
+  \code{pradius > 0}.  Good execution times are usually attained for
+  approximately \code{pradius = n/3} (default value), where \code{n} is
+  the number of regressors after evaluation \code{include} and
+  \code{exclude}.
 
   A set of standard extractor functions for fitted model objects is
   available for objects of class \code{"xsubset"}.  See
-  \code{\link{Methods}} for more details.
+  \code{\link{methods}} for more details.
 }
 
 
@@ -145,6 +144,7 @@ pradius = NULL, nbest = 1, \ldots)
   contains variable \code{j}.
 }
 
+
 \references{
   Hofmann, M. and Gatu, C. and Kontoghiorghes, E. J. (2007).  Efficient
   Algorithms for Computing the Best Subset Regression Models for
@@ -159,8 +159,8 @@ pradius = NULL, nbest = 1, \ldots)
 
 \seealso{\code{\link{summary}}, \link{methods}.}
 
-\examples{
 
+\examples{
 ## load data (with logs for relative potentials)
 data("AirPollution", package = "xsubset")
 
@@ -197,6 +197,8 @@ summary(xs)
 ## find 10 best subset models
 xs <- xsubset(mortality ~ ., data = AirPollution,
               penalty = log(nrow(AirPollution)), nbest = 10)
+
+## summarize
 summary(xs)
 
 ## visualize BIC and RSS

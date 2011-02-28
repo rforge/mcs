@@ -1,43 +1,104 @@
-\documentclass[nojss]{jss}
-\usepackage{thumbpdf}
-%% need no \usepackage{Sweave}
+%==========%
+% PREAMBLE %
+%==========%
 
-%% additional commands
+\documentclass[nojss]{jss}
+
+
+%----------%
+% vignette %
+%----------%
+
+%\VignetteIndexEntry{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
+%\VignetteKeywords{linear regression, model selection, variable selection, best subset regression, R}
+%\VignettePackage{xsubset}
+%\VignetteDepends{stats}
+
+
+%----------------%
+% Sweave options %
+%----------------%
+
+% pdflatex:  set 'eps=FALSE'
+\SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
+
+
+%----------%
+% packages %
+%----------%
+
+\usepackage{times}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{pstricks,pst-tree}
+\usepackage{algorithm,algpseudocode}
+
+% pdflatex:  use package 'auto-pst-pdf'
+\usepackage{auto-pst-pdf}
+
+% DON'T REMOVE: directive
+%need no \usepackage{Sweave}
+
+
+%----------%
+% commands %
+%----------%
+
+\newcommand{\Rset}{\mathbb{R}}
+\newcommand{\rss}{\text{RSS}}
+\DeclareMathOperator*{\argmin}{argmin}
+\newcommand{\card}[1]{\lvert{#1}\rvert}
+
 \newcommand{\squote}[1]{`{#1}'}
 \newcommand{\dquote}[1]{``{#1}''}
 \newcommand{\fct}[1]{{\texttt{#1()}\index{#1@\texttt{#1()}}}}
 \newcommand{\class}[1]{\dquote{\texttt{#1}}}
 
-\author{Marc Hofmann\\Universit{\'e} de Nech{\^a}tel
-   \And Cristian Gatu\\Universit{\'e} de Nech{\^a}tel
-   \AND Erricos J. Kontoghiorghes\\Birbeck College
-   \And Achim Zeileis\\WU Wirtschaftsuniversit\"at Wien}
-\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis}
 
-\title{\pkg{xsubset}: Efficient Computation of Best Subset Linear Regressions in \proglang{R}}
-\Plaintitle{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
+%--------------%
+% front matter %
+%--------------%
 
-\Keywords{linear regression, model selection, variable selection, best subset regression, \proglang{R}}
-\Plainkeywords{linear regression, model selection, variable selection, best subset regression, R}
+\author{Marc Hofmann\thanks{This work was in part supported by the
+    \emph{F\"orderverein des wirtschaftswissenschaftlichen Zentrum der
+    Universit\"at Basel}, through research project
+    B-123.}\\Universit{\'e} de Neuch{\^a}tel
+  \And Cristian Gatu\\Universit{\'e} de Neuch{\^a}tel
+  \AND Erricos J. Kontoghiorghes\\Birbeck College
+  \And Achim Zeileis\\WU Wirtschaftsuniversit\"at Wien}
+\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes,
+  Achim Zeileis}
 
-\SweaveOpts{engine = R, eps = FALSE, kep.source = TRUE}
-%\VignetteIndexEntry{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
-%\VignetteDepends{stats}
-%\VignetteKeywords{linear regression, model selection, variable selection, best subset regression, R}
-%\VignettePackage{xsubset}
+
+\title{\pkg{xsubset}: Efficient Computation of Best Subset Linear
+  Regressions in \proglang{R}}
+\Plaintitle{xsubset: Efficient Computation of Best Subset Linear
+  Regressions in R}
+
 
 \Abstract{ 
   todo
 }
 
+
+\Keywords{linear regression, model selection, variable selection, best
+  subset regression, \proglang{R}}
+\Plainkeywords{linear regression, model selection, variable selection,
+  best subset regression, R}
+
+ 
 \Address{
   Marc Hofmann\\
-  Institut d'Informatique\\
-  Universit{\'e} de Nech{\^a}tel\\
-  Rue Emile-Argand 11\\
-  CP 158 -- 2009 Nech{\^a}tel, Switzerland\\
-  E-mail: \email{Marc.Hofmann@unine.ch}\\
+  Wirtschaftswissenschaftliche Fakultät\\
+  Abt. Quantitative Methoden\\
+  Computational Management Science\\
+  Peter Merian-Weg 6\\
+  4002 Basel
 }
+
+
+%==========%
+% DOCUMENT %
+%==========%
 
 \begin{document}
 
@@ -46,53 +107,228 @@ options(width = 70, prompt = "R> ", continue = "+  ")
 library("xsubset")
 @
 
-\section{Introduction} \label{sec:intro}
+\section{Introduction}
+\label{sec:intro}
 
-introduce the \pkg{xsubset} package \citep{xsubset:Hofmann+Gatu+Kontoghiorghes:2009}
-for the \proglang{R} system for statistical computing \citep{xsubset:R:2009},
-available from the Comprehensive \proglang{R} Archive Network at
-\url{http://CRAN.R-project.org/package=xsubset}
+The \pkg{xsubset} package for exact, best variable-subset regression
+implements the algorithms presented by
+\cite{gatu:j_comput_graph_stat:06} and
+\cite{hofmann:comput_stat_data_an:07}.  Computationally intensive core
+code is written in \proglang{C++}.  It is available for the
+\proglang{R} platform for statistical computing
+\citep{hofmann:cran:09} from the Comprehensive \proglang{R} Archive
+Network at \url{http://CRAN.R-project.org/package=xsubset}.
 
-implements the algorithms of \cite{xsubset:Hofmann+Gatu+Kontoghiorghes:2007}
-and \cite{xsubset:Gatu+Kontoghiorghes:2006}
+\verb+TODO:+ somewhere we need to comment on alternative approaches in
+R, especially the \pkg{leaps} package \citep{lumley:cran:09} based on
+\cite{miller:02} and the \pkg{subselect} package
+\citep{orestes_cerdeira:cran:09} base on
+\cite{duarte_silva:j_multivariate_anal:01}
 
 
-somewhere we need to comment on alternative approaches in R, especially
-the \pkg{leaps} package \citep{xsubset:Lumley+Miller:2009} based on \cite{xsubset:Miller:2002}
-and the \pkg{subselect} package \citep{xsubset:OrestesCerdeira+DuarteSilva+Cadima:2009}
-base on \cite{xsubset:DuarteSilva:2001}
+\section{Implementation}
+\label{sec:implementation}
 
+Consider the standard regression model
+\begin{equation}
+  \label{eqn:olm}
+  y=X\beta+\epsilon,\qquad\epsilon\sim(0,\sigma^2I_M),
+\end{equation}
+where $y\in\Rset^M$, $X\in \Rset^{M\times N}$ is the exogenous data
+matrix of full column rank, $\beta\in\Rset^N$ is the coefficient
+vector and $\epsilon\in\Rset^N$ is the noise vector.  The columns of
+$X$ correspond to the exogenous variables $V=[v_1,\dots,v_N] $.  A
+submodel $S$ of \eqref{eqn:olm} comprises some of the variables in
+$V$.  The goal is to determine
+\begin{equation}
+  S^*=\argmin_Sf(S),\quad\text{where $f$ is some criterion function.}
+\end{equation}
+Possible criteria include Mallows' $C_{\text{p}}$ , adjusted $R^2$, or
+a criterion of the AIC family \citep{miller:02}.  The aforementioned
+criteria are monotonic functions of the residual sum of squares (RSS)
+for a constant number of parameters, and attain there optimal value
+when the RSS is minimal.  Thus, the search problem may be decomposed
+as follows: Find
+\begin{align}
+  S^*_n=\argmin_{S,\ \card{S}=n}\rss(S)\quad\text{for}\quad n=1,\dots,N.
+\end{align}
+There are $2^N-1$ possible subset models, and their computation is
+only feasible for small values of $N$.  Regression trees are employed
+to traverse the search space in a systematic fashion.  Figure
+\ref{fig:dca_tree} illustrates a regression tree for $N=5$ variables.
+A node in the regression tree is a pair $(S,k)$, where
+$S=(s_1,\ldots,s_n)$ is a certain subset of $n$ variables and $k$ is
+an integer, symbolized by a $\bullet$.
 
-\section{Implementation} \label{sec:implementation}
+\begin{figure}[htpb]
+  \def\node#1{\TR{\psframebox[framearc=0.5]{#1}}}
+  \begin{center}
+    \pstree[levelsep=8ex,treesep=2ex,edge=\ncline]{\node{12345}}{%
+      \pstree{\node{$\bullet$2345}}{%
+        \pstree{\node{$\bullet$345}}{%
+          \pstree{\node{$\bullet$45}}{%
+            \node{$\bullet$5}}%
+          \node{3$\bullet$5}}%
+        \pstree{\node{2$\bullet$45}}{%
+          \node{2$\bullet$5}}%
+        \node{23$\bullet$5}}%
+      \pstree{\node{1$\bullet$345}}{%
+        \pstree{\node{1$\bullet$45}}{%
+          \node{1$\bullet$5}}%
+        \node{13$\bullet$5}}%
+      \pstree{\node{12$\bullet$45}}{%
+        \node{12$\bullet$5}}%
+      \node{123$\bullet$5}}
+\end{center}
+\caption{All-subsets regression tree for $N=5$ variables.}
+\label{fig:dca_tree}
+\end{figure}
 
-one could probably briefly comment on the algorithm and then
-point out how it is implemented in \proglang{C++}
+Each node corresponds to a unique subset of variables, although not
+every possible subset gives rise to a node.  Thus, the number of nodes
+is $2^{N-1}$.  When the algorithm visits node $(S,k)$, it reports the
+RSS of the models corresponding to the leading variable subsets of
+size $k+1$, \ldots, $n$, i.e. the subleading models
+$(s_1,\ldots,s_{k+1})$, \ldots, $(s_1,\ldots,s_n)$.  It then generates
+and in turn visits the nodes $(S-\{s_j\},j-1)$ for $j=n-1,\ldots,k+1$
+\citep{gatu:j_comput_graph_stat:06}.
+
+The reported RSS is stored in a subset table $r$ along with its
+corresponding subset of variables.  The entry $r_n$ corresponds to the
+RSS of the best subset model with $n$ variables found so far.  The
+algorithm employs a branch-and-bound strategy to reduce the number of
+generated nodes by cutting subtrees which do not contribute to the
+best solution.  A cutting test is employed to determine which parts of
+the tree are redundant.  That is, a new node $(S-\{s_j\},j-1)$ is
+generated only if $\rss(S)<r_j$ ($j=k+1,\ldots,n-1$).  The quantity
+$\rss(S)$ is said to be the \emph{bound} of the subtree rooted in
+$(S,k)$; that is, no subset model extracted from the subtree can have
+a lower RSS \citep{gatu:j_comput_graph_stat:06}.
+
+In order to encourage the cutting of large subtrees, the regression
+tree is generated such that large subtrees have greater bounds.  The
+algorithm achieves this by preordering the variables.  Computing the
+bounds of the variables is expensive.  Thus, it is not advisable to
+preorder the variables in all the nodes.  A parameter --- the
+preordering radius $p$ ($0\le p\le N$) --- defines the extent to which
+variables are preordered
+\citep{gatu:j_comput_graph_stat:06,hofmann:comput_stat_data_an:07}.
+
+The efficiency of the branch-and-bound strategy is improved by
+allowing the algorithm to prune non-redundant portions of the
+regression tree.  Thus, the cutting test is relaxed by employing a
+tolerance parameter $\tau_n\ge 0$ ($n=1,\ldots,N$).  A node
+$(S-\{s_j\},j-1)$ is generated only if there exists at least one $i$
+such that $(1+\tau_i)\cdot\rss(S)<r_i$ ($i=j,\ldots,n-1$).  The
+algorithm is non-exhaustive if $\tau_n>0$ for any $n$, meaning that
+the computed solution is not guaranteed to be optimal.  The algorithm
+cuts subtrees more aggressively the greater the value of $\tau_n$; the
+relative error of the solution is bounded by the employed tolerance
+\citep{gatu:j_comput_graph_stat:06,hofmann:comput_stat_data_an:07}.
+
+The branch-and-bound algorithm with tolerance parameter is illustrated
+in Listing~\ref{alg:bba}.  The keywords \texttt{break} and
+\texttt{next} pertain the same meaning as in the \proglang{R}
+language; that is, \texttt{break} transfers execution to the statement
+following the inner-most loop, and \texttt{next} halts the current
+iteration and advances the looping index.
+
+\begin{algorithm}[!h]
+  \caption{The branch-and-bound algorithm.}
+  \label{alg:bba}
+  \begin{algorithmic}[1]
+    \Procedure{BBA}{$V$, $\tau$, $r$}
+    \State $N$ $\gets$ $\card{V}$
+    \State $r_{1:N}$ $\gets$ $+\infty$
+    \State $z$ $\gets$ $((V,0))$$\quad\#$ {\it node stack}
+    \While{\texttt{not} empty $z$}
+      \State \texttt{with} $z$ pop $(S,k)$
+      \State $n$ $\gets$ $\card{S}$, $\rho$ $\gets$ $\rss(S)$
+      \State preorder $(S,k)$
+      \State \texttt{with} $(S,k)$ update $r_{k+1:n}$
+      \For{$i=n-1,\ldots,k+1$}
+        \State \textbf{if} $(1+\tau_i)\cdot\rho>r_i$ \texttt{next}
+        \For{$j=k+1,\ldots,i$}
+          \State \texttt{with} $z$ push $(S-\{s_j\},j-1)$
+        \EndFor
+        \State \texttt{break}
+      \EndFor
+    \EndWhile
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+The algorithm reports the $N$ subset models with the lowest RSS, one
+for each subset size.  The user can then analyse the list of returned
+subsets to determine the \dquote{best} subset, e.g. by evaluating some
+criterion function.  This approach is practical but not necessarily
+efficient.  The algorithm may be optimized for a particular criterion
+$f$ under the condition that the latter may be expressed as a function
+of the subset size $n$ and the RSS $\rho$, i.e. $f(n,\rho)$, and that
+$f$ is monotonic with respect to both $n$ and $\rho$.  The modified
+algorithm is presented in Listing~\ref{alg:mbba}.  It takes a single
+tolerance value and returns a single solution, that is the overall
+(i.e. over all subset sizes) best subset model according to criterion
+function $f$.
+
+\begin{algorithm}[!h]
+  \caption{The modified branch-and-bound algorithm.}
+  \label{alg:mbba}
+  \begin{algorithmic}[1]
+    \Procedure{mBBA}{$V$, $\tau$, $f$}
+    \State $r$ $\gets$ $+\infty$
+    \State $z$ $\gets$ $((V,0))$$\quad\#$ {\it node stack}
+    \While{\texttt{not} empty $z$}
+      \State \texttt{with} $z$ pop $(S,k)$
+      \State $n$ $\gets$ $\card{S}$, $\rho$ $\gets$ $\rss(S)$
+      \State preorder $(S,k)$
+      \State \texttt{with} $(S,k)$, $f$ update $r$
+      \For{$i=n-1,\ldots,k+1$}
+        \State \textbf{if} $(1+\tau)\cdot f(i,\rho)>r$ \texttt{next}
+        \For{$j=k+1,\ldots,i$}
+          \State \texttt{with} $z$ push $(S-\{s_j\},j-1)$
+        \EndFor
+        \State \texttt{break}
+      \EndFor
+    \EndWhile
+    \State \texttt{return} $r$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
 
 \subsection[C++]{\proglang{C++}}
 
+Focus has been put on the computational efficiency of the code
+\proglang{C++} code.  The following points have been given special
+attention: (a) no allocation of dynamic memory in main loop, (b) no
+(unnecessary) matrix copy operations.
+
+
 \subsection[R interface]{\proglang{R} interface}
 
-\proglang{S}3 class \class{xsubset} with associated methods
+% \proglang{S}3 class \class{xsubset} with associated methods
 
-\fct{xsubset} is generic with the default method being the workhorse 
-function and taking the regressor matrix \code{x} and response vector \code{y}
-as main arguments. In addition, a \class{formula} and a \class{lm} method
-are provided for convenience.
+% \fct{xsubset} is generic with the default method being the workhorse 
+% function and taking the regressor matrix \code{x} and response vector \code{y}
+% as main arguments. In addition, a \class{formula} and a \class{lm} method
+% are provided for convenience.
 
-Many methods that work for \class{lm} objects also work for \class{xsubset}
-objects. The idea is always that the linear model is refitted for the
-specified \code{size} and then the information is extracted. If some method
-is not available, \fct{refit} can always be called explicitly which returns
-a \class{lm} object. For some
-methods, \code{size} can also be a vector of sizes that should be assessed.
-The default for \code{size} is typically the best BIC model, sometimes (as
-in the \fct{summary} and \fct{plot} method) all sizes available in the 
-\class{xsubset} object are assessed.  Currently, the methods to the generic functions include
-\fct{print}, \fct{summary}, \fct{coef}, \fct{vcov}, \fct{logLik}, \fct{residuals}, 
-\fct{fitted}, \fct{model.frame}, \fct{model.matrix}, \fct{AIC}, \fct{logLik}, \fct{deviance}.  
+% Many methods that work for \class{lm} objects also work for \class{xsubset}
+% objects. The idea is always that the linear model is refitted for the
+% specified \code{size} and then the information is extracted. If some method
+% is not available, \fct{refit} can always be called explicitly which returns
+% a \class{lm} object. For some
+% methods, \code{size} can also be a vector of sizes that should be assessed.
+% The default for \code{size} is typically the best BIC model, sometimes (as
+% in the \fct{summary} and \fct{plot} method) all sizes available in the 
+% \class{xsubset} object are assessed.  Currently, the methods to the generic functions include
+% \fct{print}, \fct{summary}, \fct{coef}, \fct{vcov}, \fct{logLik}, \fct{residuals}, 
+% \fct{fitted}, \fct{model.frame}, \fct{model.matrix}, \fct{AIC}, \fct{logLik}, \fct{deviance}.  
 
 
-\section{Illustrations} \label{sec:illustrations}
+\section{Illustrations}
+\label{sec:illustrations}
 
 load package and example data, for convenience already take logs for relative potentials
 %
@@ -121,32 +357,33 @@ summary(xs)
 \begin{figure}{t}
 \begin{center}
 \includegraphics{xsubset-summary}
-\caption{\label{fig:summary} BIC and RSS.}
+\caption{BIC and RSS.}
+\label{fig:summary}
 \end{center}
 \end{figure}
 
 extract information (by default for best BIC model)
 @
 <<deviance>>=
-#deviance(xs)
-#logLik(xs)
-#AIC(xs)
-#AIC(xs, k = log(nrow(AirPollution)))
+deviance(xs)
+logLik(xs)
+AIC(xs)
+AIC(xs, k = log(nrow(AirPollution)))
 @
 %
 extract information for all subsets fitted
 %
 <<deviance-all>>=
-#deviance(xs, size = 1:16)
-#AIC(xs, size = 1:16)
-#AIC(xs, size = 1:16, k = log(nrow(AirPollution)))
+deviance(xs, size = 1:16)
+AIC(xs, size = 1:16)
+AIC(xs, size = 1:16, k = log(nrow(AirPollution)))
 @
 %
 refit model (best BIC by default)
 %
 <<refit>>=
-#lm5 <- refit(xs)
-#summary(lm5)
+lm5 <- refit(summary(xs))
+summary(lm5)
 @
 
 (Note that the $p$~values are not valid due to model selection.)

@@ -3,6 +3,20 @@
 ##
 
 
+xsubset <- function (object, ...)
+  UseMethod("xsubset")
+
+
+refit <- function (object, ...)
+  UseMethod("refit")
+
+
+
+################
+## GENERATORS ##
+################
+
+
 ## interface for fitted lm regression
 ##
 ## Args:
@@ -157,7 +171,7 @@ xsubset.formula <- function (formula, data, row.subset, weights,
 ##   ...       - ignored
 ##
 ## Rval:  (xsubset0)
-##   call      - (FIXME)
+##   call      - (call)
 ##   weights   - (numeric[])
 ##   offset    - (numeric[])
 ##   nobs      - (integer)
@@ -204,6 +218,9 @@ xsubset.default <- function (object, y, weights = NULL, offset = NULL,
 
   ## variables names
   x.names <- colnames(x)
+  if (is.null(x.names)) {
+    x.names <- paste("X", 1:nvar, sep = "")
+  }
 
   ## include processing
   if (is.null(include)) {
@@ -244,7 +261,7 @@ xsubset.default <- function (object, y, weights = NULL, offset = NULL,
   }
 
   ## handle intercept
-  intercept <- x.names[1] == "(Intercept)"
+  intercept <- isTRUE(all.equal(as.vector(x[, 1]), rep(1, nobs)))
   if (intercept) {
     if (any(include == 1)) {
       ## OK, already selected
@@ -325,7 +342,7 @@ xsubset.default <- function (object, y, weights = NULL, offset = NULL,
     ## size
     rval$size <- size
     ## tolerance
-    rval$tolerance <- tolerance
+    rval$tolerance <- array(tolerance, dim = nvar0, dimnames = list(1:nvar0))
     ## rss
     rval$rss <- array(NA, dim = c(nbest, nvar),
                       dimnames = list(1:nbest, 1:nvar))
@@ -343,18 +360,21 @@ xsubset.default <- function (object, y, weights = NULL, offset = NULL,
     ## class
     class(rval) <- c("xsubset", class(rval))
   } else {
+    cnames <- paste(1:nbest, ".", sep = "")
     ## tolerance
-    rval$tolerance <- tolerance[1]
+    rval$tolerance <- array(rep(tolerance[1], nbest), dim = nbest,
+                            dimnames = list(cnames))
     ## rss
-    rval$rss <- array(C_rval$rss, dim = nbest, dimnames = list(1:nbest))
+    rval$rss <- array(C_rval$rss, dim = nbest, dimnames = list(cnames))
     ## aic
-    rval$aic <- array(C_rval$aic, dim = nbest, dimnames = list(1:nbest))
+    rval$aic <- array(C_rval$aic, dim = nbest, dimnames = list(cnames))
     ## sel
     rval$which <- array(NA, dim = c(nvar, nbest),
-                        dimnames = list(x.names, 1:nbest))
+                        dimnames = list(x.names, cnames))
     rval$which[which0, ] <- C_rval$which[1:(nvar0 * nbest)]
     ## size
-    rval$size <- apply(rval$which, 2, sum)
+    rval$size <- array(apply(rval$which, 2, sum), dim = nbest,
+                       dimnames = list(cnames))
     ## class
     class(rval) <- c("xsubset2", class(rval))
   }
@@ -367,14 +387,19 @@ xsubset.default <- function (object, y, weights = NULL, offset = NULL,
 ## print method for 'xsubset' objects
 ##
 ## Args:
-##   x   - (xsubset)
-##   ... - ignored
+##   x      - (xsubset)
+##   digits - (integer)
+##   ...    - ignored
 ##
-## Rval: (xsubset) invisible
+## Rval:  (xsubset) invisible
 ##
-print.xsubset <- function (x, ...)
+print.xsubset <- function (x, digits = NULL, ...)
 {
   catln <- function (...) base::cat(..., "\n", sep = "")
+
+  if (is.null(digits)) {
+    digits <- max(3, getOption("digits") - 3)
+  }
   
   catln()
   catln("Call:")
@@ -386,7 +411,8 @@ print.xsubset <- function (x, ...)
                      paste(x$exclude, collapse = " "),
                      paste(x$size, collapse = " "),
                      "RSS",
-                     paste(x$tolerance, collapse = " "),
+                     paste(format(x$tolerance, digits = digits, trim = TRUE),
+                           collapse = " "),
                      format(x$nbest)),
                      ncol = 1)
   colnames(val) <- ""
@@ -402,14 +428,19 @@ print.xsubset <- function (x, ...)
 ## print method for 'xsubset2' objects
 ##
 ## Args:
-##   x   - (xsubset2)
-##   ... - ignored
+##   x      - (xsubset2)
+##   digits - (integer)
+##   ...    - ignored
 ##
-## Rval: (xsubset2) invisible
+## Rval:  (xsubset2) invisible
 ##
-print.xsubset2 <- function (x, ...)
+print.xsubset2 <- function (x, digits = NULL, ...)
 {
   catln <- function (...) base::cat(..., "\n", sep = "")
+
+  if (is.null(digits)) {
+    digits <- max(3, getOption("digits") - 3)
+  }
   
   catln()
   catln("Call:")
@@ -419,9 +450,11 @@ print.xsubset2 <- function (x, ...)
                      if (x$intercept) "yes" else "no",
                      paste(x$include, collapse = " "),
                      paste(x$exclude, collapse = " "),
-                     paste("AIC (k = ", x$penalty, ")", sep = ""),
-                     format(x$tolerance),
-                     format(x$nbest),
+                     paste("AIC (k = ", format(x$penalty, digits = digits),
+                           ")", sep = ""),
+                     paste(format(x$tolerance, digits = digits),
+                           collapse = " "),
+                     x$nbest,
                      paste(x$size, collapse = " ")),
                      ncol = 1)
   colnames(val) <- ""
@@ -451,7 +484,7 @@ print.xsubset2 <- function (x, ...)
 ##   legend - (logical)
 ##   ...    - passed ot 'plot.default'
 ##
-## Rval: (xsubset) invisible
+## Rval:  (xsubset) invisible
 ##
 ## Graphical arguments are passed to 'plot.default'.
 ##
@@ -497,7 +530,7 @@ plot.xsubset <- function (x, rank = 1, type = "b", main = "Deviance",
 ##   legend - (logical)
 ##   ...    - passed ot 'plot.default'
 ##
-## Rval: (xsubset2) invisible
+## Rval:  (xsubset2) invisible
 ##
 ## Graphical arguments are passed to 'plot.default'.
 ##
@@ -505,11 +538,14 @@ plot.xsubset2 <- function (x, type = "b", main = "Deviance", xlab = NULL,
                            ylab = "", col = "blue", lty = 1, legend = TRUE,
                            ...)
 {
+  digits <- max(3, getOption("digits") - 3)
+
   ## aic
   aic <- AIC(x, rank = 1:x$nbest)$AIC
 
   ## sub title
-  sub <- paste("AIC (k = ", x$penalty, ")", sep = "")
+  sub <- paste("AIC (k = ", format(x$penalty, digits = digits),
+               ")", sep = "")
 
   ## x label
   if (is.null(xlab)) {
@@ -524,12 +560,12 @@ plot.xsubset2 <- function (x, type = "b", main = "Deviance", xlab = NULL,
        xlab = xlab, ylab = ylab, col = col, lty = lty, ...)
 
   ## labels (subset sizes)
-  text(rank, aic, labels = paste("[", x$size, "]", sep = ""),
+  text(rank, aic, labels = paste("(", x$size, ")", sep = ""),
        adj = c(0, 1.5), cex = 0.8)
 
   ## legend
   if (legend) {
-    legend("topleft", "AIC [Size]", lty = lty, col = col, bty = "n")
+    legend("topleft", "AIC (size)", lty = lty, col = col, bty = "n")
   }
 
   ## done
@@ -537,15 +573,21 @@ plot.xsubset2 <- function (x, type = "b", main = "Deviance", xlab = NULL,
 }
 
 
+
+#############
+## METHODS ##
+#############
+
+
 ## extract variable names
 ##
 ## Args:
 ##   object - (xsubset)
-##   size   - (integer[])
+##   size   - (integer)
 ##   rank   - (integer)
 ##   ...    - ignored
 ##
-## Rval: (character[])
+## Rval:  (character[])
 ##   variable names
 ##
 variable.names.xsubset <- function (object, size, rank = 1, ...) {
@@ -564,7 +606,7 @@ variable.names.xsubset <- function (object, size, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - ignored
 ##
-## Rval: (character[])
+## Rval:  (character[])
 ##   variable names
 ##
 variable.names.xsubset2 <- function (object, rank = 1, ...) {
@@ -582,7 +624,7 @@ variable.names.xsubset2 <- function (object, rank = 1, ...) {
 ##   x    - (xsubset0)
 ##   ...  - forwarded to 'variable.names'
 ##
-## Rval: (formula)
+## Rval:  (formula)
 ##
 formula.xsubset0 <- function (x, ...) {
   ## formula interface?
@@ -617,7 +659,7 @@ formula.xsubset0 <- function (x, ...) {
 ##   rank - (integer)
 ##   ...  - ignored
 ##
-## Rval: (formula)
+## Rval:  (formula)
 ##
 formula.xsubset <- function (x, size, rank = 1, ...) {
   NextMethod(.Generic, x, size = size, rank = rank)
@@ -631,7 +673,7 @@ formula.xsubset <- function (x, size, rank = 1, ...) {
 ##   rank - (integer)
 ##   ...  - ignored
 ##
-## Rval: (formula)
+## Rval:  (formula)
 ##
 formula.xsubset2 <- function (x, rank = 1, ...) {
   NextMethod(.Generic, x, rank = rank)
@@ -644,7 +686,7 @@ formula.xsubset2 <- function (x, rank = 1, ...) {
 ##   formula - (xsubset0)
 ##   ...     - ignored
 ##
-## Rval: (data.frame)
+## Rval:  (data.frame)
 ##
 model.frame.xsubset0 <- function (formula, ...) {
   ## formula interface?
@@ -668,7 +710,7 @@ model.frame.xsubset0 <- function (formula, ...) {
 ##   formula - (xsubset)
 ##   ...     - ignored
 ##
-## Rval: (data.frame)
+## Rval:  (data.frame)
 ##
 model.frame.xsubset <- function (formula, ...) {
   NextMethod(.Generic, formula)
@@ -681,7 +723,7 @@ model.frame.xsubset <- function (formula, ...) {
 ##   formula - (xsubset2)
 ##   ...     - ignored
 ##
-## Rval: (data.frame)
+## Rval:  (data.frame)
 ##
 model.frame.xsubset2 <- function (formula, ...) {
   NextMethod(.Generic, formula)
@@ -694,7 +736,7 @@ model.frame.xsubset2 <- function (formula, ...) {
 ##   object - (xsubset0)
 ##   ...    - forwarded to 'variable.names'
 ##
-## Rval: (matrix)
+## Rval:  (matrix)
 ##
 model.matrix.xsubset0 <- function (object, ...) {
   ## formula interface?
@@ -724,7 +766,7 @@ model.matrix.xsubset0 <- function (object, ...) {
 ##   rank   - (integer)
 ##   ...    - ignored
 ##
-## Rval: (matrix)
+## Rval:  (matrix)
 ##
 model.matrix.xsubset <- function (object, size, rank = 1, ...) {
   NextMethod(.Generic, object, size = size, rank = rank)
@@ -738,7 +780,7 @@ model.matrix.xsubset <- function (object, size, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - ignored
 ##
-## Rval: (matrix)
+## Rval:  (matrix)
 ##
 model.matrix.xsubset2 <- function (object, rank = 1, ...) {
   NextMethod(.Generic, object, rank = rank)
@@ -752,7 +794,7 @@ model.matrix.xsubset2 <- function (object, rank = 1, ...) {
 ##   ...       - forwarded to 'formula'
 ##   mask.call - (logical) used internally
 ##
-## Rval: (lm)
+## Rval:  (lm)
 ##
 ## Note:  'mask.call'
 ##   Reconstruct 'call' object for pretty printing.
@@ -808,7 +850,7 @@ refit.xsubset0 <- function (object, ..., mask.call = TRUE) {
 ##   ...       - ignored
 ##   mask.call - (logical) used internally
 ##
-## Rval: (lm)
+## Rval:  (lm)
 ##
 refit.xsubset <- function (object, size, rank = 1, ..., mask.call = TRUE) {
   NextMethod(.Generic, object, size = size, rank = rank, mask.call = mask.call)
@@ -823,7 +865,7 @@ refit.xsubset <- function (object, size, rank = 1, ..., mask.call = TRUE) {
 ##   ...       - ignored
 ##   mask.call - (logical) used internally
 ##
-## Rval: (lm)
+## Rval:  (lm)
 ##
 refit.xsubset2 <- function (object, rank = 1, ..., mask.call = TRUE) {
   NextMethod(.Generic, object, rank = rank, mask.call = mask.call)
@@ -838,11 +880,11 @@ refit.xsubset2 <- function (object, rank = 1, ..., mask.call = TRUE) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'coef.lm'
 ##
-## Rval: (numeric[])
+## Rval:  (numeric[])
 ##
 ## Note: 'refit'
 ##   This method refits the 'xsubset' object and calls 'coef' on the
-##   obtained 'lm' object.  Under some circumstances it might be more
+##   obtained 'lm' object.  In some circumstances it might be more
 ##   efficient to call 'refit' directly and execute 'coef' on the
 ##   obtained 'lm' object.
 ##
@@ -858,7 +900,7 @@ coef.xsubset <- function (object, size, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'coef.lm'
 ##
-## Rval: (numeric[])
+## Rval:  (numeric[])
 ##
 ## Note: 'refit'
 ##   See 'coef.xsubset'.
@@ -876,7 +918,7 @@ coef.xsubset2 <- function (object, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'vcov.lm'
 ##
-## Rval: (matrix)
+## Rval:  (matrix)
 ##
 ## Note: 'refit'
 ##   See 'coef.xsubset'.
@@ -893,7 +935,7 @@ vcov.xsubset <- function (object, size, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'vcov.lm'
 ##
-## Rval: (matrix)
+## Rval:  (matrix)
 ##
 ## Note: 'refit'
 ##   See 'coef.xsubset'.
@@ -911,7 +953,7 @@ vcov.xsubset2 <- function (object, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'fitted.lm'
 ##
-## Rval: (numeric[])
+## Rval:  (numeric[])
 ##
 ## Note: 'refit'
 ##   See 'coef.xsubset'.
@@ -928,7 +970,7 @@ fitted.xsubset <- function (object, size, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'fitted.lm'
 ##
-## Rval: (numeric[])
+## Rval:  (numeric[])
 ##
 ## Note: 'refit'
 ##   See 'coef.xsubset'.
@@ -946,7 +988,7 @@ fitted.xsubset2 <- function (object, rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'residuals.lm'
 ##
-## Rval: (numeric[])
+## Rval:  (numeric[])
 ##
 ## Note: 'refit'
 ##   See 'coef.xsubset'.
@@ -963,7 +1005,7 @@ residuals.xsubset <- function (object, size , rank = 1, ...) {
 ##   rank   - (integer)
 ##   ...    - forwarded to 'residuals.lm'
 ##
-## Rval: (numeric[])
+## Rval:  (numeric[])
 ##
 ## Note: 'refit'
 ##   See 'coef.xsubset'.
@@ -981,7 +1023,7 @@ residuals.xsubset2 <- function (object, rank = 1, ...) {
 ##   rank   - (integer[])
 ##   ...    - ignored
 ##
-## Rval: (numeric[])
+## Rval:  (numeric[])
 ##
 ## Returns the RSS for the specified subset(s).
 ##
@@ -1049,17 +1091,24 @@ logLik.xsubset0 <- function (object, ..., df) {
 ## Args:
 ##   object - (xsubset)
 ##   size   - (integer[])
-##   rank   - (integer)
+##   rank   - (integer[])
 ##   ...    - ignored
 ##
 ## Rval:  (logLik)
 ##
 ## Note:  'size'
-##   This method returns a numeric vector of the same length as
-##   'size' and of class 'logLik'.
+##   This method returns a numeric vector of length
+##   'length(rank) * length(size)'.
 ##
 logLik.xsubset <- function (object, size = NULL, rank = 1, ...) {
-  NextMethod(.Generic, object, size = size, rank = rank, df = size + 1)
+  ## size
+  if (is.null(size)) {
+    size <- object$size
+  }
+  ## degrees of freedom
+  df <- rep(size + 1, each = length(rank))
+  ## done
+  NextMethod(.Generic, object, size = size, rank = rank, df = df)
 }
 
 
@@ -1074,7 +1123,7 @@ logLik.xsubset <- function (object, size = NULL, rank = 1, ...) {
 ##
 ## Note:  'rank'
 ##   This method returns a numeric vector of the same length as
-##   'size' and of class 'logLik'.
+##   'rank'.
 ##
 logLik.xsubset2 <- function (object, rank = 1, ...) {
   ## done
@@ -1092,13 +1141,15 @@ logLik.xsubset2 <- function (object, rank = 1, ...) {
 ## Rval: (numeric|data.frame)
 ##
 AIC.xsubset0 <- function (object, ..., k = 2) {
+  ## extract log-likelihoods
   ll <- logLik(object, ...)
+  ## compute AICs
   aic <- AIC(ll, k = k)
-
+  ## data frame?
   if (length(aic) > 1) {
     aic <- data.frame(df = attr(ll, "df"), AIC = aic)
   }
-
+  ## done
   aic
 }
 
@@ -1108,7 +1159,7 @@ AIC.xsubset0 <- function (object, ..., k = 2) {
 ## Args:
 ##   object - (xsubset)
 ##   size   - (integer[])
-##   rank   - (integer)
+##   rank   - (integer[])
 ##   ...    - ignored
 ##   k      - (integer)
 ##
@@ -1158,377 +1209,4 @@ AIC.xsubset2 <- function (object, rank = 1, ..., k = NULL) {
 
   ## done
   NextMethod(.Generic, object, rank = rank, k = k)
-}
-
-
-##
-## SUMMARY
-##
-
-
-## summary for 'xsubset' objects
-##
-## Args:
-##   object  - (xsubset)
-##   rank    - (integer)
-##   penalty - (numeric)
-##   ...     - ignored
-##
-## Rval: (summary.xsubset)
-##
-summary.xsubset <- function (object, rank = 1, penalty = 2, ...) {
-  paste <- function (...) base::paste(..., sep = "")
-
-  ## rss
-  rss <- deviance(object, rank = rank)
-
-  ## aic
-  aic <- AIC(object, size = object$size, rank = rank, k = penalty)
-  if (length(object$size) > 1) {
-    aic <- aic$AIC
-    best <- which.min(aic)
-  } else {
-    best <- 1
-  }
-
-  ## names
-  names(aic) <- object$size
-
-  ## update object
-  object$sum.rank <- rank
-  object$sum.penalty <- penalty
-  object$sum.rss <- rss
-  object$sum.aic <- aic
-  object$sum.best <- best
-  class(object) <- c("summary.xsubset", class(object))
-
-  ## done
-  object
-}
-
-
-
-## summary for 'xsubset2' objects
-##
-## Args:
-##   object - (xsubset2)
-##   ...    - ignored
-##
-## Rval:  (summary.xsubset2)
-##
-## Do nothing for objects of type 'xsubset2'.
-##
-summary.xsubset2 <- function (object, ...) {
-  ## update object
-  class(object) <- c("summary.xsubset2", class(object))
-
-  ## done
-  object
-}
-
-
-## print 'xsubset' summary
-##
-## Args:
-##   x      - (summary.xsubset)
-##   digits - (integer)
-##   ...    - ignored
-##
-## Rval: (summary.xsubset) invisible
-##
-print.summary.xsubset <- function (x, digits = max(3, getOption("digits") - 3), ...)
-{
-  catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
-  paste <- function (..., sep = "") base::paste(..., sep = sep)
-
-  ## call
-  catln()
-  catln("Call:")
-  catln(deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
-
-  ## rank
-  catln()
-  catln("Rank: ", paste(x$sum.rank, "."), "/", x$nbest)
-
-  ## variable table
-  catln()
-  catln("Selected variables (by size):")
-  which.x <- ifelse(x$which[, x$sum.rank, ][, x$size, drop = FALSE], "x", "")
-  rownames(which.x)[x$include] <- paste("+", rownames(which.x)[x$include])
-  rownames(which.x)[x$exclude] <- paste("-", rownames(which.x)[x$exclude])
-  colnames(which.x)[x$sum.best] <- paste(colnames(which.x)[x$sum.best], "*")
-  print(which.x, quote = FALSE)
-
-  ## fit
-  catln()
-  catln("Model fit:")
-  fit <- rbind(x$sum.aic, x$sum.rss)
-  rownames(fit) <- c("AIC", "RSS")
-  colnames(fit)[x$sum.best] <- paste(colnames(fit)[x$sum.best], "*")
-  print(fit, digits = digits)
-  catln()
-  catln("AIC: penalty = ", format(x$sum.penalty, digits = digits))
-  catln()
-  catln("* best subset")
-    
-  invisible(x)
-}
-
-
-## print 'xsubset2' summary
-##
-## Args:
-##   x      - (summary.xsubset2)
-##   digits - (integer)
-##   ...    - ignored
-##
-## Rval: (summary.xsubset2) invisible
-##
-print.summary.xsubset2 <- function (x, digits = max(3, getOption("digits") - 3), ...)
-{
-  catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
-  paste <- function (..., sep = "") base::paste(..., sep = sep)
-
-  ## call
-  catln()
-  catln("Call:")
-  catln(deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
-
-  ## rank
-  rank <- 1:x$nbest
-  catln()
-  catln("Rank: ", paste(paste(rank, "."), collapse = " "), "/", x$nbest)
-
-  ## variables
-  catln()
-  catln("Selected variables (by rank):")
-  which.x <- ifelse(x$which, "x", "")
-  rownames(which.x)[x$include] <- paste("+", rownames(which.x)[x$include])
-  rownames(which.x)[x$exclude] <- paste("-", rownames(which.x)[x$exclude])
-  colnames(which.x) <- paste(colnames(which.x), ".")
-  print(which.x, quote = FALSE)
-
-  ## fit
-  catln()
-  catln("Model fit:")
-  fit <- rbind(format(x$aic), format(x$rss), format(x$size[rank]))
-  rownames(fit) <- c("AIC", "RSS", "Size")
-  colnames(fit) <- paste(colnames(fit), ".")
-  print(fit, digits = digits, quote = FALSE)
-  catln()
-  catln("AIC: penalty = ", x$penalty)
-    
-  ## done
-  invisible(x)
-}
-
-
-## plot 'xsubset' summary
-##
-## Args:
-##   x      - (xsubset)
-##   type   - (character)
-##   main   - (character)
-##   xlab   - (character)
-##   ylab   - (character)
-##   col    - (integer[]|character[])
-##   lty    - (integer)
-##   legend - (logical)
-##   ...    - forwarded
-##
-## Rval: (summary.xsubset) invisible
-##
-## All arguments are passed to 'plot.default'.
-##
-plot.summary.xsubset <- function (x, type = "b", main = NULL, xlab = NULL,
-                                  ylab = "", col = c("blue", "red"), lty = 1,
-                                  legend = TRUE, ...)
-{
-  ## x label
-  if (is.null(xlab)) {
-    xlab <- "Number of regressors in model"
-  }
-
-  ## type
-  type <- rep(type, length.out = 2)
-
-  ## main title
-  if (is.null(main)) {
-    main <- "AIC and residual sum of squares"
-  }
-
-  ## sub title
-  sub <- paste("AIC (k = ", x$sum.penalty, ")", sep = "")
-
-  ## color
-  col <- rep(col, length.out = 2)
-
-  ## line type
-  lty <- rep(lty, length.out = 2)
-
-  ## plot rss
-  plot(x$size, x$sum.rss, type = type[1], main = main, sub = sub,
-       xlab = xlab, ylab = ylab, col = col[1], lty = lty[1], ...)
-
-  ## plot aic
-  new.old <- getOption("new")
-  par(new = TRUE)
-  plot(x$size, x$sum.aic, type = type[2], xlab = "", ylab = "",
-       col = col[2], lty = lty[2], axes = FALSE, ...)
-  par(new = new.old)
-
-  ## legend
-  if (legend) {
-    legend("top", c("RSS", "AIC"), lty = lty, col = col, bty = "n")
-  }
-
-  ## axes
-  axis(4)
-
-  ## done
-  invisible(x)
-}
-
-
-## plot 'xsubset2' summary
-##
-## Args:
-##   x      - (xsubset2)
-##   type   - (character) plot type
-##   main   - (character) main title
-##   xlab   - (character) x label
-##   ylab   - (character) y label
-##   col    - (integer[]|character[]) color
-##   lty    - (integer) line type
-##   legend - (logical) legend?
-##   ...    - forwarded
-##
-## Rval: (summary.xsubset2) invisible
-##
-## All arguments are passed to 'plot.default'.
-##
-plot.summary.xsubset2 <- function (x, type = "b", main = NULL, xlab = NULL,
-                                  ylab = "", col = c("blue", "red"), lty = 1,
-                                  legend = TRUE, ...)
-{
-  ## type
-  type <- rep(type, length.out = 2)
-
-  ## main title
-  if (is.null(main)) {
-    main <- paste("AIC and residual sum of squares")
-  }
-
-  ## sub title
-  sub <- paste("AIC (penalty = ", x$penalty, ")", sep = "")
-
-  ## x label
-  if (is.null(xlab)) {
-    xlab <- "Rank"
-  }
-
-  ## color
-  col <- rep(col, length.out = 2)
-
-  ## line type
-  lty <- rep(lty, length.out = 2)
-
-  ## rank
-  rank <- 1:x$nbest
-
-  ## plot rss
-  plot(rank, x$rss, type = type[1], main = main, sub = sub,
-       xlab = xlab, ylab = ylab, col = col[1], lty = lty[1], ...)
-
-  ## plot aic
-  new.old <- getOption("new")
-  par(new = TRUE)
-  plot(rank, x$aic, type = type[2], xlab = "", ylab = "",
-       col = col[2], lty = lty[2], axes = FALSE, ...)
-  par(new = new.old)
-
-  ## legend
-  if (legend) {
-    legend("top", c("RSS", "AIC"), lty = lty, col = col, bty = "n")
-  }
-
-  ## axes
-  axis(4)
-
-  ## done
-  invisible(x)
-}
-
-
-## refit
-##
-## Args:
-##   object    - (summary.xsubset)
-##   ...       - ignored
-##   mask.call - (logical) used internally
-##
-## Rval: (lm)
-##
-## Refit 'xsubset' object to best subset.
-## 
-refit.summary.xsubset <- function (object, ..., mask.call = TRUE) {
-  best <- object$size[object$sum.best]
-  NextMethod("summary.xsubset", object, size = best,
-             rank = object$sum.rank, mask.call = mask.call)
-}
-
-
-## refit
-##
-## Args:
-##   object    - (summary.xsubset2)
-##   ...       - ignored
-##   mask.call - (logical) used internally
-##
-## Rval: (lm)
-##
-## Refit 'xsubset2' object to best subset.
-##
-refit.summary.xsubset2 <- function (object, ..., mask.call = TRUE) {
-  NextMethod("summary.xsubset2", object, rank = 1, mask.call = mask.call)
-}
-
-
-## summary for 'summary.xsubset' objects
-##
-## Args:
-##   object  - (summary.xsubset)
-##   ...     - forwarded
-##
-## Rval: (summary.xsubset)
-##
-## Note:
-##   Utility method to tidy 'class' attribute
-##
-summary.summary.xsubset <- function (object, ...) {
-  ## remove 'summary.xsubste' from classes
-  class(object) <- class(object)[-1]
-
-  ## done
-  NextMethod(.Generic, object, ...)
-}
-
-
-## summary for 'summary.xsubset2' objects
-##
-## Args:
-##   object  - (summary.xsubset2)
-##   ...     - forwarded
-##
-## Rval: (summary.xsubset2)
-##
-## Note:
-##   Utility method to tidy 'class' attribute
-##
-summary.summary.xsubset2 <- function (object, ...) {
-  ## remove 'summary.xsubset' from classes
-  class(object) <- class(object)[-1]
-
-  ## done
-  NextMethod(.Generic, object, ...)
 }

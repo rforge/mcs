@@ -39,8 +39,6 @@ S3method("AIC", "xsubset")
 S3method("summary", "xsubset")
 S3method("print", "summary.xsubset")
 S3method("plot", "summary.xsubset")
-S3method("refit", "summary.xsubset")
-S3method("summary", "summary.xsubset")
 
 
 ## 'xsubset2' extractor methods
@@ -61,10 +59,6 @@ S3method("logLik", "xsubset2")
 S3method("AIC", "xsubset2")
 
 S3method("summary", "xsubset2")
-S3method("print", "summary.xsubset2")
-S3method("plot", "summary.xsubset2")
-S3method("refit", "summary.xsubset2")
-S3method("summary", "summary.xsubset2")
 
 
 ## 'xsubset0' extractor methods (base methods)
