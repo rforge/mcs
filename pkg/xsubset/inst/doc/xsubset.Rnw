@@ -58,41 +58,31 @@
 % front matter %
 %--------------%
 
-\author{Marc Hofmann\thanks{This work was in part supported by the
-    \emph{F\"orderverein des wirtschaftswissenschaftlichen Zentrum der
-    Universit\"at Basel}, through research project
-    B-123.}\\Universit{\'e} de Neuch{\^a}tel
+\author{Marc Hofmann\\Universit{\'e} de Neuch{\^a}tel
   \And Cristian Gatu\\Universit{\'e} de Neuch{\^a}tel
   \AND Erricos J. Kontoghiorghes\\Birbeck College
-  \And Achim Zeileis\\WU Wirtschaftsuniversit\"at Wien}
-\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes,
-  Achim Zeileis}
+  \And Achim Zeileis\\Universit\"at Innsbruck}
+\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis}
 
-
-\title{\pkg{xsubset}: Efficient Computation of Best Subset Linear
-  Regressions in \proglang{R}}
-\Plaintitle{xsubset: Efficient Computation of Best Subset Linear
-  Regressions in R}
-
+\title{\pkg{xsubset}: Efficient Computation of Best Subset Linear Regressions in \proglang{R}}
+\Plaintitle{xsubset: Efficient Computation of Best Subset Linear Regressions in R}
 
 \Abstract{ 
   todo
 }
 
-
-\Keywords{linear regression, model selection, variable selection, best
-  subset regression, \proglang{R}}
-\Plainkeywords{linear regression, model selection, variable selection,
-  best subset regression, R}
+\Keywords{linear regression, model selection, variable selection, best subset regression, \proglang{R}}
+\Plainkeywords{linear regression, model selection, variable selection, best subset regression, R}
 
  
 \Address{
   Marc Hofmann\\
-  Wirtschaftswissenschaftliche Fakultät\\
-  Abt. Quantitative Methoden\\
+  Wirtschaftswissenschaftliche Fakult\"at\\
+  Abteilung Quantitative Methoden\\
   Computational Management Science\\
+  Universit\"at Basel\\
   Peter Merian-Weg 6\\
-  4002 Basel
+  4002 Basel, Switzerland
 }
 
 
@@ -120,10 +110,11 @@ code is written in \proglang{C++}.  It is available for the
 Network at \url{http://CRAN.R-project.org/package=xsubset}.
 
 \verb+TODO:+ somewhere we need to comment on alternative approaches in
-R, especially the \pkg{leaps} package \citep{lumley:cran:09} based on
-\cite{miller:02} and the \pkg{subselect} package
-\citep{orestes_cerdeira:cran:09} base on
-\cite{duarte_silva:j_multivariate_anal:01}
+\proglang{R}, especially the \pkg{leaps} package \citep{lumley:cran:09} based on
+\cite{miller:02}, the \pkg{subselect} package
+\citep{orestes_cerdeira:cran:09} based on
+\cite{duarte_silva:j_multivariate_anal:01}, and the \pkg{glmulti} package
+\citep{calcagno:jss:10}
 
 
 \section{Implementation}
@@ -141,12 +132,12 @@ $X$ correspond to the exogenous variables $V=[v_1,\dots,v_N] $.  A
 submodel $S$ of \eqref{eqn:olm} comprises some of the variables in
 $V$.  The goal is to determine
 \begin{equation}
-  S^*=\argmin_Sf(S),\quad\text{where $f$ is some criterion function.}
+  S^*=\argmin_S f(S),\quad\text{where $f$ is some criterion function.}
 \end{equation}
 Possible criteria include Mallows' $C_{\text{p}}$ , adjusted $R^2$, or
 a criterion of the AIC family \citep{miller:02}.  The aforementioned
 criteria are monotonic functions of the residual sum of squares (RSS)
-for a constant number of parameters, and attain there optimal value
+for a constant number of parameters, and attain their optimal value
 when the RSS is minimal.  Thus, the search problem may be decomposed
 as follows: Find
 \begin{align}
@@ -154,13 +145,13 @@ as follows: Find
 \end{align}
 There are $2^N-1$ possible subset models, and their computation is
 only feasible for small values of $N$.  Regression trees are employed
-to traverse the search space in a systematic fashion.  Figure
-\ref{fig:dca_tree} illustrates a regression tree for $N=5$ variables.
+to traverse the search space in a systematic fashion.  Figure~\ref{fig:dca_tree}
+illustrates a regression tree for $N=5$ variables.
 A node in the regression tree is a pair $(S,k)$, where
 $S=(s_1,\ldots,s_n)$ is a certain subset of $n$ variables and $k$ is
 an integer, symbolized by a $\bullet$.
 
-\begin{figure}[htpb]
+\begin{figure}[t!]
   \def\node#1{\TR{\psframebox[framearc=0.5]{#1}}}
   \begin{center}
     \pstree[levelsep=8ex,treesep=2ex,edge=\ncline]{\node{12345}}{%
@@ -299,9 +290,9 @@ function $f$.
 
 \subsection[C++]{\proglang{C++}}
 
-Focus has been put on the computational efficiency of the code
+Focus has been put on the computational efficiency of the
 \proglang{C++} code.  The following points have been given special
-attention: (a) no allocation of dynamic memory in main loop, (b) no
+attention: (a)~no allocation of dynamic memory in main loop, (b)~no
 (unnecessary) matrix copy operations.
 
 
@@ -389,7 +380,12 @@ summary(lm5)
 (Note that the $p$~values are not valid due to model selection.)
 
 
+\section*{Acknowledgments}
 
+This work was in part supported by the
+\emph{F\"orderverein des wirtschaftswissenschaftlichen Zentrums der Universit\"at Basel},
+through research project B-123.
+    
 \bibliography{xsubset}
 
 \end{document}
