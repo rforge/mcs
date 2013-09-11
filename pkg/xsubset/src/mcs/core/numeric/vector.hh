@@ -270,11 +270,11 @@ public:
   }
   pointer_type ptr()
   {
-    return base_type::ptr_ + base_type::off_;
+    return base_type::ptr_;
   }
   const_pointer_type ptr() const
   {
-    return base_type::ptr_ + base_type::off_;
+    return base_type::ptr_;
   }
   size_type len() const
   {
@@ -356,7 +356,7 @@ public:
   }
   const_pointer_type ptr() const
   {
-    return base_type::ptr_ + base_type::off_;
+    return base_type::ptr_;
   }
   size_type len() const
   {
@@ -459,11 +459,11 @@ public:
   }
   pointer_type ptr()
   {
-    return base_type::ptr_ + base_type::off_;
+    return base_type::ptr_;
   }
   const_pointer_type ptr() const
   {
-    return base_type::ptr_ + base_type::off_;
+    return base_type::ptr_;
   }
   size_type len() const
   {
@@ -546,7 +546,7 @@ public:
   }
   const_pointer_type ptr() const
   {
-    return base_type::ptr_ + base_type::off_;
+    return base_type::ptr_;
   }
   size_type len() const
   {
