@@ -2,78 +2,19 @@
 #define _MCS_CORE_NUMERIC_MATRIX_HH_
 
 
-#include <cassert>
-#include <cstddef>
 #include <algorithm>
+#include <cassert>
 #include <utility>
 
-#include "vector.hh"
+#include "../../mcs.hh"
+
 #include "subscript.hh"
+#include "traits.hh"
 
 
 namespace mcs     {
 namespace core    {
 namespace numeric {
-
-
-// forward declarations
-template<typename Value>
-class matrix;
-
-template<typename Value>
-class const_matrix;
-
-template<typename Value>
-class matrix_reference;
-
-template<typename Value>
-class const_matrix_reference;
-
-
-// matrix traits
-template<typename Value>
-struct matrix_traits
-{
-  typedef std::size_t size_type;
-  typedef Value value_type;
-  typedef Value& reference_type;
-  typedef const Value& const_reference_type;
-  typedef Value* pointer_type;
-  typedef const Value* const_pointer_type;
-
-  typedef vector<Value> vector_type;
-  typedef const_vector<Value> const_vector_type;
-  typedef vector_reference<Value> vector_reference_type;
-  typedef const_vector_reference<Value> const_vector_reference_type;
-
-  typedef matrix<Value> matrix_type;
-  typedef const_matrix<Value> const_matrix_type;
-  typedef matrix_reference<Value> matrix_reference_type;
-  typedef const_matrix_reference<Value> const_matrix_reference_type;
-
-  typedef subscript<size_type> subscript_type;
-};
-
-template<typename Value>
-struct matrix_traits<matrix<Value> > : matrix_traits<Value>
-{
-};
-
-template<typename Value>
-struct matrix_traits<const_matrix<Value> > : matrix_traits<Value>
-{
-};
-
-template<typename Value>
-struct matrix_traits<matrix_reference<Value> > : matrix_traits<Value>
-{
-};
-
-template<typename Value>
-struct matrix_traits<const_matrix_reference<Value> > : matrix_traits<Value>
-{
-};
-
 
 
 // matrix base
@@ -86,19 +27,24 @@ public:
   typedef matrix_base<Derived> self_type;
   typedef Derived derived_type;
 
-  typedef typename matrix_traits<Derived>::size_type size_type;
-  typedef typename matrix_traits<Derived>::value_type value_type;
-  typedef typename matrix_traits<Derived>::reference_type reference_type;
-  typedef typename matrix_traits<Derived>::const_reference_type const_reference_type;
-  typedef typename matrix_traits<Derived>::pointer_type pointer_type;
-  typedef typename matrix_traits<Derived>::const_pointer_type const_pointer_type;
+  typedef typename traits<Derived>::size_type size_type;
+  typedef typename traits<Derived>::value_type value_type;
+  typedef typename traits<Derived>::reference_type reference_type;
+  typedef typename traits<Derived>::const_reference_type const_reference_type;
+  typedef typename traits<Derived>::pointer_type pointer_type;
+  typedef typename traits<Derived>::const_pointer_type const_pointer_type;
 
-  typedef typename matrix_traits<Derived>::matrix_type matrix_type;
-  typedef typename matrix_traits<Derived>::const_matrix_type const_matrix_type;
-  typedef typename matrix_traits<Derived>::matrix_reference_type matrix_reference_type;
-  typedef typename matrix_traits<Derived>::const_matrix_reference_type const_matrix_reference_type;
+  typedef typename traits<Derived>::vector_type vector_type;
+  typedef typename traits<Derived>::const_vector_type const_vector_type;
+  typedef typename traits<Derived>::vector_reference_type vector_reference_type;
+  typedef typename traits<Derived>::const_vector_reference_type const_vector_reference_type;
 
-  typedef typename matrix_traits<Derived>::subscript_type subscript_type;
+  typedef typename traits<Derived>::matrix_type matrix_type;
+  typedef typename traits<Derived>::const_matrix_type const_matrix_type;
+  typedef typename traits<Derived>::matrix_reference_type matrix_reference_type;
+  typedef typename traits<Derived>::const_matrix_reference_type const_matrix_reference_type;
+
+  typedef typename traits<Derived>::subscript_type subscript_type;
 protected:
   pointer_type buf_;
   pointer_type ptr_;
@@ -116,19 +62,27 @@ protected:
   }
   explicit
   matrix_base(const size_type nrow, const size_type ncol) :
-    buf_(new value_type[len]),
+    buf_(new value_type[nrow * ncol]),
+    ptr_(buf_),
     nrow_(nrow),
     ncol_(ncol),
     ldim_(nrow)
   {
+    MCS_ASSERT(nrow >= 0, "invalid argument: nrow (matrix_base::matrix_base)");
+    MCS_ASSERT(ncol >= 0, "invalid argument: ncol (matrix_base::matrix_base)");
   }
   matrix_base(const pointer_type ptr, const size_type nrow,
 	      const size_type ncol, const size_type ldim) :
     buf_(nullptr),
     ptr_(ptr),
     nrow_(nrow),
-    ncol_(ncol)
+    ncol_(ncol),
+    ldim_(ldim)
   {
+    MCS_ASSERT(ptr != nullptr, "invalid argument: ptr (matrix_base::matrix_base)");
+    MCS_ASSERT(nrow >= 0, "invalid argument: nrow (matrix_base::matrix_base)");
+    MCS_ASSERT(ncol >= 0, "invalid argument: ncol (matrix_base::matrix_base)");
+    MCS_ASSERT(ldim >= nrow, "invalid argument: ldim (matrix_base::matrix_base)");
   }
   ~matrix_base()
   {
@@ -140,15 +94,15 @@ protected:
   }
   reference_type at(const size_type i, const size_type j)
   {
-    assert((0 <= i) && (i < nrow_));
-    assert((0 <= j) && (j < ncol_));
+    MCS_ASSERT((0 <= i) && (i < nrow_), "invalid argument: i (matrix_base::at)");
+    MCS_ASSERT((0 <= j) && (j < ncol_), "invalid argument: j (matrix_base::at)");
 
     return ptr_[j * ldim_ + i];
   }
   const_reference_type at(const size_type i, const size_type j) const
   {
-    assert((0 <= i) && (i < nrow_));
-    assert((0 <= j) && (j < ncol_));
+    MCS_ASSERT((0 <= i) && (i < nrow_), "invalid argument: i (matrix_base::at)");
+    MCS_ASSERT((0 <= j) && (j < ncol_), "invalid argument: j (matrix_base::at)");
 
     return ptr_[j * ldim_ + i];
   }
@@ -179,8 +133,8 @@ protected:
   template<typename D>
   void copy(const matrix_base<D>& x)
   {
-    assert(nrow_ == x.nrow_);
-    assert(ncol_ == x.ncol_);
+    MCS_ASSERT(nrow_ == x.nrow_, "invalid argument: x (matrix_base::copy)");
+    MCS_ASSERT(ncol_ == x.ncol_, "invalid argument: x (matrix_base::copy)");
 
     pointer_type dst = buf_;
     const_pointer_type src = x.buf_;
@@ -278,8 +232,8 @@ public:
   }
   self_type& operator =(matrix_type x)
   {
-    assert(base_type::nrow_ == x.nrow_);
-    assert(base_type::ncol_ == x.ncol_);
+    MCS_ASSERT(base_type::nrow_ == x.nrow_, "invalid argument: x (matrix::operator=)");
+    MCS_ASSERT(base_type::ncol_ == x.ncol_, "invalid argument: x (matrix::operator=)");
 
     base_type::move(x);
 

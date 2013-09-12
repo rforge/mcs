@@ -3,70 +3,17 @@
 
 
 #include <cassert>
-#include <cstddef>
 #include <utility>
 
+#include "../../mcs.hh"
+
 #include "subscript.hh"
+#include "traits.hh"
 
 
 namespace mcs     {
 namespace core    {
 namespace numeric {
-
-
-// forward declarations
-template<typename Value>
-class vector;
-
-template<typename Value>
-class const_vector;
-
-template<typename Value>
-class vector_reference;
-
-template<typename Value>
-class const_vector_reference;
-
-
-// vector traits
-template<typename Value>
-struct vector_traits
-{
-  typedef std::size_t size_type;
-  typedef Value value_type;
-  typedef Value& reference_type;
-  typedef const Value& const_reference_type;
-  typedef Value* pointer_type;
-  typedef const Value* const_pointer_type;
-
-  typedef vector<Value> vector_type;
-  typedef const_vector<Value> const_vector_type;
-  typedef vector_reference<Value> vector_reference_type;
-  typedef const_vector_reference<Value> const_vector_reference_type;
-
-  typedef subscript<size_type> subscript_type;
-};
-
-template<typename Value>
-struct vector_traits<vector<Value> > : vector_traits<Value>
-{
-};
-
-template<typename Value>
-struct vector_traits<const_vector<Value> > : vector_traits<Value>
-{
-};
-
-template<typename Value>
-struct vector_traits<vector_reference<Value> > : vector_traits<Value>
-{
-};
-
-template<typename Value>
-struct vector_traits<const_vector_reference<Value> > : vector_traits<Value>
-{
-};
-
 
 
 // vector base
@@ -79,19 +26,19 @@ public:
   typedef vector_base<Derived> self_type;
   typedef Derived derived_type;
 
-  typedef typename vector_traits<Derived>::size_type size_type;
-  typedef typename vector_traits<Derived>::value_type value_type;
-  typedef typename vector_traits<Derived>::reference_type reference_type;
-  typedef typename vector_traits<Derived>::const_reference_type const_reference_type;
-  typedef typename vector_traits<Derived>::pointer_type pointer_type;
-  typedef typename vector_traits<Derived>::const_pointer_type const_pointer_type;
+  typedef typename traits<Derived>::size_type size_type;
+  typedef typename traits<Derived>::value_type value_type;
+  typedef typename traits<Derived>::reference_type reference_type;
+  typedef typename traits<Derived>::const_reference_type const_reference_type;
+  typedef typename traits<Derived>::pointer_type pointer_type;
+  typedef typename traits<Derived>::const_pointer_type const_pointer_type;
 
-  typedef typename vector_traits<Derived>::vector_type vector_type;
-  typedef typename vector_traits<Derived>::const_vector_type const_vector_type;
-  typedef typename vector_traits<Derived>::vector_reference_type vector_reference_type;
-  typedef typename vector_traits<Derived>::const_vector_reference_type const_vector_reference_type;
+  typedef typename traits<Derived>::vector_type vector_type;
+  typedef typename traits<Derived>::const_vector_type const_vector_type;
+  typedef typename traits<Derived>::vector_reference_type vector_reference_type;
+  typedef typename traits<Derived>::const_vector_reference_type const_vector_reference_type;
 
-  typedef typename vector_traits<Derived>::subscript_type subscript_type;
+  typedef typename traits<Derived>::subscript_type subscript_type;
 protected:
   pointer_type buf_;
   pointer_type ptr_;
@@ -112,6 +59,7 @@ protected:
     len_(len),
     inc_(1)
   {
+    MCS_ASSERT(len >= 0, "invalid argument: len (vector_base::vector_base)");
   }
   vector_base(const pointer_type ptr, const size_type len, const size_type inc) :
     buf_(nullptr),
@@ -119,6 +67,9 @@ protected:
     len_(len),
     inc_(inc)
   {
+    MCS_ASSERT(ptr != nullptr, "invalid argument: ptr (vector_base::vector_base)");
+    MCS_ASSERT(len >= 0, "invalid argument: len (vector_base::vector_base)");
+    MCS_ASSERT(inc >= 0, "invalid argument: inc (vector_base::vector_base)");
   }
   ~vector_base()
   {
@@ -130,28 +81,28 @@ protected:
   }
   reference_type at(const size_type pos)
   {
-    assert((0 <= pos) && (pos < len_));
+    MCS_ASSERT((0 <= pos) && (pos < len_), "invalid argument: pos (vector_base::at)");
 
     return ptr_[pos * inc_];
   }
   const_reference_type at(const size_type pos) const
   {
-    assert((0 <= pos) && (pos < len_));
+    MCS_ASSERT((0 <= pos) && (pos < len_), "invalid argument: pos (vector_base::at)");
 
     return ptr_[pos * inc_];
   }
-  vector_reference_type at(const subscript_type& slice)
+  vector_reference_type at(const subscript_type& pos)
   {
-    return vector_reference_type(ptr_ + slice.pos * inc_, slice.len, slice.inc * inc_);
+    return vector_reference_type(ptr_ + pos.pos * inc_, pos.len, pos.inc * inc_);
   }
-  const_vector_reference_type at(const subscript_type& slice) const
+  const_vector_reference_type at(const subscript_type& pos) const
   {
-    return const_vector_reference_type(ptr_ + slice.pos * inc_, slice.len, slice.inc * inc_);
+    return const_vector_reference_type(ptr_ + pos.pos * inc_, pos.len, pos.inc * inc_);
   }
   template<typename D>
   void copy(const vector_base<D>& x)
   {
-    assert(len_ == x.len_);
+    MCS_ASSERT(len_ == x.len_, "invalid argument: x (vector_base::copy)");
 
     const pointer_type end = ptr_ + len_ * inc_;
 
@@ -246,7 +197,7 @@ public:
   }
   self_type& operator =(vector_type x)
   {
-    assert(base_type::len_ == x.len_);
+    MCS_ASSERT(base_type::len_ == x.len_, "invalid argument: x (vector::operator=)");
 
     base_type::move(x);
 
@@ -260,13 +211,13 @@ public:
   {
     return base_type::at(pos);
   }
-  vector_reference_type operator ()(const subscript_type& slice)
+  vector_reference_type operator ()(const subscript_type& pos)
   {
-    return base_type::at(slice);
+    return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& slice) const
+  const_vector_reference_type operator ()(const subscript_type& pos) const
   {
-    return base_type::at(slice);
+    return base_type::at(pos);
   }
   pointer_type ptr()
   {
@@ -350,9 +301,9 @@ public:
   {
     return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& slice) const
+  const_vector_reference_type operator ()(const subscript_type& pos) const
   {
-    return base_type::at(slice);
+    return base_type::at(pos);
   }
   const_pointer_type ptr() const
   {
@@ -449,13 +400,13 @@ public:
   {
     return base_type::at(pos);
   }
-  vector_reference_type operator ()(const subscript_type& slice)
+  vector_reference_type operator ()(const subscript_type& pos)
   {
-    return base_type::at(slice);
+    return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& slice) const
+  const_vector_reference_type operator ()(const subscript_type& pos) const
   {
-    return base_type::at(slice);
+    return base_type::at(pos);
   }
   pointer_type ptr()
   {
@@ -540,9 +491,9 @@ public:
   {
     return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& slice) const
+  const_vector_reference_type operator ()(const subscript_type& pos) const
   {
-    return base_type::at(slice);
+    return base_type::at(pos);
   }
   const_pointer_type ptr() const
   {

@@ -5,170 +5,87 @@
 #define MCS_CORE_NUMERIC_BLAS_HH
 
 
-#include "slice.hh"
-#include "vector.hh"
-#include "matrix.hh"
+#include "traits.hh"
 
 
-namespace mcs
+namespace mcs     {
+namespace core    {
+namespace numeric {
+
+
+template<typename Value>
+struct blas
 {
+  typedef typename traits<Value>::size_type size_type;
+  typedef typename traits<Value>::value_type value_type;
+  typedef typename traits<Value>::reference_type reference_type;
+  typedef typename traits<Value>::const_reference_type const_reference_type;
+  typedef typename traits<Value>::pointer_type pointer_type;
+  typedef typename traits<Value>::const_pointer_type const_pointer_type;
 
-  namespace core
+  typedef typename traits<Value>::vector_type vector_type;
+  typedef typename traits<Value>::const_vector_type const_vector_type;
+  typedef typename traits<Value>::vector_reference_type vector_reference_type;
+  typedef typename traits<Value>::const_vector_reference_type const_vector_reference_type;
+
+  typedef typename traits<Value>::matrix_type matrix_type;
+  typedef typename traits<Value>::const_matrix_type const_matrix_type;
+  typedef typename traits<Value>::matrix_reference_type matrix_reference_type;
+  typedef typename traits<Value>::const_matrix_reference_type const_matrix_reference_type;
+
+
+  void copy(size_type n, const_reference_type x, size_type incx,
+	    reference_type y, size_type incy);
+
+  void copy(const_vector_reference x, vector_reference y)
   {
-
-    namespace numeric
-    {
-
-
-      namespace blas
-      {
-
-
-	void
-	copy(int n,
-             const float& x, int incx,
-	     float& y, int incy);
-
-
-	void
-	copy(int n,
-             const double& x, int incx,
-	     double& y, int incy);
-        
-
-	template<typename Value,
-                 typename Size,
-		 template<typename V,
-                          typename S>
-                 class Derived1,
-                 template<typename V,
-                          typename S>
-                 class Derived2>
-        void
-        copy(const vector_base<Value, Size, Derived1>& x,
-             vector_base<Value, Size, Derived2>&& y);
-
-
-	template<typename Value,
-		 typename Size,
-		 template<typename V,
-                          typename S>
-                 class Derived1,
-                 template<typename V,
-                          typename S>
-                 class Derived2>
-	void
-	copy(const slice<Size>& r,
-             const vector_base<Value, Size, Derived1>& x,
-             vector_base<Value, Size, Derived2>&& y);
-
-
-	void
-	gemv(const char* trans,
-             int m, int n,
-             float alpha, const float& a, int lda,
-             const float& x, int incx,
-	     float beta, float& y, int incy);
-
-
-	void
-	gemv(const char* trans,
-             int m, int n,
-             double alpha,  const double& a, int lda,
-             const double& x, int incx,
-	     double beta, double& y, int incy);
-
-
-	template<typename Value,
-		 typename Size,
-                 template<typename V,
-                          typename S>
-                 class Derived1,
-                 template<typename V,
-                          typename S>
-                 class Derived2,
-                 template<typename V,
-                          typename S>
-                 class Derived3>
-	void
-	gemv(const char* trans,
-             Value alpha, const matrix_base<Value, Size, Derived1>& a,
-	     const vector_base<Value, Size, Derived2>& x,
-             Value beta,  vector_base<Value, Size, Derived3>&& y);
-
-
-	void
-	rotg(float& x, float& y,
-             float& c, float& s);
-
-
-	void
-	rotg(double& x, double& y,
-             double& c, double& s);
-
-
-	void
-	rot(int n,
-            float& x, int incx,
-            float& y, int incy,
-	    float c, float s);
-
-
-	void
-	rot(int n,
-            double& x, int incx,
-            double& y, int incy,
-	    double c, double s);
-
-
-	template<typename Value,
-		 typename Size,
-                 template<typename V,
-                          typename S>
-                 class Derived1,
-                 template<typename V,
-                          typename S>
-                 class Derived2>
-	void
-	rot(vector_base<Value, Size, Derived1>&& x,
-            vector_base<Value, Size, Derived2>&& y,
-            Value c, Value s);
-
-
-	template<typename Value,
-		 typename Size,
-                 template<typename V,
-                          typename S>
-                 class Derived1,
-                 template<typename V,
-                          typename S>
-                 class Derived2>
-	void
-	rot(vector_base<Value, Size, Derived1>&& x,
-            vector_base<Value, Size, Derived2>&& y);
-
-
-	template<typename Value,
-		 typename Size,
-                 template<typename V,
-                          typename S>
-                 class Derived1,
-                 template<typename V,
-                          typename S>
-                 class Derived2>
-	void
-	rot(Size i,
-            vector_base<Value, Size, Derived1>&& x,
-            vector_base<Value, Size, Derived2>&& y);
-
-
-      }
-
-    }
-
+    copy(x.len(), x(0), x.inc(), y(0), y.inc());
   }
 
-}
+  void copy(subscript_type s, const_vector_reference x, vector_reference y)
+  {
+    copy(x(s), y(s));
+  }
+
+  void gemv(const char* trans, size_type m, size_type n,
+	    value_type alpha, const_reference_type a, size_type lda,
+	    const_reference_type x, size_type incx, value_type beta,
+	    reference_type y, size_type incy);
+
+  void gemv(const char* trans, value_type alpha, const_matrix_reference a,
+	    const_vector_reference x, value_type beta, vector_reference y)
+  {
+    gemv(trans, a.nrow(), a.ncol(), alpha, a(0, 0), a.ldim(),
+	 x(0), x.inc(), beta, y(0), y.inc());
+  }
+
+  void rotg(reference_type x, reference_type y, reference_type c, reference_type s);
+
+  void rot(size_type n, reference_type x, size_type incx, reference_type y, size_type incy,
+	   value_type c, value_type s);
+
+  void rot(vector_reference x, vector_reference y, value_type c, value_type s)
+  {
+    rot(x.len(), x(0), x.inc(), y(0), y.inc(), c, s);
+  }
+
+  void rot(vector_reference x, vector_reference y)
+  {
+    value_type c, s;
+
+    rotg(x(0), y(0), c, s);
+    rot(x, y, c, s);
+  }
+
+  void rot(subscript_type s, vector_reference x, vector_reference y)
+  {
+    rot(x(s), y(s));
+  }
+
+
+}  // numeric
+}  // core
+}  // mcs
 
 
 #include "blas.cc"
