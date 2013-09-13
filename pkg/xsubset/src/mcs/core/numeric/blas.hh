@@ -37,12 +37,12 @@ struct blas
   void copy(size_type n, const_reference_type x, size_type incx,
 	    reference_type y, size_type incy);
 
-  void copy(const_vector_reference x, vector_reference y)
+  void copy(const_vector_reference_type x, vector_reference_type y)
   {
     copy(x.len(), x(0), x.inc(), y(0), y.inc());
   }
 
-  void copy(subscript_type s, const_vector_reference x, vector_reference y)
+  void copy(subscript_type s, const_vector_reference_type x, vector_reference_type y)
   {
     copy(x(s), y(s));
   }
@@ -52,24 +52,27 @@ struct blas
 	    const_reference_type x, size_type incx, value_type beta,
 	    reference_type y, size_type incy);
 
-  void gemv(const char* trans, value_type alpha, const_matrix_reference a,
-	    const_vector_reference x, value_type beta, vector_reference y)
+  void gemv(const char* trans, value_type alpha, const_matrix_reference_type a,
+	    const_vector_reference_type x, value_type beta,
+            vector_reference_type y)
   {
     gemv(trans, a.nrow(), a.ncol(), alpha, a(0, 0), a.ldim(),
 	 x(0), x.inc(), beta, y(0), y.inc());
   }
 
-  void rotg(reference_type x, reference_type y, reference_type c, reference_type s);
+  void rotg(reference_type x, reference_type y,
+            reference_type c, reference_type s);
 
-  void rot(size_type n, reference_type x, size_type incx, reference_type y, size_type incy,
-	   value_type c, value_type s);
+  void rot(size_type n, reference_type x, size_type incx, reference_type y,
+           size_type incy, value_type c, value_type s);
 
-  void rot(vector_reference x, vector_reference y, value_type c, value_type s)
+  void rot(vector_reference_type x, vector_reference_type y,
+           value_type c, value_type s)
   {
     rot(x.len(), x(0), x.inc(), y(0), y.inc(), c, s);
   }
 
-  void rot(vector_reference x, vector_reference y)
+  void rot(vector_reference_type x, vector_reference_type y)
   {
     value_type c, s;
 
@@ -77,7 +80,7 @@ struct blas
     rot(x, y, c, s);
   }
 
-  void rot(subscript_type s, vector_reference x, vector_reference y)
+  void rot(subscript_type s, vector_reference_type x, vector_reference_type y)
   {
     rot(x(s), y(s));
   }

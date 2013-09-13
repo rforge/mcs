@@ -60,7 +60,6 @@ protected:
     ldim_(0)
   {
   }
-  explicit
   matrix_base(const size_type nrow, const size_type ncol) :
     buf_(new value_type[nrow * ncol]),
     ptr_(buf_),
