@@ -28,20 +28,20 @@ public:
 
   typedef typename traits<Derived>::size_type size_type;
   typedef typename traits<Derived>::value_type value_type;
-  typedef typename traits<Derived>::reference_type reference_type;
-  typedef typename traits<Derived>::const_reference_type const_reference_type;
-  typedef typename traits<Derived>::pointer_type pointer_type;
-  typedef typename traits<Derived>::const_pointer_type const_pointer_type;
+  typedef typename traits<Derived>::reference reference;
+  typedef typename traits<Derived>::const_reference const_reference;
+  typedef typename traits<Derived>::pointer pointer;
+  typedef typename traits<Derived>::const_pointer const_pointer;
 
-  typedef typename traits<Derived>::vector_type vector_type;
-  typedef typename traits<Derived>::const_vector_type const_vector_type;
-  typedef typename traits<Derived>::vector_reference_type vector_reference_type;
-  typedef typename traits<Derived>::const_vector_reference_type const_vector_reference_type;
+  typedef typename traits<Derived>::vector vector;
+  typedef typename traits<Derived>::const_vector const_vector;
+  typedef typename traits<Derived>::vector_reference vector_reference;
+  typedef typename traits<Derived>::const_vector_reference const_vector_reference;
 
-  typedef typename traits<Derived>::subscript_type subscript_type;
+  typedef typename traits<Derived>::subscript subscript;
 protected:
-  pointer_type buf_;
-  pointer_type ptr_;
+  pointer buf_;
+  pointer ptr_;
   size_type len_;
   size_type inc_;
 protected:
@@ -61,7 +61,7 @@ protected:
   {
     MCS_ASSERT(len >= 0, "invalid argument: len (vector_base::vector_base)");
   }
-  vector_base(const pointer_type ptr, const size_type len, const size_type inc) :
+  vector_base(pointer ptr, const size_type len, const size_type inc) :
     buf_(nullptr),
     ptr_(ptr),
     len_(len),
@@ -79,35 +79,35 @@ protected:
         buf_ = nullptr;
       }
   }
-  reference_type at(const size_type pos)
+  reference at(const size_type pos)
   {
     MCS_ASSERT((0 <= pos) && (pos < len_), "invalid argument: pos (vector_base::at)");
 
     return ptr_[pos * inc_];
   }
-  const_reference_type at(const size_type pos) const
+  const_reference at(const size_type pos) const
   {
     MCS_ASSERT((0 <= pos) && (pos < len_), "invalid argument: pos (vector_base::at)");
 
     return ptr_[pos * inc_];
   }
-  vector_reference_type at(const subscript_type& pos)
+  vector_reference at(const subscript& pos)
   {
-    return vector_reference_type(ptr_ + pos.pos * inc_, pos.len, pos.inc * inc_);
+    return vector_reference(ptr_ + pos.pos * inc_, pos.len, pos.inc * inc_);
   }
-  const_vector_reference_type at(const subscript_type& pos) const
+  const_vector_reference at(const subscript& pos) const
   {
-    return const_vector_reference_type(ptr_ + pos.pos * inc_, pos.len, pos.inc * inc_);
+    return const_vector_reference(ptr_ + pos.pos * inc_, pos.len, pos.inc * inc_);
   }
   template<typename D>
   void copy(const vector_base<D>& x)
   {
     MCS_ASSERT(len_ == x.len_, "invalid argument: x (vector_base::copy)");
 
-    const pointer_type end = ptr_ + len_ * inc_;
+    const_pointer end = ptr_ + len_ * inc_;
 
-    pointer_type dst = ptr_;
-    const_pointer_type src = x.ptr_;
+    pointer dst = ptr_;
+    const_pointer src = x.ptr_;
 
     while (dst < end)
       {
@@ -148,54 +148,54 @@ public:
 
   typedef typename base_type::size_type size_type;
   typedef typename base_type::value_type value_type;
-  typedef typename base_type::reference_type reference_type;
-  typedef typename base_type::const_reference_type const_reference_type;
-  typedef typename base_type::pointer_type pointer_type;
-  typedef typename base_type::const_pointer_type const_pointer_type;
+  typedef typename base_type::reference reference;
+  typedef typename base_type::const_reference const_reference;
+  typedef typename base_type::pointer pointer;
+  typedef typename base_type::const_pointer const_pointer;
 
-  typedef typename base_type::vector_type vector_type;
-  typedef typename base_type::const_vector_type const_vector_type;
-  typedef typename base_type::vector_reference_type vector_reference_type;
-  typedef typename base_type::const_vector_reference_type const_vector_reference_type;
+  //typedef typename base_type::vector vector;
+  typedef typename base_type::const_vector const_vector;
+  typedef typename base_type::vector_reference vector_reference;
+  typedef typename base_type::const_vector_reference const_vector_reference;
 
-  typedef typename base_type::subscript_type subscript_type;
+  typedef typename base_type::subscript subscript;
 public:
   explicit
   vector(const size_type len) :
     base_type(len)
   {
   }
-  vector(const vector_type& x) :
+  vector(const vector& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  vector(vector_type&& x) :
+  vector(vector&& x) :
     base_type(x.len_)
   {
     base_type::move(x);
   }
-  vector(const const_vector_type& x) :
+  vector(const const_vector& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  vector(const_vector_type&& x) :
+  vector(const_vector&& x) :
     base_type(x.len_)
   {
     base_type::move(x);
   }
-  vector(const vector_reference_type& x) :
+  vector(const vector_reference& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  vector(const const_vector_reference_type& x) :
+  vector(const const_vector_reference& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  self_type& operator =(vector_type x)
+  self_type& operator =(vector x)
   {
     MCS_ASSERT(base_type::len_ == x.len_, "invalid argument: x (vector::operator=)");
 
@@ -203,27 +203,27 @@ public:
 
     return *this;
   }
-  reference_type operator ()(size_type pos)
+  reference operator ()(const size_type pos)
   {
     return base_type::at(pos);
   }
-  const_reference_type operator ()(size_type pos) const
+  const_reference operator ()(const size_type pos) const
   {
     return base_type::at(pos);
   }
-  vector_reference_type operator ()(const subscript_type& pos)
+  vector_reference operator ()(const subscript& pos)
   {
     return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& pos) const
+  const_vector_reference operator ()(const subscript& pos) const
   {
     return base_type::at(pos);
   }
-  pointer_type ptr()
+  pointer ptr()
   {
     return base_type::ptr_;
   }
-  const_pointer_type ptr() const
+  const_pointer ptr() const
   {
     return base_type::ptr_;
   }
@@ -250,62 +250,62 @@ public:
 
   typedef typename base_type::size_type size_type;
   typedef typename base_type::value_type value_type;
-  typedef typename base_type::reference_type reference_type;
-  typedef typename base_type::const_reference_type const_reference_type;
-  typedef typename base_type::pointer_type pointer_type;
-  typedef typename base_type::const_pointer_type const_pointer_type;
+  typedef typename base_type::reference reference;
+  typedef typename base_type::const_reference const_reference;
+  typedef typename base_type::pointer pointer;
+  typedef typename base_type::const_pointer const_pointer;
 
-  typedef typename base_type::vector_type vector_type;
-  typedef typename base_type::const_vector_type const_vector_type;
-  typedef typename base_type::vector_reference_type vector_reference_type;
-  typedef typename base_type::const_vector_reference_type const_vector_reference_type;
+  typedef typename base_type::vector vector;
+  //typedef typename base_type::const_vector const_vector;
+  typedef typename base_type::vector_reference vector_reference;
+  typedef typename base_type::const_vector_reference const_vector_reference;
 
-  typedef typename base_type::subscript_type subscript_type;
+  typedef typename base_type::subscript subscript;
 public:
   explicit
   const_vector(const size_type len) :
     base_type(len)
   {
   }
-  const_vector(const vector_type& x) :
+  const_vector(const vector& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  const_vector(vector_type&& x) :
+  const_vector(vector&& x) :
     base_type(x.len_)
   {
     base_type::move(x);
   }
-  const_vector(const const_vector_type& x) :
+  const_vector(const const_vector& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  const_vector(const_vector_type&& x) :
+  const_vector(const_vector&& x) :
     base_type(x.len_)
   {
     base_type::move(x);
   }
-  const_vector(const vector_reference_type& x) :
+  const_vector(const vector_reference& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  const_vector(const const_vector_reference_type& x) :
+  const_vector(const const_vector_reference& x) :
     base_type(x.len_)
   {
     base_type::copy(x);
   }
-  const_reference_type operator ()(size_type pos) const
+  const_reference operator ()(const size_type pos) const
   {
     return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& pos) const
+  const_vector_reference operator ()(const subscript& pos) const
   {
     return base_type::at(pos);
   }
-  const_pointer_type ptr() const
+  const_pointer ptr() const
   {
     return base_type::ptr_;
   }
@@ -332,87 +332,87 @@ public:
 
   typedef typename base_type::size_type size_type;
   typedef typename base_type::value_type value_type;
-  typedef typename base_type::reference_type reference_type;
-  typedef typename base_type::const_reference_type const_reference_type;
-  typedef typename base_type::pointer_type pointer_type;
-  typedef typename base_type::const_pointer_type const_pointer_type;
+  typedef typename base_type::reference reference;
+  typedef typename base_type::const_reference const_reference;
+  typedef typename base_type::pointer pointer;
+  typedef typename base_type::const_pointer const_pointer;
 
-  typedef typename base_type::vector_type vector_type;
-  typedef typename base_type::const_vector_type const_vector_type;
-  typedef typename base_type::vector_reference_type vector_reference_type;
-  typedef typename base_type::const_vector_reference_type const_vector_reference_type;
+  typedef typename base_type::vector vector;
+  typedef typename base_type::const_vector const_vector;
+  //typedef typename base_type::vector_reference vector_reference;
+  typedef typename base_type::const_vector_reference const_vector_reference;
 
-  typedef typename base_type::subscript_type subscript_type;
+  typedef typename base_type::subscript subscript;
 public:
-  vector_reference(const pointer_type ptr, const size_type len, const size_type inc) :
+  vector_reference(pointer ptr, const size_type len, const size_type inc) :
     base_type(ptr, len, inc)
   {
   }
-  vector_reference(const vector_type& x)
+  vector_reference(const vector& x)
   {
     base_type::alias(x);
   }
-  vector_reference(vector_type&& x)
+  vector_reference(vector&& x)
   {
     base_type::move(x);
   }
-  vector_reference(const_vector_type&& x)
+  vector_reference(const_vector&& x)
   {
     base_type::move(x);
   }
-  vector_reference(const vector_reference_type& x)
+  vector_reference(const vector_reference& x)
   {
     base_type::alias(x);
   }
-  vector_reference(vector_reference_type&& x)
+  vector_reference(vector_reference&& x)
   {
     base_type::move(x);
   }
-  self_type& operator =(const vector_type& x)
+  self_type& operator =(const vector& x)
   {
     base_type::copy(x);
 
     return *this;
   }
-  self_type& operator =(const const_vector_type& x)
+  self_type& operator =(const const_vector& x)
   {
     base_type::copy(x);
 
     return *this;
   }
-  self_type& operator =(const vector_reference_type& x)
+  self_type& operator =(const vector_reference& x)
   {
     base_type::copy(x);
 
     return *this;
   }
-  self_type& operator =(const const_vector_reference_type& x)
+  self_type& operator =(const const_vector_reference& x)
   {
     base_type::copy(x);
 
     return *this;
   }
-  reference_type operator ()(size_type pos)
+  reference operator ()(size_type pos)
   {
     return base_type::at(pos);
   }
-  const_reference_type operator ()(size_type pos) const
+  const_reference operator ()(size_type pos) const
   {
     return base_type::at(pos);
   }
-  vector_reference_type operator ()(const subscript_type& pos)
+  vector_reference operator ()(const subscript& pos)
   {
     return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& pos) const
+  const_vector_reference operator ()(const subscript& pos) const
   {
     return base_type::at(pos);
   }
-  pointer_type ptr()
+  pointer ptr()
   {
     return base_type::ptr_;
   }
-  const_pointer_type ptr() const
+  const_pointer ptr() const
   {
     return base_type::ptr_;
   }
@@ -439,63 +439,63 @@ public:
 
   typedef typename base_type::size_type size_type;
   typedef typename base_type::value_type value_type;
-  typedef typename base_type::reference_type reference_type;
-  typedef typename base_type::const_reference_type const_reference_type;
-  typedef typename base_type::pointer_type pointer_type;
-  typedef typename base_type::const_pointer_type const_pointer_type;
+  typedef typename base_type::reference reference;
+  typedef typename base_type::const_reference const_reference;
+  typedef typename base_type::pointer pointer;
+  typedef typename base_type::const_pointer const_pointer;
 
-  typedef typename base_type::vector_type vector_type;
-  typedef typename base_type::const_vector_type const_vector_type;
-  typedef typename base_type::vector_reference_type vector_reference_type;
-  typedef typename base_type::const_vector_reference_type const_vector_reference_type;
+  typedef typename base_type::vector vector;
+  typedef typename base_type::const_vector const_vector;
+  typedef typename base_type::vector_reference vector_reference;
+  //typedef typename base_type::const_vector_reference const_vector_reference;
 
-  typedef typename base_type::subscript_type subscript_type;
+  typedef typename base_type::subscript subscript;
 public:
-  const_vector_reference(const pointer_type ptr, const size_type len, const size_type inc) :
+  const_vector_reference(pointer ptr, const size_type len, const size_type inc) :
     base_type(ptr, len, inc)
   {
   }
-  const_vector_reference(const vector_type& x)
+  const_vector_reference(const vector& x)
   {
     base_type::alias(x);
   }
-  const_vector_reference(vector_type&& x)
+  const_vector_reference(vector&& x)
   {
     base_type::move(x);
   }
-  const_vector_reference(const const_vector_type& x)
+  const_vector_reference(const const_vector& x)
   {
     base_type::alias(x);
   }
-  const_vector_reference(const_vector_type&& x)
+  const_vector_reference(const_vector&& x)
   {
     base_type::move(x);
   }
-  const_vector_reference(const vector_reference_type& x)
+  const_vector_reference(const vector_reference& x)
   {
     base_type::alias(x);
   }
-  const_vector_reference(vector_reference_type&& x)
+  const_vector_reference(vector_reference&& x)
   {
     base_type::move(x);
   }
-  const_vector_reference(const const_vector_reference_type& x)
+  const_vector_reference(const const_vector_reference& x)
   {
     base_type::alias(x);
   }
-  const_vector_reference(const_vector_reference_type&& x)
+  const_vector_reference(const_vector_reference&& x)
   {
     base_type::move(x);
   }
-  const_reference_type operator ()(size_type pos) const
+  const_reference operator ()(size_type pos) const
   {
     return base_type::at(pos);
   }
-  const_vector_reference_type operator ()(const subscript_type& pos) const
+  const_vector_reference operator ()(const subscript& pos) const
   {
     return base_type::at(pos);
   }
-  const_pointer_type ptr() const
+  const_pointer ptr() const
   {
     return base_type::ptr_;
   }

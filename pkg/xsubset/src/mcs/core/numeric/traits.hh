@@ -45,22 +45,22 @@ struct traits
 {
   typedef std::size_t size_type;
   typedef Value value_type;
-  typedef Value& reference_type;
-  typedef const Value& const_reference_type;
-  typedef Value* pointer_type;
-  typedef const Value* const_pointer_type;
+  typedef Value& reference;
+  typedef const Value& const_reference;
+  typedef Value* pointer;
+  typedef const Value* const_pointer;
 
-  typedef vector<Value> vector_type;
-  typedef const_vector<Value> const_vector_type;
-  typedef vector_reference<Value> vector_reference_type;
-  typedef const_vector_reference<Value> const_vector_reference_type;
+  typedef numeric::vector<Value> vector;
+  typedef numeric::const_vector<Value> const_vector;
+  typedef numeric::vector_reference<Value> vector_reference;
+  typedef numeric::const_vector_reference<Value> const_vector_reference;
 
-  typedef matrix<Value> matrix_type;
-  typedef const_matrix<Value> const_matrix_type;
-  typedef matrix_reference<Value> matrix_reference_type;
-  typedef const_matrix_reference<Value> const_matrix_reference_type;
+  typedef numeric::matrix<Value> matrix;
+  typedef numeric::const_matrix<Value> const_matrix;
+  typedef numeric::matrix_reference<Value> matrix_reference;
+  typedef numeric::const_matrix_reference<Value> const_matrix_reference;
 
-  typedef subscript<size_type> subscript_type;
+  typedef numeric::subscript<size_type> subscript;
 };
 
 

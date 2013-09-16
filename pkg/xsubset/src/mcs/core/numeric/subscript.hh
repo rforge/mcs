@@ -2,6 +2,9 @@
 #define _MCS_CORE_NUMERIC_SUBSCRIPT_HH_
 
 
+#include "../../mcs.hh"
+
+
 namespace mcs     {
 namespace core    {
 namespace numeric {
@@ -28,9 +31,9 @@ struct subscript
     len(len),
     inc(inc)
   {
-    assert(0 <= pos);
-    assert(0 <= len);
-    assert(0 <= inc);
+    MCS_ASSERT(0 <= pos, "invalid argument: pos (subscript::subscript)");
+    MCS_ASSERT(0 <= len, "invalid argument: len (subscript::subscript)");
+    MCS_ASSERT(0 <= inc, "invalid argument: inc (subscript::subscript)");
   }
 };
 

@@ -34,8 +34,8 @@ namespace numeric {
 
 
 template<>
-void blas<double>::copy(size_type n, const_reference_type x, size_type incx,
-			reference_type y, size_type incy)
+void blas<double>::copy(size_type n, const_reference x, size_type incx,
+			reference y, size_type incy)
 {
   MCS_ASSERT(n >= 0, "invalid argument: n (blas::copy)");
   MCS_ASSERT(incx > 0, "invalid argument: incx (blas::copy)");
@@ -46,9 +46,9 @@ void blas<double>::copy(size_type n, const_reference_type x, size_type incx,
 
 template<>
 void blas<double>::gemv(const char* const trans, size_type m, size_type n,
-			value_type alpha, const_reference_type a, size_type lda,
-			const_reference_type x, size_type incx, value_type beta,
-			reference_type y, size_type incy)
+			value_type alpha, const_reference a, size_type lda,
+			const_reference x, size_type incx, value_type beta,
+			reference y, size_type incy)
 {
   MCS_ASSERT(m >= 0, "invalid argument: m (blas::copy)");
   MCS_ASSERT(n >= 0, "invalid argument: n (blas::copy)");
@@ -60,14 +60,14 @@ void blas<double>::gemv(const char* const trans, size_type m, size_type n,
 }
 
 template<>
-void blas<double>::rotg(reference_type x, reference_type y,
-			reference_type c, reference_type s)
+void blas<double>::rotg(reference x, reference y,
+			reference c, reference s)
 {
   MCS_F77_CALL(drotg)(&x, &y, &c, &s);
 }
 
 template<>
-void blas<double>::rot(size_type n, reference_type x, size_type incx, reference_type y,
+void blas<double>::rot(size_type n, reference x, size_type incx, reference y,
 		       size_type incy, value_type c, value_type s)
 {
   MCS_ASSERT(n >= 0, "invalid argument: n (blas::rot)");

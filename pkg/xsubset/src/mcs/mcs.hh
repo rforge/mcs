@@ -8,6 +8,7 @@
 
 
 #include <cassert>
+#include <iostream>
 
 
 #ifndef MCS_INLINE
@@ -23,13 +24,11 @@
 /**
  * Disable degug.
  */
-#define NDEBUG  // disable asserts
+//#define NDEBUG  // disable asserts
 
 
 /**
  * Custom assert.
- *
- * @see http://efreedom.com/Question/1-3767869/Adding-Message-Assert
  */
 #ifndef NDEBUG
 #define MCS_ASSERT(cond, msg)                                           \
