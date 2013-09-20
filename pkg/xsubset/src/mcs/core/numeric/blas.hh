@@ -37,7 +37,7 @@ struct blas
   void copy(size_type n, const_reference x, size_type incx,
 	    reference y, size_type incy);
 
-  void copy(const_vector_reference_type x, vector_reference_type y)
+  void copy(const_vector_reference x, vector_reference y)
   {
     copy(x.len(), x(0), x.inc(), y(0), y.inc());
   }
@@ -52,9 +52,9 @@ struct blas
 	    const_reference x, size_type incx, value_type beta,
 	    reference y, size_type incy);
 
-  void gemv(const char* trans, value_type alpha, const_matrix_reference_type a,
-	    const_vector_reference_type x, value_type beta,
-            vector_reference_type y)
+  void gemv(const char* trans, value_type alpha, const_matrix_reference a,
+	    const_vector_reference x, value_type beta,
+            vector_reference y)
   {
     gemv(trans, a.nrow(), a.ncol(), alpha, a(0, 0), a.ldim(),
 	 x(0), x.inc(), beta, y(0), y.inc());
@@ -65,13 +65,13 @@ struct blas
   void rot(size_type n, reference x, size_type incx, reference y, size_type incy,
 	   value_type c, value_type s);
 
-  void rot(vector_reference_type x, vector_reference_type y,
+  void rot(vector_reference x, vector_reference y,
            value_type c, value_type s)
   {
     rot(x.len(), x(0), x.inc(), y(0), y.inc(), c, s);
   }
 
-  void rot(vector_reference_type x, vector_reference_type y)
+  void rot(vector_reference x, vector_reference y)
   {
     value_type c, s;
 
