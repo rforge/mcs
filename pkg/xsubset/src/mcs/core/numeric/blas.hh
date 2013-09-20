@@ -33,6 +33,8 @@ struct blas
   typedef typename traits<Value>::matrix_reference matrix_reference;
   typedef typename traits<Value>::const_matrix_reference const_matrix_reference;
 
+  typedef typename traits<Value>::subscript subscript;
+
 
   void copy(size_type n, const_reference x, size_type incx,
 	    reference y, size_type incy);
