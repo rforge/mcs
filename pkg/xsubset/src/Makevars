@@ -1,2 +1,0 @@
-PKG_CXXFLAGS = -std=c++0x
-PKG_LIBS = $(objects) $(LAPACK_LIBS)
