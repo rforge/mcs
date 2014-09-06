@@ -63,7 +63,7 @@ data("AirPollution")
 \examples{
 ## load data (with logs for relative potentials)
 data("AirPollution", package = "mcsSubset")
-for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
+for (i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 
 ## fit subsets
 xs <- mcsSubset(mortality ~ ., data = AirPollution)
@@ -74,7 +74,7 @@ sx <- summary(xs, penalty = log(nrow(AirPollution)))
 print(sx)
 
 ## refit best model
-lm6 <- refit(xs, size = sx$best)
+lm6 <- refit(xs, size = 6)
 summary(lm6)
 }
 

@@ -1,2 +1,3 @@
-PKG_CXXFLAGS = -std=c++0x
-PKG_LIBS = $(objects) $(LAPACK_LIBS)
+PKG_CPPFLAGS = -I.
+PKG_CXXFLAGS = -std=c++11
+PKG_LIBS = $(objects) $(BLAS_LIBS) $(LAPACK_LIBS)

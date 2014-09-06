@@ -6,22 +6,19 @@
 \alias{print.summary.mcsSubset}
 \alias{plot.summary.mcsSubset}
 
-\alias{summary.mcsSubset2}
-
 
 \title{Summarize mcsSubset objects}
 
 \description{
-  Summary methods for objects of class \code{"mcsSubset"}.
+  Summary methods for objects of class \code{mcsSubset}.
 }
 
 \usage{
 \method{summary}{mcsSubset}(object, penalty = 2, \dots)
-\method{summary}{mcsSubset2}(object, penalty = NULL, \ldots)
 }
 
 \arguments{
-  \item{object}{An object of class \code{"mcsSubset"}.}
+  \item{object}{An object of class \code{mcsSubset}.}
   \item{penalty}{The AIC penalty.}
   \item{\dots}{Ignored.}
 }
@@ -32,7 +29,7 @@
 }
 
 \value{
-  An object of class \code{"summary.mcsSubset"}.  The subset models
+  An object of class \code{summary.mcsSubset}.  The subset models
   contained in the summary object are sorted in order of increasing AIC.
 
   Extractor methods may be called on summary objects to obtain
@@ -54,11 +51,11 @@ sx <- summary(xs, penalty = log(nrow(AirPollution)))
 sx
 
 ## refit (best BIC)
-lm <- refit(sx)
+lm <- refit(sx, rank=1)
 summary(lm)
 
 ## refit (second best BIC)
-lm <- refit(sx, rank = 2)
+lm <- refit(sx, rank=2)
 summary(lm)
 }
 

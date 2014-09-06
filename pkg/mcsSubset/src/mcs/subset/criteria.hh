@@ -1,145 +1,54 @@
-/**
- * @file criteria.hh
- */
 #ifndef MCS_SUBSET_CRITERIA_HH
 #define MCS_SUBSET_CRITERIA_HH
 
 
-#include "lm.hh"
+#include "mcs/subset/detail/log_lik.hh"
 
 
-namespace mcs
-{
 
-  namespace subset
-  {
+namespace mcs    {
+namespace subset {
 
 
-    template<typename Value,
-             typename Size>
-    class log_lik
+  namespace Criteria {
+
+
+    template<typename TReal>
+    class Aic
     {
 
     private:
 
-      const Value nobs_;
-
-      const Value log_nobs_;
-
-      const Value log_2pi_;
+      TReal                 K_;
+      detail::LogLik<TReal> L_;
 
 
     public:
 
-      log_lik(Size nobs);
-
-      Value
-      value(Value rss) const;
-
-    };
-
-
-
-    template<typename Value,
-             typename Size>
-    class aic
-    {
-
-    public:
-
-      class instance
+      Aic(const TReal K, const int nobs) :
+        K_{K}   ,
+        L_{nobs}
       {
-
-      private:
-
-        const Value K_;
-
-	const log_lik<Value, Size> L_;
+      }
 
 
-      public:
-
-	instance(Value K,
-                 Size nobs);
-
-	Value
-	value(const Size nvar,
-	      const Value rss) const;
-
-      };
-
-
-    private:
-
-      const Value K_;
-
-
-    public:
-
-      aic();
-
-      aic(Value K);
-
-      instance
-      for_model(const lm<Value, Size>& x) const;
-
-    };
-
-
-
-    template<typename Value,
-             typename Size>
-    class cp
-    {
-
-    public:
-
-      class instance
+      TReal
+      value(const int size, const TReal rss) const
       {
+        // size + 1  to account for sd as estimated parameter
+        const int npar = size + 1;
 
-      private:
-
-        const Value M_;
-
-	const Value nobs_;
-
-	const Value rms_;
-
-
-      public:
-
-	instance(Value M_,
-                 Size nobs,
-                 Value rms);
-
-	Value
-	value(Size nvar,
-	      Value rss) const;
-
-      };
-
-
-    private:
-
-      const Value M_;
-
-
-    public:
-
-      cp();
-
-      cp(Value M);
-
-      instance
-      for_model(const lm<Value, Size>& x) const;
+        return -2 * L_.value(rss) + K_ * npar;
+      }
 
     };
 
 
   }
 
+
+}
 }
 
 
-#include "criteria.cc"
 #endif

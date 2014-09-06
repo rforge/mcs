@@ -14,8 +14,8 @@ export("mcsSubset",
 
 ## 'mcsSubset' generator methods
 ##
-S3method("mcsSubset", "lm")
 S3method("mcsSubset", "formula")
+S3method("mcsSubset", "lm")
 S3method("mcsSubset", "default")
 
 
@@ -39,33 +39,3 @@ S3method("AIC", "mcsSubset")
 S3method("summary", "mcsSubset")
 S3method("print", "summary.mcsSubset")
 S3method("plot", "summary.mcsSubset")
-
-
-## 'mcsSubset2' extractor methods
-##
-S3method("print", "mcsSubset2")
-S3method("plot", "mcsSubset2")
-S3method("variable.names", "mcsSubset2")
-S3method("formula", "mcsSubset2")
-S3method("model.frame", "mcsSubset2")
-S3method("model.matrix", "mcsSubset2")
-S3method("refit", "mcsSubset2")
-S3method("coef", "mcsSubset2")
-S3method("vcov", "mcsSubset2")
-S3method("fitted", "mcsSubset2")
-S3method("residuals", "mcsSubset2")
-S3method("deviance", "mcsSubset2")
-S3method("logLik", "mcsSubset2")
-S3method("AIC", "mcsSubset2")
-
-S3method("summary", "mcsSubset2")
-
-
-## 'mcsSubset0' extractor methods (base methods)
-##
-S3method("formula", "mcsSubset0")
-S3method("model.frame", "mcsSubset0")
-S3method("model.matrix", "mcsSubset0")
-S3method("refit", "mcsSubset0")
-S3method("logLik", "mcsSubset0")
-S3method("AIC", "mcsSubset0")
