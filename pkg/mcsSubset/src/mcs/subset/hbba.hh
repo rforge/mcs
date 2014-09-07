@@ -89,7 +89,7 @@ namespace subset {
   {
     using namespace detail;
 
-    Preorder::Full<TReal> p (size, pmin);
+    Preorder::Full<TReal> p(size, pmin);
 
     DcaState<TReal>                state(size, mark, v, rz, ldrz);
     DcaTable<TReal,Criteria::None> table(size, mark, nbest, sIndex, sRss, s);

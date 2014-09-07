@@ -24,7 +24,7 @@
   \code{update}).  Applications refit models after some kind of
   model selection, e.g., variable subset selection, partitioning,
   reweighting etc.
-    
+
   The generic is similar to the one provided in \pkg{modeltools} and
   \pkg{fxregime} (and should fulfill the same purpose).  To avoid
   dependence on this package, it is also provided here.

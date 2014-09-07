@@ -21,7 +21,7 @@ summary.mcsSubset <- function (object, penalty = 2, ...) {
 
   if (object$penalty == 0) {
       ## aic
-      aic <- AIC(object, size = 1:object$nvar, rank = 1:object$nbest,
+      aic <- AIC(object, size = 1:object$nvar, best = 1:object$nbest,
                  k = penalty)
       aic <- matrix(aic$AIC, nrow = object$nbest)
       ## penalty
@@ -57,7 +57,7 @@ summary.mcsSubset <- function (object, penalty = 2, ...) {
                            dimnames = list(.cnames))
   } else if (object$penalty != penalty) {
       ## aic
-      aic <- AIC(object, rank = 1:object$nbest, k = penalty)
+      aic <- AIC(object, best = 1:object$nbest, k = penalty)
       if (!is.atomic(aic)) aic <- aic$AIC
       ## penalty
       object$penalty <- penalty
@@ -118,7 +118,7 @@ print.summary.mcsSubset <- function (x, digits = NULL, ...)
     catln(deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
     ## variable table
     catln()
-    catln("Selected variables (by rank):")
+    catln("Selected variables (best first):")
     which.x <- ifelse(x$which, "x", "")
     rownames(which.x)[x$include] <- paste("+", rownames(which.x)[x$include])
     rownames(which.x)[x$exclude] <- paste("-", rownames(which.x)[x$exclude])
@@ -172,21 +172,21 @@ plot.summary.mcsSubset <- function (x, type = "b", main = NULL, xlab = NULL,
                  ")", sep = "")
     ## x label
     if (is.null(xlab)) {
-        xlab <- "Rank"
+        xlab <- "Best"
     }
     ## color
     col <- rep(col, length.out = 2)
     ## line type
     lty <- rep(lty, length.out = 2)
-    ## rank
-    rank <- 1:x$nbest
+    ## best
+    best <- 1:x$nbest
     ## plot rss
-    plot(rank, x$rss, type = type[1], main = main, sub = sub,
+    plot(best, x$rss, type = type[1], main = main, sub = sub,
          xlab = xlab, ylab = ylab, col = col[1], lty = lty[1], ...)
     ## plot aic
     new.old <- getOption("new")
     par(new = TRUE)
-    plot(rank, x$aic, type = type[2], xlab = "", ylab = "",
+    plot(best, x$aic, type = type[2], xlab = "", ylab = "",
          col = col[2], lty = lty[2], axes = FALSE, ...)
     par(new = new.old)
     ## legend

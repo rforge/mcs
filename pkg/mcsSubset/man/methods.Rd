@@ -23,31 +23,31 @@
 
 
 \usage{
-\method{variable.names}{mcsSubset}(object, size = NULL, rank = 1,
-\ldots, .full = FALSE, .complement = FALSE)
+\method{variable.names}{mcsSubset}(object, size = NULL, best = 1,
+\ldots, .full = FALSE, .neg = FALSE)
 \method{formula}{mcsSubset}(x, \ldots)
 \method{model.frame}{mcsSubset}(formula, \ldots)
-\method{model.matrix}{mcsSubset}(object, size = NULL, rank = 1, \ldots)
+\method{model.matrix}{mcsSubset}(object, size = NULL, best = 1, \ldots)
 \method{refit}{mcsSubset}(object, \ldots)
 \method{coef}{mcsSubset}(object, \ldots)
 \method{vcov}{mcsSubset}(object, \ldots)
 \method{fitted}{mcsSubset}(object, \ldots)
 \method{residuals}{mcsSubset}(object, \ldots)
-\method{deviance}{mcsSubset}(object, size = NULL, rank = 1, \ldots)
-\method{logLik}{mcsSubset}(object, size = NULL, rank = 1, \ldots, df)
-\method{AIC}{mcsSubset}(object, size = NULL, rank = 1, \ldots, k = NULL)
+\method{deviance}{mcsSubset}(object, size = NULL, best = 1, \ldots)
+\method{logLik}{mcsSubset}(object, size = NULL, best = 1, \ldots, df)
+\method{AIC}{mcsSubset}(object, size = NULL, best = 1, \ldots, k = NULL)
 }
 
 
 \arguments{
   \item{object, formula, x}{An object of class \code{mcsSubset}.}
   \item{size}{The subset size.}
-  \item{rank}{The subset rank.}
+  \item{best}{The subset rank.}
   \item{df}{Degrees of freedom.}
   \item{k}{AIC penalty.}
   \item{\dots}{Forwarded arguments.}
-  \item{.full}{Internal use.}
-  \item{.complement}{Internal use.}
+  \item{.full}{For internal use.}
+  \item{.neg}{For internal use.}
 }
 
 
@@ -58,7 +58,7 @@
   The information is extracted from the model refitted to a given size.
   If a method is not available, \code{refit} can always be called
   explicitly to obtain a new \code{lm} object of the desired size or
-  rank.  In some cases, the \code{size} and \code{rank} arguments may be
+  rank.  In some cases, the \code{size} and \code{best} arguments may be
   a vector specifying multiple values.
 
   The method \code{refit} returns an \code{lm} object fitted to the
@@ -106,7 +106,7 @@ summary(xs)
 deviance(xs)
 
 ## extract BIC for all subsets
-AIC(xs, rank = 1:5, k = log(nrow(AirPollution)))
+AIC(xs, best = 1:5, k = log(nrow(AirPollution)))
 }
 
 

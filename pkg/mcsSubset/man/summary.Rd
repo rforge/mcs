@@ -51,11 +51,11 @@ sx <- summary(xs, penalty = log(nrow(AirPollution)))
 sx
 
 ## refit (best BIC)
-lm <- refit(sx, rank=1)
+lm <- refit(sx)
 summary(lm)
 
 ## refit (second best BIC)
-lm <- refit(sx, rank=2)
+lm <- refit(sx, best=2)
 summary(lm)
 }
 

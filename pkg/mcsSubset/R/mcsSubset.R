@@ -20,7 +20,7 @@
 ##   See 'mcsSubset.default'.
 ##
 ## NOTE:  'lm'
-##   If 'lm' is 'FALSE', the returned 'lm' component is an
+##   If 'lm' is 'FALSE', the returned 'lm' component is
 ##   an "empty" mockup.
 ##
 mcsSubset.formula <- function (formula, ..., lm = FALSE) {
@@ -84,9 +84,7 @@ mcsSubset.formula <- function (formula, ..., lm = FALSE) {
     ## forward call
     cl <- match.call(expand.dots = TRUE)
     cl[[1L]] <- as.name("mcsSubset")
-    cl$formula <- NULL
-    cl$y <- NULL
-    cl$lm <- NULL
+    cl$formula <- cl$y <- cl$lm <- NULL
     cl$object <- object
     rval <- eval(cl, parent.frame())
 
@@ -95,6 +93,7 @@ mcsSubset.formula <- function (formula, ..., lm = FALSE) {
     if (!ret.m) rval$lm$model <- NULL
     if (!ret.x) rval$lm$x <- NULL
     if (!ret.y) rval$lm$y <- NULL
+    if (!ret.lm) rval$lm <- NULL
 
     ## done
     rval
@@ -141,7 +140,7 @@ mcsSubset.lm <- function (object, ...) {
 
     ## return value
     rval$call <- call
-    rval$lm <- object
+    rval$.lm <- rval$lm <- object
 
     ## done
     rval
@@ -287,12 +286,12 @@ mcsSubset.default <- function (object, y, include = NULL, exclude = NULL,
         size <- size.min:size.max
     } else {
         size <- match(size, size.min:size.max)
+        size <- (size.min:size.max)[size]
         if (any(is.na(size))) {
             size <- na.omit(size)
             warning ("invalid sizes selected in 'size'; fixing 'size': ",
                      "c(", paste(size, collapse = ","), ")")
         }
-        size <- (size.min:size.max)[size]
     }
 
     ## preordering radius
@@ -500,15 +499,15 @@ plot.mcsSubset <- function (x, type = "b", main = "Deviance",
         sub <- paste("AIC (k = ", format(x$penalty, digits = digits), ")", sep = "")
         ## xlab
         if (is.null(xlab)) {
-            xlab <- "Rank"
+            xlab <- "Best"
         }
-        ## rank
-        rank <- 1:x$nbest
+        ## best
+        best <- 1:x$nbest
         ## plot
-        plot(rank, aic, type = type, main = main, sub = sub,
+        plot(best, aic, type = type, main = main, sub = sub,
              xlab = xlab, ylab = ylab, col = col, lty = lty)
         ## labels (subset size)
-        text(rank, aic, labels = paste("(", size, ")", sep = ""),
+        text(best, aic, labels = paste("(", size, ")", sep = ""),
              adj = c(0, 1.5), cex = 0.8)
         ## legend
         if (legend) {
@@ -530,37 +529,35 @@ plot.mcsSubset <- function (x, type = "b", main = "Deviance",
 ## extract variable names
 ##
 ## Args:
-##   object      - (mcsSubset)
-##   size        - (integer)
-##   rank        - (integer)
-##   ...         - ignored
-##   .full       - (logical) for internal use
-##   .complement - (logical) for internal use
+##   object - (mcsSubset)
+##   size   - (integer)
+##   best   - (integer)
+##   ...    - ignored
+##   .full  - (logical) for internal use
+##   .neg   - (logical) for internal use
 ##
 ## Rval:  (character[])
 ##   variable names
 ##
-variable.names.mcsSubset <- function (object, size = NULL, rank = 1, ...,
-                                      .full = FALSE, .complement = FALSE) {
-    if (is.null(object$lm)) {
+variable.names.mcsSubset <- function (object, size = NULL, best = 1, ...,
+                                      .full = FALSE, .neg = FALSE) {
+    if (is.null(object$.lm)) {
         stop ("'mcsSubset' object does not have a 'lm' component")
     }
 
     ## full model
-    x.names <- variable.names(object$lm)
+    x.names <- variable.names(object$.lm)
     if (.full) {
         return (x.names)
     }
     ## which
     if (object$penalty == 0) {
-        wi <- object$which[, rank, size]
+        wi <- object$which[, best, size]
     } else {
-        wi <- object$which[, rank]
+        wi <- object$which[, best]
     }
-    ## internal
-    if (.complement) {
-        wi <- !wi
-    }
+    ## negate
+    wi <- xor(wi, .neg)
     ## select
     x.names <- x.names[wi]
 
@@ -578,14 +575,14 @@ variable.names.mcsSubset <- function (object, size = NULL, rank = 1, ...,
 ## Rval:  (formula)
 ##
 formula.mcsSubset <- function (x, ...) {
-    if (is.null(x$lm)) {
+    if (is.null(x$.lm)) {
         stop ("'mcsSubset' object does not have a 'lm' component")
     }
 
     ## full model
-    f <- formula(x$lm)
+    f <- formula(x$.lm)
     ## variable names
-    x.names <- variable.names(x, ..., .complement = TRUE)
+    x.names <- variable.names(x, ..., .neg = TRUE)
     ## update formula
     f <- update(f, paste(".~.", paste(c("", x.names), collapse = "-")))
 
@@ -603,12 +600,12 @@ formula.mcsSubset <- function (x, ...) {
 ## Rval:  (data.frame)
 ##
 model.frame.mcsSubset <- function (formula, ...) {
-    if (is.null(formula$lm)) {
+    if (is.null(formula$.lm)) {
         stop ("'mcsSubset' object does not have a 'lm' component")
     }
 
     ## full model
-    mf <- model.frame(formula$lm)
+    mf <- model.frame(formula$.lm)
     ## formula
     f <- formula(formula, ...)
     ## build
@@ -624,23 +621,23 @@ model.frame.mcsSubset <- function (formula, ...) {
 ## Args:
 ##   object        - (mcsSubset)
 ##   size          - (integer)
-##   rank          - (integer)
+##   best          - (integer)
 ##   ...           - ignored
 ##
 ## Rval:  (matrix)
 ##
-model.matrix.mcsSubset <- function (object, size = NULL, rank = 1, ...) {
-    if (is.null(object$lm)) {
+model.matrix.mcsSubset <- function (object, size = NULL, best = 1, ...) {
+    if (is.null(object$.lm)) {
         stop ("'mcsSubset' object does not have a 'lm' component")
     }
 
     ## full model
-    x <- model.matrix(object$lm)
+    x <- model.matrix(object$.lm)
     ## which
     if (object$penalty == 0) {
-        wi <- object$which[, rank, size]
+        wi <- object$which[, best, size]
     } else {
-        wi <- object$which[, rank]
+        wi <- object$which[, best]
     }
     ## select
     x <- x[, wi]
@@ -659,7 +656,7 @@ model.matrix.mcsSubset <- function (object, size = NULL, rank = 1, ...) {
 ## Rval:  (lm)
 ##
 refit.mcsSubset <- function (object, ...) {
-    if (is.null(object$lm)) {
+    if (is.null(object$.lm)) {
         stop ("'mcsSubset' object does not have a 'lm' component")
     }
 
@@ -670,7 +667,7 @@ refit.mcsSubset <- function (object, ...) {
     mf.call[[1]] <- as.name("model.frame")
     mf.call$formula <- mf.call$object;  mf.call$object <- NULL
     ## lm call
-    lm.call <- object$lm$call
+    lm.call <- object$.lm$call
     lm.call$formula <- f
     lm.call$data <- mf.call
     ## eval
@@ -753,21 +750,21 @@ residuals.mcsSubset <- function (object, ...) {
 ## Args:
 ##   object        - (mcsSubset)
 ##   size          - (integer[])
-##   rank          - (integer[])
+##   best          - (integer[])
 ##   ...           - ignored
 ##
 ## Rval:  (numeric[])
 ##
 ## Returns the RSS for the specified subset(s).
 ##
-deviance.mcsSubset <- function (object, size = NULL, rank = 1, ...) {
+deviance.mcsSubset <- function (object, size = NULL, best = 1, ...) {
     ## compute indices
     if (object$penalty == 0) {
         if (is.null(size)) size <- object$size
-        d <- object$rss[rank, size]
+        d <- object$rss[best, size]
         names(d) <- size
     } else {
-        d <- object$rss[rank]
+        d <- object$rss[best]
     }
 
     ## done
@@ -780,7 +777,7 @@ deviance.mcsSubset <- function (object, size = NULL, rank = 1, ...) {
 ## Args:
 ##   object - (mcsSubset)
 ##   size   - (integer[])
-##   rank   - (integer[])
+##   best   - (integer[])
 ##   ...    - ignored
 ##   df     - (integer[]) degrees of freedom
 ##
@@ -789,17 +786,21 @@ deviance.mcsSubset <- function (object, size = NULL, rank = 1, ...) {
 ## Note:
 ##   Can handle multiple objects.
 ##
-logLik.mcsSubset <- function (object, size = NULL, rank = 1, ..., df) {
+logLik.mcsSubset <- function (object, size = NULL, best = 1, ..., df) {
+    if (is.null(object$.lm)) {
+        stop ("'mcsSubset' object does not have a 'lm' component")
+    }
+
     ## degrees of freedom
     if (object$penalty == 0) {
         if (is.null(size)) size <- object$size
-        df <- rep(size + 1, each = length(rank))
+        df <- rep(size + 1, each = length(best))
     } else {
-        df <- object$size[rank] + 1
+        df <- object$size[best] + 1
     }
 
     ## weights
-    if(is.null(w <- weights(object$lm))) {
+    if(is.null(w <- weights(object$.lm))) {
         nobs <- object$nobs
         sw <- 0
     } else {
@@ -809,7 +810,7 @@ logLik.mcsSubset <- function (object, size = NULL, rank = 1, ..., df) {
     }
 
     ## extract rss
-    rss <- deviance(object, size = size, rank = rank)
+    rss <- deviance(object, size = size, best = best)
 
     ## done
     structure(0.5 * (sw - nobs * (log(2 * pi) + 1 - log(nobs) + log(rss))),
@@ -822,22 +823,22 @@ logLik.mcsSubset <- function (object, size = NULL, rank = 1, ..., df) {
 ## Args:
 ##   object - (mcsSubset)
 ##   size   - (integer[])
-##   rank   - (integer[])
+##   best   - (integer[])
 ##   ...    - ignored
 ##   k      - (integer)
 ##
 ## Rval: (numeric|data.frame)
 ##
-AIC.mcsSubset <- function (object, size = NULL, rank = 1, ..., k = NULL) {
+AIC.mcsSubset <- function (object, size = NULL, best = 1, ..., k = NULL) {
     if (object$penalty == 0) {
         if (is.null(size)) size <- object$size
         if (is.null(k)) k <- 2
     } else {
-        k <- object$penalty
+        if (is.null(k)) k <- object$penalty
     }
 
     ## extract log-likelihoods
-    ll <- logLik(object, size = size, rank = rank)
+    ll <- logLik(object, size = size, best = best)
     ## compute AICs
     aic <- AIC(ll, k = k)
     ## data frame?
