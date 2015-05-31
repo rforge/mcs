@@ -180,11 +180,11 @@ mcsSubset.lm <- function (object, ...) {
 ##
 ## NOTE: '.algo'
 ##   The following values are recognized:
-##   'dca' :  Dropping Column Algorithm (no branch and bound)
-##   'bba' :  Branch and Bound Algorithm
-##   'pbba':  BBA with variable preordering
-##   'hbba':  PBBA with tolerances
-##   'xbba':  experimental PBBA
+##   'dca'  :  Dropping Column Algorithm (no branch and bound)
+##   'bba'  :  Branch and Bound Algorithm
+##   'pbba' :  BBA with variable preordering
+##   'hbba' :  PBBA with tolerances
+##   'xbba*':  experimental PBBA
 ##
 mcsSubset.default <- function (object, y, include = NULL, exclude = NULL,
                                size = NULL, penalty = 0, tolerance = 0,

@@ -50,9 +50,9 @@ R_mcsSubset(const char* const* const algo, const int* const nobs,
         {
           *nodes = hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s, tau + *mark);
         }
-      else if (std::strcmp(*algo, "xbba") == 0)
+      else if (std::strncmp(*algo, "xbba", 4) == 0)
         {
-          *nodes = xbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s);
+          *nodes = xbba(*algo, info, *nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s);
         }
       else
         {
@@ -112,9 +112,9 @@ R_mcsSubset(const char* const* const algo, const int* const nobs,
         {
           *nodes = hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c, *tau);
         }
-      else if (std::strcmp(*algo, "xbba") == 0)
+      else if (std::strncmp(*algo, "xbba", 4) == 0)
         {
-          *nodes = xbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c);
+          *nodes = xbba(*algo, info, *nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c);
         }
       else
         {

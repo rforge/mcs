@@ -13,6 +13,8 @@
 
 #include "mcs/subset/detail/pbba.hh"
 
+#include <cstring>
+
 
 
 namespace mcs    {
@@ -26,20 +28,34 @@ namespace subset {
     class TCriterion
   >
   int
-  xbba(const int m, const int size, const int mark, const int nbest, const int pmin,
+  xbba(const char* const algo, int* const info,
+       const int m, const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const ay, const int lday,
        int* const sIndex, TReal* const sRss, TReal* const sCrit,
        int* const sSize, int* const s, const TCriterion<TReal>& c)
   {
     using namespace detail;
 
-    Preorder::Full<TReal>    p1(size, pmin);
-    Preorder::Single2<TReal> p (size, pmin);
+
+    Preorder::Full<TReal> p1(size, pmin);
 
     DcaState<TReal>            state(m, size, mark, v, ay, lday, p1);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss, sCrit, sSize, s, c);
 
-    return pbba(state, table, c, p);
+
+    if (std::strcmp(algo, "xbba1")) {
+      Preorder::Single1<TReal> p (size, pmin);
+
+      return pbba(state, table, c, p);
+    } else if (std::strcmp(algo, "xbba2")) {
+      Preorder::Single2<TReal> p (size, pmin);
+
+      return pbba(state, table, c, p);
+    } else {
+      *info = 1;
+
+      return -1;
+    }
   }
 
 
@@ -49,56 +65,98 @@ namespace subset {
     class TCriterion
   >
   int
-  xbba(const int size, const int mark, const int nbest, const int pmin,
+  xbba(const char* const algo, int* const info,
+       const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const rz, const int ldrz,
        int* const sIndex, TReal* const sRss, TReal* const sCrit,
        int* const sSize, int* const s, const TCriterion<TReal>& c)
   {
     using namespace detail;
 
-    Preorder::Full<TReal>    p1(size, pmin);
-    Preorder::Single2<TReal> p (size, pmin);
+
+    Preorder::Full<TReal> p1(size, pmin);
 
     DcaState<TReal>            state(size, mark, v, rz, ldrz, p1);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss, sCrit, sSize, s, c);
 
-    return pbba(state, table, c, p);
+
+    if (std::strcmp(algo, "xbba1")) {
+      Preorder::Single1<TReal> p (size, pmin);
+
+      return pbba(state, table, c, p);
+    } else if (std::strcmp(algo, "xbba2")) {
+      Preorder::Single2<TReal> p (size, pmin);
+
+      return pbba(state, table, c, p);
+    } else {
+      *info = 1;
+
+      return -1;
+    }
   }
 
 
   template<typename TReal>
   int
-  xbba(const int m, const int size, const int mark, const int nbest, const int pmin,
+  xbba(const char* const algo, int* const info,
+       const int m, const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const ay, const int lday,
        int* const sIndex, TReal* const sRss, int* const s)
   {
     using namespace detail;
 
-    Preorder::Full<TReal>    p1(size, pmin);
-    Preorder::Single2<TReal> p (size, pmin);
+
+    Preorder::Full<TReal> p1(size, pmin);
 
     DcaState<TReal>                 state(m, size, mark, v, ay, lday, p1);
     DcaTable<TReal, Criteria::None> table(size, mark, nbest, sIndex, sRss, s);
 
-    return pbba(state, table, p);
+
+    if (std::strcmp(algo, "xbba1")) {
+      Preorder::Single1<TReal> p (size, pmin);
+
+      return pbba(state, table, p);
+    } else if (std::strcmp(algo, "xbba2")) {
+      Preorder::Single2<TReal> p (size, pmin);
+
+      return pbba(state, table, p);
+    } else {
+      *info = 1;
+
+      return -1;
+    }
   }
 
 
   template<typename TReal>
   int
-  xbba(const int size, const int mark, const int nbest, const int pmin,
+  xbba(const char* const algo, int* const info,
+       const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const rz, const int ldrz,
        int* const sIndex, TReal* const sRss, int* const s)
   {
     using namespace detail;
 
-    Preorder::Full<TReal>    p1(size, pmin);
-    Preorder::Single2<TReal> p (size, pmin);
+
+    Preorder::Full<TReal> p1(size, pmin);
 
     DcaState<TReal>                 state(size, mark, v, rz, ldrz, p1);
     DcaTable<TReal, Criteria::None> table(size, mark, nbest, sIndex, sRss, s);
 
-    return pbba(state, table, p);
+
+    if (std::strcmp(algo, "xbba1")) {
+      Preorder::Single1<TReal> p (size, pmin);
+
+      return pbba(state, table, p);
+    } else if (std::strcmp(algo, "xbba2")) {
+      Preorder::Single2<TReal> p (size, pmin);
+
+      return pbba(state, table, p);
+    } else {
+      *info = 1;
+
+      return -1;
+    }
   }
 
 
