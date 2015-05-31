@@ -33,8 +33,8 @@ namespace subset {
   {
     using namespace detail;
 
-    Preorder::Full<TReal>   p1(size, pmin);
-    Preorder::Single<TReal> p (size, pmin);
+    Preorder::Full<TReal>    p1(size, pmin);
+    Preorder::Single2<TReal> p (size, pmin);
 
     DcaState<TReal>            state(m, size, mark, v, ay, lday, p1);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss, sCrit, sSize, s, c);
@@ -56,8 +56,8 @@ namespace subset {
   {
     using namespace detail;
 
-    Preorder::Full<TReal>   p1(size, pmin);
-    Preorder::Single<TReal> p (size, pmin);
+    Preorder::Full<TReal>    p1(size, pmin);
+    Preorder::Single2<TReal> p (size, pmin);
 
     DcaState<TReal>            state(size, mark, v, rz, ldrz, p1);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss, sCrit, sSize, s, c);
@@ -74,8 +74,8 @@ namespace subset {
   {
     using namespace detail;
 
-    Preorder::Full<TReal>   p1(size, pmin);
-    Preorder::Single<TReal> p (size, pmin);
+    Preorder::Full<TReal>    p1(size, pmin);
+    Preorder::Single2<TReal> p (size, pmin);
 
     DcaState<TReal>                 state(m, size, mark, v, ay, lday, p1);
     DcaTable<TReal, Criteria::None> table(size, mark, nbest, sIndex, sRss, s);
@@ -92,8 +92,8 @@ namespace subset {
   {
     using namespace detail;
 
-    Preorder::Full<TReal>   p1(size, pmin);
-    Preorder::Single<TReal> p (size, pmin);
+    Preorder::Full<TReal>    p1(size, pmin);
+    Preorder::Single2<TReal> p (size, pmin);
 
     DcaState<TReal>                 state(size, mark, v, rz, ldrz, p1);
     DcaTable<TReal, Criteria::None> table(size, mark, nbest, sIndex, sRss, s);

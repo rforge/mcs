@@ -1,0 +1,69 @@
+#ifndef MCS_DETAIL_DEBUG_HH
+#define MCS_DETAIL_DEBUG_HH
+
+
+
+#define MCS_DEBUG  // enable asserts
+
+
+#ifdef MCS_DEBUG
+
+#include <stdexcept>
+
+
+namespace mcs    {
+namespace detail {
+
+
+  class Error : public std::exception
+  {
+  private:
+    const char* file_;
+    const char* line_;
+    const char* func_;
+    const char* msg_;
+
+  public:
+    Error(const char* file,
+	  const char* line,
+	  const char* func,
+	  const char* msg ) :
+      file_{file}, line_{line}, func_{func}, msg_{msg}
+    {
+    }
+
+    ~Error() noexcept {}
+
+    const char* what() noexcept { return msg_; }
+    const char* file() noexcept { return file_; }
+    const char* line() noexcept { return line_; }
+    const char* func() noexcept { return func_; }
+    const char* msg()  noexcept { return msg_; }
+
+  };
+
+
+}  // namespace detail
+}  // namespace mcs
+
+
+#define MCS_STRINGIFY(x) #x
+#define MCS_TOSTRING(x)  STRINGIFY(x)
+
+#define MCS_ASSERT(cond, msg)                                              \
+  if (!(cond))                                                             \
+    {                                                                      \
+      throw mcs::detail::Error(__FILE__, MCS_TOSTRING(__LINE__), __func__, \
+                               "Assertion `"#cond"' failed: "#msg);        \
+    } else
+#else
+#define MCS_ASSERT(cond, msg) if (0) {} else
+#endif
+
+
+#define MCS_REQUIRE(cond, msg)  MCS_ASSERT(cond, msg)
+#define MCS_ENSURE(cond, msg)   MCS_ASSERT(cond, msg)
+
+
+
+#endif

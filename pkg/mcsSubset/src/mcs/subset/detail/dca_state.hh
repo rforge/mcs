@@ -19,31 +19,12 @@ namespace detail {
   class DcaTable;
 
 
-  namespace Preorder {
-
-    template<typename TReal>
-    class None;
-
-    template<typename TReal>
-    class Full;
-
-    template<typename TReal>
-    class Single;
-
-  }
-
-
 
   template<typename TReal>
   class DcaState
   {
 
-    friend Preorder::None<TReal>;
-    friend Preorder::Full<TReal>;
-    friend Preorder::Single<TReal>;
-
-
-  private:
+  public:
 
     struct Node;
 

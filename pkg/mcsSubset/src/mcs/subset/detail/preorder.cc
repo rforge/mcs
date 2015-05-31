@@ -84,7 +84,7 @@ namespace detail {
 
 
   template<typename TReal>
-  Preorder::Single<TReal>::Single(int size, int pmin) :
+  Preorder::Single1<TReal>::Single1(int size, int pmin) :
     pmin_{pmin},
     givens_(size + 1),
     bounds_(size + 1)
@@ -94,9 +94,9 @@ namespace detail {
 
   template<typename TReal>
   void
-  Preorder::Single<TReal>::apply(typename DcaState<TReal>::Node& in,
-                                 typename DcaState<TReal>::Node& out,
-                                 const int rzLdim) const
+  Preorder::Single1<TReal>::apply(typename DcaState<TReal>::Node& in,
+                                  typename DcaState<TReal>::Node& out,
+                                  const int rzLdim) const
   {
     const int n = in.n;
     const int k = in.k;
@@ -119,8 +119,46 @@ namespace detail {
     const int j = mx - b;
 
     // preorder v1
-    //std::swap(out.s[k], out.s[k + j]);
-    //Qrz<TReal>::permute1(n - k, j, out.rz + k * rzLdim + k, rzLdim);
+    std::swap(out.s[k], out.s[k + j]);
+    Qrz<TReal>::permute1(n - k, j, out.rz + k * rzLdim + k, rzLdim);
+  }
+
+
+
+  template<typename TReal>
+  Preorder::Single2<TReal>::Single2(int size, int pmin) :
+    pmin_{pmin},
+    givens_(size + 1),
+    bounds_(size + 1)
+  {
+  }
+
+
+  template<typename TReal>
+  void
+  Preorder::Single2<TReal>::apply(typename DcaState<TReal>::Node& in,
+                                  typename DcaState<TReal>::Node& out,
+                                  const int rzLdim) const
+  {
+    const int n = in.n;
+    const int k = in.k;
+
+    std::swap(in, out);
+
+    // preorder?
+    if (n - k <= pmin_)
+      {
+        return;
+      }
+
+    // bounds
+    TReal* const b = bounds_.data();
+
+    Qrz<TReal>::bounds(n - k, out.rz + k * rzLdim + k, rzLdim, b, givens_);
+
+    // find max
+    const auto mx = std::max_element(b, b + n - k);
+    const int j = mx - b;
 
     // preorder v2
     std::rotate(std::reverse_iterator<int*>(out.s + k + j + 1),
@@ -134,7 +172,6 @@ namespace detail {
 }  // namespace detail
 }  // namespace subset
 }  // namespace mcs
-
 
 
 #endif

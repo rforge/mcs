@@ -352,7 +352,7 @@ mcsSubset.default <- function (object, y, include = NULL, exclude = NULL,
         info    = integer(1)
     )
 
-    C_rval <- do.call(".C", c(name = "R_mcsSubset", C_args))
+    C_rval <- do.call(".C", c("R_mcsSubset", C_args))
 
     ## return value
     rval <- list(call      = call,

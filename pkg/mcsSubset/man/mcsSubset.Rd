@@ -13,7 +13,7 @@
 \title{All-Subsets Regression}
 
 
-\description{All-subsets regression for linear models.}
+\description{All-subsets regression for ordinary linear models.}
 
 \usage{
 mcsSubset(object, \dots)
@@ -45,7 +45,7 @@ size = NULL, penalty = 0, tolerance = 0, pradius = NULL, nbest = 1,
   \item{penalty}{Penalty per parameter (see \code{\link[stats]{AIC}}).
     If \code{penalty == 0}, determine subsets with lowest RSS for each
     subset size; otherwise, determine subset(s) with overall lowest
-    AIC.}
+    AIC.  Ignored if \code{penalty != 0}.}
   \item{tolerance}{If \code{penalty == 0}, a numeric vector (expanded if
     necessary), where \code{tolerance[n]} is the tolerance employed for
     subsets of size \code{n}; otherwise, a single value indicating the

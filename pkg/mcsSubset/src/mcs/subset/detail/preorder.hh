@@ -62,7 +62,7 @@ namespace detail {
 
 
     template<typename TReal>
-    class Single
+    class Single1
     {
 
     private:
@@ -75,7 +75,32 @@ namespace detail {
 
     public:
 
-      Single(int size, int pmin);
+      Single1(int size, int pmin);
+
+      void
+      apply(typename DcaState<TReal>::Node& in,
+            typename DcaState<TReal>::Node& out,
+            int rzLdim) const;
+
+    };
+
+
+
+    template<typename TReal>
+    class Single2
+    {
+
+    private:
+
+      int pmin_;
+
+      mutable std::vector<Givens<TReal>> givens_;
+      mutable std::vector<TReal>         bounds_;
+
+
+    public:
+
+      Single2(int size, int pmin);
 
       void
       apply(typename DcaState<TReal>::Node& in,
