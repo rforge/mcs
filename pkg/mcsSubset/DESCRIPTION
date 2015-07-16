@@ -23,7 +23,7 @@ Description: Matrix Computations and Statisctics: Variable subset selection in l
 Depends: R (>= 2.7.0), stats
 Imports: stats, graphics
 License: GPL-2
-URL: http://iiun.unine.ch/matrix/
+URL: TODO: MCS homepage?
 collate: xsubset.R summary.R
 Acknowledgements: TODO: Dietmar, Manfred, ...
 Projects: TODO: SNF, Geneva, Basel, ...
