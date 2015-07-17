@@ -507,7 +507,7 @@ plot.mcsSubset <- function (x, type = "b", main = "Deviance",
         plot(best, aic, type = type, main = main, sub = sub,
              xlab = xlab, ylab = ylab, col = col, lty = lty)
         ## labels (subset size)
-        text(best, aic, labels = paste("(", size, ")", sep = ""),
+        text(best, aic, labels = paste0("(", best, ")"), ## FIXME: was "size"
              adj = c(0, 1.5), cex = 0.8)
         ## legend
         if (legend) {
