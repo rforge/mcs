@@ -22,21 +22,21 @@
 % pdflatex:  set 'eps=FALSE'
 \SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
 
+% DON'T REMOVE: directive
+% need no \usepackage{Sweave}
+
 
 %----------%
 % packages %
 %----------%
 
-\usepackage{times}
-\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsmath,amssymb}
 \usepackage{pstricks,pst-tree}
 \usepackage{algorithm,algpseudocode}
 
 % pdflatex:  use package 'auto-pst-pdf'
 \usepackage{auto-pst-pdf}
 
-% DON'T REMOVE: directive
-%need no \usepackage{Sweave}
 
 
 %----------%
