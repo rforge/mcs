@@ -814,7 +814,7 @@ logLik.mcsSubset <- function (object, size = NULL, best = 1, ..., df) {
 
     ## done
     structure(0.5 * (sw - nobs * (log(2 * pi) + 1 - log(nobs) + log(rss))),
-              df = df, class = "logLik")
+              df = df, nobs = nobs, class = "logLik")
 }
 
 
