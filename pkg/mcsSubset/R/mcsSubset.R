@@ -493,21 +493,24 @@ plot.mcsSubset <- function (x, type = "b", main = "Deviance",
         }
     } else {
         digits <- max(3, getOption("digits") - 3)
+        ## best
+        best <- 1:x$nbest
         ## aic
-        aic <- AIC(x, ...)$AIC
+        aic <- AIC(x, best = best, ...)
+        if (length(aic) > 1) {
+            aic <- aic$AIC
+        }
         ## sub title
         sub <- paste("AIC (k = ", format(x$penalty, digits = digits), ")", sep = "")
         ## xlab
         if (is.null(xlab)) {
             xlab <- "Best"
         }
-        ## best
-        best <- 1:x$nbest
         ## plot
         plot(best, aic, type = type, main = main, sub = sub,
              xlab = xlab, ylab = ylab, col = col, lty = lty)
         ## labels (subset size)
-        text(best, aic, labels = paste0("(", best, ")"), ## FIXME: was "size"
+        text(best, aic, labels = paste("(", x$size, ")", sep = ""),
              adj = c(0, 1.5), cex = 0.8)
         ## legend
         if (legend) {
@@ -825,7 +828,7 @@ logLik.mcsSubset <- function (object, size = NULL, best = 1, ..., df) {
 ##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   k      - (integer)
+##   k      - (numeric)
 ##
 ## Rval: (numeric|data.frame)
 ##
@@ -848,4 +851,34 @@ AIC.mcsSubset <- function (object, size = NULL, best = 1, ..., k = NULL) {
 
     ## done
     aic
+}
+
+
+## compute BIC
+##
+## Args:
+##   object - (mcsSubset)
+##   size   - (integer[])
+##   best   - (integer[])
+##   ...    - ignored
+##
+## Rval: (numeric|data.frame)
+##
+BIC.mcsSubset <- function (object, size = NULL, best = 1, ...) {
+    if (object$penalty == 0) {
+        if (is.null(size)) size <- object$size
+    }
+
+    ## extract log-likelihoods
+    ll <- logLik(object, size = size, best = best)
+    ## compute BICs
+    nobs <- attr(ll, "nobs")
+    bic <- AIC(ll, k = log(nobs))
+    ## data frame?
+    if (length(bic) > 1) {
+        bic <- data.frame(df = attr(ll, "df"), BIC = bic)
+    }
+
+    ## done
+    bic
 }

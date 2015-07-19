@@ -14,6 +14,7 @@
 \alias{deviance.mcsSubset}
 \alias{logLik.mcsSubset}
 \alias{AIC.mcsSubset}
+\alias{BIC.mcsSubset}
 
 
 \title{Methods for 'mcsSubset' objects}
@@ -36,6 +37,7 @@
 \method{deviance}{mcsSubset}(object, size = NULL, best = 1, \ldots)
 \method{logLik}{mcsSubset}(object, size = NULL, best = 1, \ldots, df)
 \method{AIC}{mcsSubset}(object, size = NULL, best = 1, \ldots, k = NULL)
+\method{BIC}{mcsSubset}(object, size = NULL, best = 1, \ldots)
 }
 
 
@@ -106,7 +108,7 @@ summary(xs)
 deviance(xs)
 
 ## extract BIC for all subsets
-AIC(xs, best = 1:5, k = log(nrow(AirPollution)))
+BIC(xs, best = 1:5)
 }
 
 
