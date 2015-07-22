@@ -20,7 +20,7 @@ mcsSubset(object, \dots)
 
 \method{mcsSubset}{formula}(formula, \ldots, lm = FALSE)
 
-\method{mcsSubset}{lm}(object, \dots)
+\method{mcsSubset}{lm}(object, \dots, penalty = 0)
 
 \method{mcsSubset}{default}(object, y, include = NULL, exclude = NULL,
 size = NULL, penalty = 0, tolerance = 0, pradius = NULL, nbest = 1,
@@ -45,7 +45,7 @@ size = NULL, penalty = 0, tolerance = 0, pradius = NULL, nbest = 1,
   \item{penalty}{Penalty per parameter (see \code{\link[stats]{AIC}}).
     If \code{penalty == 0}, determine subsets with lowest RSS for each
     subset size; otherwise, determine subset(s) with overall lowest
-    AIC.  Ignored if \code{penalty != 0}.}
+    AIC.}
   \item{tolerance}{If \code{penalty == 0}, a numeric vector (expanded if
     necessary), where \code{tolerance[n]} is the tolerance employed for
     subsets of size \code{n}; otherwise, a single value indicating the
@@ -186,7 +186,7 @@ summary(xs)
 
 ## find 10 best subset models
 xs <- mcsSubset(mortality ~ ., data = AirPollution,
-              penalty = log(nrow(AirPollution)), nbest = 10)
+                penalty = "BIC", nbest = 10)
 
 ## summarize
 summary(xs)

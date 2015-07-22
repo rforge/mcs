@@ -105,11 +105,12 @@ mcsSubset.formula <- function (formula, ..., lm = FALSE) {
 ## Args:
 ##   object       - (lm)
 ##   ...          - forwarded to 'mcsSubset.default'
+##   penalty      - ("AIC"|"BIC"|numeric)
 ##
 ## Rval:  (mcsSubset)
 ##   See 'mcsSubset.default'.
 ##
-mcsSubset.lm <- function (object, ...) {
+mcsSubset.lm <- function (object, ..., penalty = 0) {
     ## keep call (of generic)
     call <- match.call()
     call[[1]] <- as.name("mcsSubset")
@@ -135,8 +136,14 @@ mcsSubset.lm <- function (object, ...) {
     x <- sqrt(wnz) * x[wok, , drop = FALSE]
     y <- sqrt(wnz) * y[wok,   drop = FALSE] - o[wok]
 
+    ## penalty
+    if (tolower(penalty) == "bic") {
+        penalty <- log(sum(wnz))
+        attr(penalty, "label") <- "BIC"
+    }
+
     ## forward call
-    rval <- mcsSubset(x, y, ...)
+    rval <- mcsSubset(x, y, penalty = penalty, ...)
 
     ## return value
     rval$call <- call
@@ -170,7 +177,7 @@ mcsSubset.lm <- function (object, ...) {
 ##   exclude   - (integer[])
 ##   size      - (integer[])
 ##   intercept - (logical)
-##   penalty   - (numeric)
+##   penalty   - ("AIC"|"BIC"|numeric)
 ##   tolerance - (numeric[])
 ##   nbest     - (integer)
 ##   rss       - (array)
@@ -300,6 +307,17 @@ mcsSubset.default <- function (object, y, include = NULL, exclude = NULL,
         pmin <- 8
     } else {
         pmin <- size.max - pradius
+    }
+
+    ## penalty
+    if (tolower(penalty) == "aic") {
+        penalty <- 2
+        attr(penalty, "label") <- "AIC"
+    } else if (tolower(penalty) == "bic") {
+        penalty <- log(nobs)
+        attr(penalty, "label") <- "BIC"
+    } else if (!is.numeric(penalty)) {
+        stop ("invalid 'penalty'")
     }
 
     ## tolerance
@@ -437,9 +455,11 @@ print.mcsSubset <- function (x, digits = NULL, ...)
                        paste(x$size, collapse = " "),
                        if (x$penalty == 0) {
                            "RSS"
-                       } else {
+                       } else if (is.null(lab <- attr(x$penalty, "label"))) {
                            paste("AIC (k = ", format(x$penalty, digits = digits),
                                  ")", sep = "")
+                       } else {
+                           lab
                        },
                        paste(format(x$tolerance, digits = digits, trim = TRUE),
                              collapse = " "),
@@ -501,7 +521,10 @@ plot.mcsSubset <- function (x, type = "b", main = "Deviance",
             aic <- aic$AIC
         }
         ## sub title
-        sub <- paste("AIC (k = ", format(x$penalty, digits = digits), ")", sep = "")
+        sub <- attr(x$penalty, "label")
+        if (is.null(sub)) {
+            sub <- paste("AIC (k = ", format(x$penalty, digits = digits), ")", sep = "")
+        }
         ## xlab
         if (is.null(xlab)) {
             xlab <- "Best"
@@ -510,11 +533,11 @@ plot.mcsSubset <- function (x, type = "b", main = "Deviance",
         plot(best, aic, type = type, main = main, sub = sub,
              xlab = xlab, ylab = ylab, col = col, lty = lty)
         ## labels (subset size)
-        text(best, aic, labels = paste("(", x$size, ")", sep = ""),
+        text(best, aic, labels = paste("(size=", x$size, ")", sep = ""),
              adj = c(0, 1.5), cex = 0.8)
         ## legend
         if (legend) {
-            legend("topleft", "AIC (size)", lty = lty, col = col, bty = "n")
+            legend("topleft", sub, lty = lty, col = col, bty = "n")
         }
     }
 
@@ -790,10 +813,6 @@ deviance.mcsSubset <- function (object, size = NULL, best = 1, ...) {
 ##   Can handle multiple objects.
 ##
 logLik.mcsSubset <- function (object, size = NULL, best = 1, ..., df) {
-    if (is.null(object$.lm)) {
-        stop ("'mcsSubset' object does not have a 'lm' component")
-    }
-
     ## degrees of freedom
     if (object$penalty == 0) {
         if (is.null(size)) size <- object$size
@@ -803,21 +822,21 @@ logLik.mcsSubset <- function (object, size = NULL, best = 1, ..., df) {
     }
 
     ## weights
-    if(is.null(w <- weights(object$.lm))) {
-        nobs <- object$nobs
-        sw <- 0
+    if (is.null(w <- weights(object$.lm))) {
+        n <- object$nobs
+        s <- 0
     } else {
-        wnz <- w[w > 0]
-        nobs <- sum(wnz)
-        sw <- sum(log(wnz))
+        wnz <- w[w != 0]
+        n <- sum(wnz)
+        s <- sum(log(wnz))
     }
 
     ## extract rss
     rss <- deviance(object, size = size, best = best)
 
     ## done
-    structure(0.5 * (sw - nobs * (log(2 * pi) + 1 - log(nobs) + log(rss))),
-              df = df, nobs = nobs, class = "logLik")
+    structure(0.5 * (s - n * (log(2 * pi) + 1 - log(n) + log(rss))),
+              df = df, nobs = n, class = "logLik")
 }
 
 
@@ -872,8 +891,8 @@ BIC.mcsSubset <- function (object, size = NULL, best = 1, ...) {
     ## extract log-likelihoods
     ll <- logLik(object, size = size, best = best)
     ## compute BICs
-    nobs <- attr(ll, "nobs")
-    bic <- AIC(ll, k = log(nobs))
+    n <- attr(ll, "nobs")
+    bic <- AIC(ll, k = log(n))
     ## data frame?
     if (length(bic) > 1) {
         bic <- data.frame(df = attr(ll, "df"), BIC = bic)

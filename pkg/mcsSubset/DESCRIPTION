@@ -14,11 +14,6 @@ Authors@R: c(person("Marc", "Hofmann",
              person("Achim", "Zeileis",
                     role = "aut",
                     email = "Achim.Zeileis@R-project.org"))
-Author: Marc Hofmann [aut, cre],
-        Cristian Gatu [aut],
-        Erricos J. Kontoghiorghes [aut],
-        Achim Zeileis [aut]
-Maintainer: Marc Hofmann <marc.hofmann@gmail.com>
 Description: Matrix Computations and Statisctics: Variable subset selection in linear regression models.
 Depends: R (>= 2.7.0)
 Imports: stats, graphics
