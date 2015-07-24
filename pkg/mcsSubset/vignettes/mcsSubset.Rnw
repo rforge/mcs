@@ -113,8 +113,9 @@ Network at \url{http://CRAN.R-project.org/package=mcsSubset}.
 \proglang{R}, especially the \pkg{leaps} package \citep{lumley:cran:09} based on
 \cite{miller:02}, the \pkg{subselect} package
 \citep{orestes_cerdeira:cran:09} based on
-\cite{duarte_silva:j_multivariate_anal:01}, and the \pkg{glmulti} package
-\citep{calcagno:jss:10}
+\cite{duarte_silva:j_multivariate_anal:01}, 
+\pkg{bestglm} \citep{mcleod:cran:09} which reuses \pkg{leaps} for the normal case,
+and the \pkg{glmulti} package \citep{calcagno:jss:10}
 
 
 \section{Implementation}

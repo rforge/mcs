@@ -12,3 +12,4 @@ clean:
 	rm -f mcsSubset.log
 	rm -f mcsSubset.out
 	rm -f mcsSubset-*.pdf
+	rm -f texput.log
