@@ -847,7 +847,7 @@ logLik.mcsSubset <- function (object, size = NULL, best = 1, ..., df) {
 ##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   k      - (numeric)
+##   k      - ("AIC"|"BIC"|numeric)
 ##
 ## Rval: (numeric|data.frame)
 ##
@@ -861,8 +861,18 @@ AIC.mcsSubset <- function (object, size = NULL, best = 1, ..., k = NULL) {
 
     ## extract log-likelihoods
     ll <- logLik(object, size = size, best = best)
+    ## penalty
+    if (tolower(k) == "aic") {
+        penalty <- 2;  attr(penalty, "label") <- "AIC"
+    } else if (tolower(k) == "bic") {
+        n <- attr(ll, "nobs")
+        penalty <- log(n);  attr(penalty, "label") <- "BIC"
+    } else {
+        penalty <- 2
+    }
     ## compute AICs
-    aic <- AIC(ll, k = k)
+    aic <- AIC(ll, k = penalty)
+    attr(aic, "penalty") <- penalty;  attr(aic, "label") <- NULL
     ## data frame?
     if (length(aic) > 1) {
         aic <- data.frame(df = attr(ll, "df"), AIC = aic)
@@ -884,20 +894,9 @@ AIC.mcsSubset <- function (object, size = NULL, best = 1, ..., k = NULL) {
 ## Rval: (numeric|data.frame)
 ##
 BIC.mcsSubset <- function (object, size = NULL, best = 1, ...) {
-    if (object$penalty == 0) {
-        if (is.null(size)) size <- object$size
+    aic <- AIC(object, size = size, best = best, k = "BIC")
+    if (length(aic) > 1) {
+        aic$BIC <- aic$AIC;  aic$AIC <- NULL
     }
-
-    ## extract log-likelihoods
-    ll <- logLik(object, size = size, best = best)
-    ## compute BICs
-    n <- attr(ll, "nobs")
-    bic <- AIC(ll, k = log(n))
-    ## data frame?
-    if (length(bic) > 1) {
-        bic <- data.frame(df = attr(ll, "df"), BIC = bic)
-    }
-
-    ## done
-    bic
+    aic
 }
