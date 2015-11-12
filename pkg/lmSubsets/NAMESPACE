@@ -1,0 +1,81 @@
+
+
+import("stats", "graphics")
+
+
+useDynLib("lmSubsets")
+
+
+## export new generics
+##
+export("lmSubsets",
+       "lmSelect",
+       "refit")
+
+
+################
+## 'lmSubsets' #
+################
+
+## 'lmSubsets' generator methods
+##
+S3method("lmSubsets", "formula")
+S3method("lmSubsets", "lm")
+S3method("lmSubsets", "default")
+
+
+## 'lmSubsets' extractor methods
+##
+S3method("print"         , "lmSubsets")
+S3method("plot"          , "lmSubsets")
+S3method("variable.names", "lmSubsets")
+S3method("formula"       , "lmSubsets")
+S3method("model.frame"   , "lmSubsets")
+S3method("model.matrix"  , "lmSubsets")
+S3method("refit"         , "lmSubsets")
+S3method("coef"          , "lmSubsets")
+S3method("vcov"          , "lmSubsets")
+S3method("fitted"        , "lmSubsets")
+S3method("residuals"     , "lmSubsets")
+S3method("deviance"      , "lmSubsets")
+S3method("logLik"        , "lmSubsets")
+S3method("AIC"           , "lmSubsets")
+S3method("BIC"           , "lmSubsets")
+
+S3method("summary", "lmSubsets")
+S3method("print"  , "summary.lmSubsets")
+S3method("plot"   , "summary.lmSubsets")
+
+
+###############
+## 'lmSelect' #
+###############
+
+## 'lmSelect' generator methods
+##
+S3method("lmSelect", "formula")
+S3method("lmSelect", "lm")
+S3method("lmSelect", "default")
+
+
+## 'lmSelect' extractor methods
+##
+S3method("print"         , "lmSelect")
+S3method("plot"          , "lmSelect")
+S3method("variable.names", "lmSelect")
+S3method("formula"       , "lmSelect")
+S3method("model.frame"   , "lmSelect")
+S3method("model.matrix"  , "lmSelect")
+S3method("refit"         , "lmSelect")
+S3method("coef"          , "lmSelect")
+S3method("vcov"          , "lmSelect")
+S3method("fitted"        , "lmSelect")
+S3method("residuals"     , "lmSelect")
+S3method("deviance"      , "lmSelect")
+S3method("logLik"        , "lmSelect")
+S3method("AIC"           , "lmSelect")
+S3method("BIC"           , "lmSelect")
+
+S3method("summary", "lmSelect")
+S3method("print"  , "summary.lmSelect")
+S3method("plot"   , "summary.lmSelect")
