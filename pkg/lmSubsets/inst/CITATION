@@ -1,26 +1,26 @@
-citHeader("To cite mcsSubset in publications use")
+citHeader("To cite package 'lmSubsets' in publications use")
 
 ## R >= 2.8.0 passes package metadata to citation().
-if(!exists("meta") || is.null(meta)) meta <- packageDescription("mcsSubset")
+if(!exists("meta") || is.null(meta)) meta <- packageDescription("lmSubsets")
 year <- sub("-.*", "", meta$Date)
 note <- sprintf("R package version %s", meta$Version)
 
 citEntry(entry = "Manual",
-         title = "{mcsSubset}: Variable Subset Selection",
+         title = "{lmSubsets}: Variable Subset Selection",
          author = personList(as.person("Marc Hofmann"), 
 	                     as.person("Cristian Gatu"),
                              as.person("Erricos J. Kontoghiorghes"),
 			     as.person("Achim Zeileis")),
          year = year,
          note = note,
-         url = "http://CRAN.R-project.org/package=mcsSubset",
+         url = "http://CRAN.R-project.org/package=lmSubsets",
 
          textVersion =
          paste("Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis",
    	       sprintf("(%s).", year),	 
-               "mcsSubset: Variable Subset Selection.",
+               "lmSubsets: Variable Subset Selection.",
 	       paste(note, ".", sep = ""),
-               "URL http://CRAN.R-project.org/package=mcsSubset")
+               "URL http://CRAN.R-project.org/package=lmSubsets")
 )
 
 citEntry(entry = "Article",

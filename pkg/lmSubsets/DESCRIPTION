@@ -1,20 +1,20 @@
 Package: lmSubsets
 Version: 0.1
-Date: 2015-10-09
-Title: MCS: Variable Subset Selection in Linear Regression
-Authors@R: c(person("Marc", "Hofmann",
+Date: 2015-11-11
+Title: Variable Subset Selection in Linear Regression
+Authors@R: c(person(given = "Marc", family = "Hofmann",
                     role  = c("aut", "cre"),
                     email = "marc.hofmann@gmail.com"),
-             person("Cristian", "Gatu",
+             person(given = "Cristian", family = "Gatu",
                     role  = "aut",
                     email = "cgatu@info.uaic.ro"),
-             person("Erricos", "J.", "Kontoghiorghes",
+             person(given = "Erricos J.", family = "Kontoghiorghes",
                     role = "aut",
                     email = "erricos@dcs.bbk.ac.uk"),
-             person("Achim", "Zeileis",
+             person(given = "Achim", family = "Zeileis",
                     role = "aut",
                     email = "Achim.Zeileis@R-project.org"))
-Description: Matrix Computations and Statisctics: Variable subset selection in linear regression models.
+Description: Variable subset selection in linear regression models.
 Depends: R (>= 2.7.0)
 Imports: stats, graphics
 License: GPL-2

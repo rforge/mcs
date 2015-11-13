@@ -5,105 +5,74 @@
 #############
 
 
-## summary for 'mcsSubset' objects
+## summary for 'lmSubsets' objects
 ##
 ## Args:
-##   object  - (mcsSubset)
-##   penalty - (numeric)
+##   object  - (lmSubsets)
+##   penalty - (numeric|"AIC"|"BIC") passed to 'AIC.lmSubsets'
 ##   ...     - ignored
 ##
-## Rval: (summary.mcsSubset)
+## Rval: (summary.lmSubsets)
 ##
-summary.mcsSubset <- function (object, penalty = 2, ...) {
+summary.lmSubsets <- function (object, penalty = 2, ...) {
   paste <- function (..., sep = "") base::paste(..., sep = sep)
 
   x.names <- variable.names(object, .full = TRUE)
 
-  if (object$penalty == 0) {
-      ## aic
-      aic <- AIC(object, size = 1:object$nvar, best = 1:object$nbest,
-                 k = penalty)
-      aic <- matrix(aic$AIC, nrow = object$nbest)
-      ## penalty
-      object$penalty <- penalty
-      ## order
-      pi <- order(aic)
-      pi <- array(c((pi - 1) %%  object$nbest + 1,
-                    (pi - 1) %/% object$nbest + 1),
-                  dim = c(length(aic), 2))
-      nok <- is.na(aic[pi])
-      pi <- pi[!nok, , drop = FALSE]
-      ## nbest
-      object$nbest <- nrow(pi)
+  ## aic
+  aic <- AIC(object, size = 1:object$nvar, best = 1:object$nbest,
+             k = penalty)
+  aic <- matrix(aic$AIC, nrow = object$nbest)
+  ## penalty
+  object$penalty <- penalty
+  ## order
+  pi <- order(aic)
+  pi <- array(c((pi - 1) %%  object$nbest + 1,
+                (pi - 1) %/% object$nbest + 1),
+              dim = c(length(aic), 2))
+  nok <- is.na(aic[pi])
+  pi <- pi[!nok, , drop = FALSE]
+  ## nbest
+  object$nbest <- nrow(pi)
 
-      .cnames <- paste(1:object$nbest, ".")
-      ## tolerance
-      object$tolerance <- array(object$tolerance[pi[, 2]], dim = object$nbest,
-                                dimnames = list(.cnames))
-      ## rss
-      object$rss <- array(object$rss[pi], dim = object$nbest,
-                          dimnames = list(.cnames))
-      ## aic
-      object$aic <- array(aic[pi], dim = object$nbest,
-                          dimnames = list(.cnames))
-      ## which table
-      sel <- cbind(rep(1:object$nvar, nrow(pi)),
-                   rep(pi[, 1], each = object$nvar),
-                   rep(pi[, 2], each = object$nvar))
-      object$which <- array(object$which[sel], dim = c(object$nvar, object$nbest),
-                            dimnames = list(x.names, .cnames))
-      ## size
-      object$size <- array(apply(object$which, 2, sum), dim = object$nbest,
-                           dimnames = list(.cnames))
-  } else if (object$penalty != penalty) {
-      ## aic
-      aic <- AIC(object, best = 1:object$nbest, k = penalty)
-      if (!is.atomic(aic)) aic <- aic$AIC
-      ## penalty
-      object$penalty <- penalty
-      ## order
-      pi <- order(aic)
-      nok <- is.na(aic[pi])
-      pi <- pi[!nok]
-      ## nbest
-      object$nbest <- length(pi)
-
-      .cnames <- paste(1:object$nbest, ".")
-      ## tolerance
-      object$tolerance <- array(object$tolerance[pi], dim = object$nbest,
-                                dimnames = list(.cnames))
-      ## rss
-      object$rss <- array(object$rss[pi], dim = object$nbest,
-                          dimnames = list(.cnames))
-      ## aic
-      object$aic <- array(aic[pi], dim = object$nbest,
-                          dimnames = list(.cnames))
-      ## which table
-      object$which <- array(object$which[, pi], dim = c(object$nvar, object$nbest),
-                            dimnames = list(x.names, .cnames))
-      ## size
-      object$size <- array(apply(object$which, 2, sum), dim = object$nbest,
-                           dimnames = list(.cnames))
-  }
+  .cnames <- paste(1:object$nbest, ".")
+  ## tolerance
+  object$tolerance <- array(object$tolerance[pi[, 2]], dim = object$nbest,
+                            dimnames = list(.cnames))
+  ## rss
+  object$rss <- array(object$rss[pi], dim = object$nbest,
+                      dimnames = list(.cnames))
+  ## aic
+  object$aic <- array(aic[pi], dim = object$nbest,
+                      dimnames = list(.cnames))
+  ## which table
+  sel <- cbind(rep(1:object$nvar, nrow(pi)),
+               rep(pi[, 1], each = object$nvar),
+               rep(pi[, 2], each = object$nvar))
+  object$which <- array(object$which[sel], dim = c(object$nvar, object$nbest),
+                        dimnames = list(x.names, .cnames))
+  ## size
+  object$size <- array(apply(object$which, 2, sum), dim = object$nbest,
+                       dimnames = list(.cnames))
 
   ## class
-  class(object) <- c("summary.mcsSubset", "mcsSubset")
+  class(object) <- "summary.lmSubsets"
 
   ## done
   object
 }
 
 
-## print 'mcsSubset' summary
+## print 'lmSubsets' summary
 ##
 ## Args:
-##   x      - (summary.mcsSubset)
+##   x      - (summary.lmSubsets)
 ##   digits - (integer)
 ##   ...    - ignored
 ##
-## Rval: (summary.mcsSubset) invisible
+## Rval: (summary.lmSubsets) invisible
 ##
-print.summary.mcsSubset <- function (x, digits = NULL, ...)
+print.summary.lmSubsets <- function (x, digits = NULL, ...)
 {
     catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
     paste <- function (..., sep = "") base::paste(..., sep = sep)
@@ -138,10 +107,10 @@ print.summary.mcsSubset <- function (x, digits = NULL, ...)
 }
 
 
-## plot 'mcsSubset' summary
+## plot 'lmSubsets' summary
 ##
 ## Args:
-##   x      - (mcsSubset)
+##   x      - (lmSubsets)
 ##   type   - (character) plot type
 ##   main   - (character) main title
 ##   xlab   - (character) x label
@@ -151,11 +120,11 @@ print.summary.mcsSubset <- function (x, digits = NULL, ...)
 ##   legend - (logical) legend?
 ##   ...    - forwarded
 ##
-## Rval: (summary.mcsSubset) invisible
+## Rval: (summary.lmSubsets) invisible
 ##
 ## All arguments are passed to 'plot.default'.
 ##
-plot.summary.mcsSubset <- function (x, type = "b", main = NULL, xlab = NULL,
+plot.summary.lmSubsets <- function (x, type = "b", main = NULL, xlab = NULL,
                                     ylab = "", col = c("blue", "red"), lty = 1,
                                     legend = TRUE, ...)
 {

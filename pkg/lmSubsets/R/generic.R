@@ -1,7 +1,11 @@
 
 
-mcsSubset <- function (object, ...)
-  UseMethod("mcsSubset")
+lmSubsets <- function (object, ...)
+  UseMethod("lmSubsets")
+
+
+lmSelect <- function (object, ...)
+  UseMethod("lmSelect")
 
 
 refit <- function (object, ...)

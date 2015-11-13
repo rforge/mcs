@@ -62,11 +62,11 @@ data("AirPollution")
 
 \examples{
 ## load data (with logs for relative potentials)
-data("AirPollution", package = "mcsSubset")
+data("AirPollution", package = "lmSubsets")
 for (i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 
 ## fit subsets
-xs <- mcsSubset(mortality ~ ., data = AirPollution)
+xs <- lmSubsets(mortality ~ ., data = AirPollution)
 plot(xs)
 
 ## summary with BIC

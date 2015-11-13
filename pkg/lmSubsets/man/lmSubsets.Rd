@@ -15,6 +15,7 @@
 
 \description{All-subsets regression for ordinary linear models.}
 
+
 \usage{
 lmSubsets(object, \dots)
 
@@ -122,7 +123,7 @@ size = NULL, tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
   \bold{15}, 139--156.
 }
 
-\seealso{\code{\link{summary}}, \code\link{methods}}.}
+\seealso{\code{\link{summary}}, \code{\link{methods}}.}
 
 
 \examples{
