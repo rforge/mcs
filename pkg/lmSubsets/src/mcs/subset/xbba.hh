@@ -66,11 +66,12 @@ namespace subset {
     class TCriterion
   >
   int
-  xbba(const char* const algo, int* const info,
+  xbba(const char* const algo,
        const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const rz, const int ldrz,
        int* const sIndex, TReal* const sRss, TReal* const sCrit,
-       int* const sSize, int* const s, const TCriterion<TReal>& c)
+       int* const sSize, int* const s, const TCriterion<TReal>& c,
+       int* const info)
   {
     using namespace detail;
 
@@ -99,10 +100,11 @@ namespace subset {
 
   template<typename TReal>
   int
-  xbba(const char* const algo, int* const info,
+  xbba(const char* const algo,
        const int m, const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const ay, const int lday,
-       int* const sIndex, TReal* const sRss, int* const s)
+       int* const sIndex, TReal* const sRss, int* const s,
+       int* const info)
   {
     using namespace detail;
 
@@ -131,10 +133,11 @@ namespace subset {
 
   template<typename TReal>
   int
-  xbba(const char* const algo, int* const info,
+  xbba(const char* const algo,
        const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const rz, const int ldrz,
-       int* const sIndex, TReal* const sRss, int* const s)
+       int* const sIndex, TReal* const sRss, int* const s,
+       int* const info)
   {
     using namespace detail;
 

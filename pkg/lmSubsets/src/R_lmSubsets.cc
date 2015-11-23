@@ -48,7 +48,7 @@ R_lmSubsets(const char* const* const algo, const int* const nobs,
     }
   else if (std::strncmp(*algo, "xbba", 4) == 0)
     {
-      *nodes = xbba(*algo, info, *nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s);
+      *nodes = xbba(*algo, *nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s, info);
     }
   else
     {
