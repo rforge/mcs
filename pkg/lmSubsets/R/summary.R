@@ -213,13 +213,39 @@ print.summary.lmSelect <- function (x, ...)
 ## All arguments are passed to 'plot.default'.
 ##
 plot.summary.lmSubsets <- function (x, ...) {
-    ## plot value
-    matplot(t(x$summary$aic[, x$size, drop = FALSE]), type = "o", lty = 3, pch = 21,
-            main = "lmSubsets (summary)", sub = "",
-            xlab = "Number of regressors", ylab = "Value")
+    ## start
+    plot.new()
+    box()
+
+    ## title
+    title(main = "lmSubsets (summary)")
 
     ## legend
-    legend("topright", legend = "Value", lty = 3, pch = 21, pt.bg = "white")
+    legend("topright", legend = c("Value", "Deviance"),
+           lty = 3, pch = 21,
+           col = c("red", "black"), pt.bg = "white")
+    
+    ## plot deviance
+    xlim <- range(x$size)
+    ylim <- range(x$rss[!is.na(x$rss)])
+    plot.window(xlim = xlim, ylim = ylim)
+    axis(1, at = pretty(xlim))
+    axis(4, at = pretty(ylim))
+    mtext("Size", side = 1, line = 3, col = "black")
+    mtext("Deviance", side = 4, line = 3, col = "black")
+    plot.lmSubsets(x, add = TRUE)
+
+    ## plot value
+    ylim <- range(x$summary$aic[!is.na(x$summary$aic)])
+    plot.window(xlim = xlim, ylim = ylim)
+    axis(2, at = pretty(ylim))
+    mtext("Value", side = 2, line = 3, col = "black")
+    for (i in x$size) {
+        lines(x = rep(i, x$nbest), y = x$summary$aic[, i],
+              type = "o", lty = 3, pch = 21,
+              col = "red", bg = "white")
+    }
+
 
     ## done
     invisible(x)

@@ -12,9 +12,9 @@
 ## standard formula interface
 ##
 ## Args:
-##   formula   - (formula)
-##   ...       - forwarded to 'lm' and 'lmSubsets.lm'
-##   lm        - (logical) if 'true', compute 'lm' component
+##   formula - (formula)
+##   ...     - forwarded to 'lm' and 'lmSubsets.lm'
+##   lm      - (logical) if 'true', compute 'lm' component
 ##
 ## Rval:  (lmSubsets)
 ##   See 'lmSubsets.default'.
@@ -104,8 +104,8 @@ lmSubsets.formula <- function (formula, ..., lm = FALSE) {
 ## interface for fitted lm regressions
 ##
 ## Args:
-##   object       - (lm)
-##   ...          - forwarded to 'lmSubsets.default'
+##   object - (lm)
+##   ...    - forwarded to 'lmSubsets.default'
 ##
 ## Rval:  (lmSubsets)
 ##   See 'lmSubsets.default'.
@@ -396,8 +396,8 @@ lmSubsets.default <- function (object, y, weights = NULL, offset = NULL,
 ## print method for 'lmSubsets' objects
 ##
 ## Args:
-##   x      - (lmSubsets)
-##   ...    - ignored
+##   x   - (lmSubsets)
+##   ... - ignored
 ##
 ## Rval:  (lmSubsets) invisible
 ##
@@ -453,21 +453,44 @@ print.lmSubsets <- function (x, ...) {
 ## plot method for 'lmSubsets' objects
 ##
 ## Args:
-##   x      - (lmSubsets)
-##   ...    - ignored
+##   x   - (lmSubsets)
+##   ... - ignored
+##   add - (logical) add to current plot
 ##
 ## Rval:  (lmSubsets) invisible
 ##
 ## Graphical arguments are passed to 'plot.default'.
 ##
-plot.lmSubsets <- function (x, ...) {
-    ## plot
-    matplot(t(x$rss[, x$size, drop = FALSE]), type = "o", lty = 3, pch = 21,
-            main = "lmSubsets", sub = "",
-            xlab = "Number of regressors", ylab = "Deviance")
+plot.lmSubsets <- function (x, ..., add = FALSE) {
+    if (!add) {
+        xlim <- range(x$size)
+        ylim <- range(x$rss[!is.na(x$rss)])
 
-    ## legend
-    legend("topright", legend = "Deviance", lty = 3, pch = 21, pt.bg = "white")
+        ## start
+        plot.new()
+        box()
+
+        ## title
+        title(main = "lmSubsets")
+
+        ## legend
+        legend("topright", legend = "Deviance",
+               lty = 3, pch = 21, pt.bg = "white")
+        
+        ## window
+        plot.window(xlim = xlim, ylim = ylim)
+        axis(1, at = pretty(xlim))
+        axis(2, at = pretty(ylim))
+        mtext("Size", side = 1, line = 3, col = "black")
+        mtext("Deviance", side = 2, line = 3, col = "black")
+    }
+
+    ## plot
+    for (i in x$size) {
+        lines(x = rep(i, x$nbest), y = x$rss[, i],
+              type = "o", lty = 3, pch = 21,
+              col = "black", bg = "white")
+    }
 
     ## done
     invisible(x)
@@ -547,8 +570,8 @@ formula.lmSubsets <- function (x, ...) {
 ## extract model frame
 ##
 ## Args:
-##   formula       - (lmSubsets)
-##   ...           - forwarded to 'formula.lmSubsets'
+##   formula - (lmSubsets)
+##   ...     - forwarded to 'formula.lmSubsets'
 ##
 ## Rval:  (data.frame)
 ##
@@ -573,10 +596,10 @@ model.frame.lmSubsets <- function (formula, ...) {
 ## extract model matrix
 ##
 ## Args:
-##   object        - (lmSubsets)
-##   size          - (integer)
-##   best          - (integer)
-##   ...           - ignored
+##   object - (lmSubsets)
+##   size   - (integer)
+##   best   - (integer)
+##   ...    - ignored
 ##
 ## Rval:  (matrix)
 ##
@@ -700,10 +723,10 @@ residuals.lmSubsets <- function (object, ...) {
 ## extract deviance
 ##
 ## Args:
-##   object        - (lmSubsets)
-##   size          - (integer[])
-##   best          - (integer)
-##   ...           - ignored
+##   object - (lmSubsets)
+##   size   - (integer[])
+##   best   - (integer)
+##   ...    - ignored
 ##
 ## Rval:  (numeric[])
 ##
