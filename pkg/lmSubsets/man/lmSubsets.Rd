@@ -23,29 +23,23 @@ lmSubsets(object, \dots)
 
 \method{lmSubsets}{lm}(object, \dots)
 
-\method{lmSubsets}{default}(object, y, include = NULL, exclude = NULL,
-size = NULL, tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
+\method{lmSubsets}{default}(object, y, weights = NULL, offset = NULL,
+include = NULL, exclude = NULL, size = NULL, tolerance = 0,
+pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 }
 
 
 \arguments{
-  \item{formula, object}{An object of class \code{lm}, \code{formula} or
+  \item{object, formula}{An object of class \code{lm}, \code{formula} or
     \code{matrix}.}
   \item{y}{The response variable.}
+  \item{weights, offset}{Part of the standard \code{formula} interface.}
   \item{include, exclude}{Index vectors designating variables that are
-    forced in or out of the model, respectively.  The vectors may
-    consist of (integer) indexes, (character) names, or (logical) bits
-    selecting the desired columns.  The integer indexes correspond to
-    the position of the variables in the model matrix; the intercept, if
-    any, has index \code{1}.  By default, all variables are included.}
-  \item{size}{Vector of subset sizes (not counting the intercept, if any).
-    By default, the best subsets are computed for each subset size (as
-    determined by way of \code{include} and \code{exclude}).}
-  \item{tolerance}{A numeric vector (expanded if necessary), where
-    \code{tolerance[n]} is the tolerance employed for subsets of size
-    \code{n}}
+    forced in or out of the model, respectively.}
+  \item{size}{Vector of subset sizes.}
+  \item{tolerance}{Vector of tolerances.}
   \item{pradius}{Preordering radius.}
-  \item{nbest}{Number of best subsets to report.}
+  \item{nbest}{Number of best subsets.}
   \item{\dots}{Ignored.}
   \item{lm}{If \code{true}, compute \code{lm} component.}
   \item{.algo}{Internal use.}
@@ -53,7 +47,7 @@ size = NULL, tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 
 
 \details{
-  The function \code{lmSubsets} computes all variable-subsets regression
+  The function \code{lmSubsets} computes all-variable-subsets regression
   for ordinary linear models.  The function is generic and provides
   various methods to conveniently specify the regressor and response
   variables.  The standard \code{formula} interface (see
@@ -85,29 +79,22 @@ size = NULL, tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 
 
 \value{
-  An object of class \code{"lmSubsets"}, i.e. a list
-  with the following components:
-  \item{weights}{Weights.}
-  \item{offset}{Offset.}
+  An object of class \code{"lmSubsets"}, i.e. a list with the
+  following components:
   \item{nobs}{Number of observations.}
-  \item{nvar}{Number of variables (not including intercept, if any).}
-  \item{x.names}{Names of all design variables.}
-  \item{y.name}{Name of response variable.}
-  \item{include}{Indexes of variables forced in.}
-  \item{exclude}{Indexes of variables forced out.}
+  \item{nvar}{Number of variables.}
+  \item{weights}{Weights vector.}
+  \item{offset}{Offset component.}
+  \item{include}{Included regressors.}
+  \item{exclude}{Excluded regressors.}
+  \item{size}{Subset sizes.}
   \item{intercept}{\code{TRUE} if regression has an intercept term;
     \code{FALSE} otherwise.}
-  \item{nbest}{Number of best subsets.}
-  \item{size}{Subset sizes.}
   \item{tolerance}{Tolerance vector.}
-  \item{rss}{A two dimensional numeric \code{nbest x nvar} array.}
-  \item{which}{A three dimensional logical \code{nvar x nbest x nvar}
-    array.}
-
-  The entry \code{rss[i, n]} corresponds to the RSS of the \code{i}-th
-  best subset model of size \code{n}.  The entry \code{which[j, i, n]}
-  has value \code{TRUE} if the \code{i}-th best subset model of size
-  \code{n} contains the \code{j}-th variable.
+  \item{nbest}{Number of best subsets.}
+  \item{df}{Degrees of freedom.}
+  \item{rss}{Residual sum of squares.}
+  \item{which}{Selected variables.}
 }
 
 
@@ -123,7 +110,9 @@ size = NULL, tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
   \bold{15}, 139--156.
 }
 
-\seealso{\code{\link{summary}}, \code{\link{methods}}.}
+
+\seealso{\code{\link{lmSelect}}, \code{\link{summary}},
+  \code{\link{methods}}.}
 
 
 \examples{
@@ -135,7 +124,7 @@ data("AirPollution", package = "lmSubsets")
 #################
 
 ## canonical example: fit best subsets
-xs <- lmSubsets(mortality ~ ., data = AirPollution)
+xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## visualize RSS
 plot(xs)
@@ -150,10 +139,8 @@ plot(summary(xs))
 xs <- lmSubsets(mortality ~ ., data = AirPollution,
                 include = "noncauc", exclude = "whitecollar")
 
-## or equivalently
-xs <- lmSubsets(mortality ~ ., data = AirPollution,
-                include = 10, exclude = 11)
 summary(xs)
 }
+
 
 \keyword{regression}

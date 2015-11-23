@@ -7,9 +7,9 @@
 \alias{print.summary.lmSubsets}
 \alias{plot.summary.lmSubsets}
 
-%% \alias{summary.lmSelect}
-%% \alias{print.summary.lmSelect}
-%% \alias{plot.summary.lmSelect}
+\alias{summary.lmSelect}
+\alias{print.summary.lmSelect}
+\alias{plot.summary.lmSelect}
 
 
 \title{Summarize 'lmSubsets' and 'lmSelect' objects}
@@ -22,14 +22,14 @@
 
 
 \usage{
-\method{summary}{lmSubsets}(object, penalty = 2, \dots)
-%% \method{summary}{lmSelect}(object, penalty = 2, \dots)
+\method{summary}{lmSubsets}(object, penalty = "AIC", \dots)
+\method{summary}{lmSelect}(object, penalty = "BIC", \dots)
 }
 
 
 \arguments{
   \item{object}{An object of class \code{lmSubsets} or \code{lmSelect}.}
-  \item{penalty}{The AIC penalty.}
+  \item{penalty}{Penalty per parameter.}
   \item{\dots}{Ignored.}
 }
 
@@ -53,16 +53,21 @@
 ## load data
 data("AirPollution", package = "lmSubsets")
 
-## fit best subsets
-xs <- lmSubsets(mortality ~ ., data = AirPollution)
+## fit all subsets
+xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
-## summarize (BIC)
-sx <- summary(xs, penalty = log(nrow(AirPollution)))
+## summarize (AIC)
+sx <- summary(xs, penalty = "AIC")
 sx
+plot(sx)
 
-## or
-sx <- summary(xs, penalty = "BIC")
-sx
+## fit best subsets (AIC)
+xz <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
+
+## summarize
+zx <- summary(xz, penalty = c("AIC", "BIC", 3:10))
+zx
+plot(zx)
 }
 
 \keyword{regression}

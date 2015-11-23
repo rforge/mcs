@@ -8,7 +8,6 @@
 #include <numeric>  // std::iota
 
 
-
 namespace mcs    {
 namespace subset {
 namespace detail {
@@ -102,12 +101,12 @@ namespace detail {
       return sCrit_[i] < sCrit_[j];
     };
 
-    std::sort(sIndex_, sIndex_ + nbest_, comp);
+    std::sort_heap(sIndex_, sIndex_ + nbest_, comp);
 
     for (int i = 0; i < nbest_; ++i)
       {
 	int* const begin = s_ + i * size_;
-	int* const end   = begin + sSize_[sIndex_[i]];
+	int* const end   = begin + sSize_[i];
 
 	std::sort(begin, end);
       }

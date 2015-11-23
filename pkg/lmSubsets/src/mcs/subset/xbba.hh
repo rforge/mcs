@@ -28,11 +28,12 @@ namespace subset {
     class TCriterion
   >
   int
-  xbba(const char* const algo, int* const info,
+  xbba(const char* const algo,
        const int m, const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const ay, const int lday,
        int* const sIndex, TReal* const sRss, TReal* const sCrit,
-       int* const sSize, int* const s, const TCriterion<TReal>& c)
+       int* const sSize, int* const s, const TCriterion<TReal>& c,
+       int* const info)
   {
     using namespace detail;
 
@@ -44,11 +45,11 @@ namespace subset {
 
 
     if (std::strcmp(algo, "xbba1")) {
-      Preorder::Single1<TReal> p (size, pmin);
+      Preorder::Single1<TReal> p(size, pmin);
 
       return pbba(state, table, c, p);
     } else if (std::strcmp(algo, "xbba2")) {
-      Preorder::Single2<TReal> p (size, pmin);
+      Preorder::Single2<TReal> p(size, pmin);
 
       return pbba(state, table, c, p);
     } else {

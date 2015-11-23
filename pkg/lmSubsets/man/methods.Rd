@@ -1,5 +1,6 @@
 \name{methods}
 
+
 \alias{methods}
 
 \alias{variable.names.lmSubsets}
@@ -34,52 +35,53 @@
 \title{Methods for 'lmSubsets' and 'lmSelect' objects}
 
 
-\description{Extractor methods for \code{\link{mcsSubset}} and
-\code{\link{lmSelect}} objects.}
+\description{
+  Extractor methods for \code{lmSubsets} and \code{lmSelect}
+  objects.
+}
 
 
 \usage{
-\method{variable.names}{lmSubsets}(object, size = NULL, best = 1,
-\ldots, .full = FALSE, .neg = FALSE)
+\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots,
+.full = FALSE, .cmpl = FALSE)
 \method{formula}{lmSubsets}(x, \ldots)
 \method{model.frame}{lmSubsets}(formula, \ldots)
-\method{model.matrix}{lmSubsets}(object, size = NULL, best = 1, \ldots)
+\method{model.matrix}{lmSubsets}(object, size, best = 1, \ldots)
 \method{refit}{lmSubsets}(object, \ldots)
 \method{coef}{lmSubsets}(object, \ldots)
 \method{vcov}{lmSubsets}(object, \ldots)
 \method{fitted}{lmSubsets}(object, \ldots)
 \method{residuals}{lmSubsets}(object, \ldots)
-\method{deviance}{lmSubsets}(object, size = NULL, best = 1, \ldots)
-\method{logLik}{lmSubsets}(object, size = NULL, best = 1, \ldots, df)
-\method{AIC}{lmSubsets}(object, size = NULL, best = 1, \ldots, k = NULL)
-\method{BIC}{lmSubsets}(object, size = NULL, best = 1, \ldots)
+\method{deviance}{lmSubsets}(object, size, best = 1, \ldots)
+\method{logLik}{lmSubsets}(object, size, best = 1, \ldots)
+\method{AIC}{lmSubsets}(object, size, best = 1, \ldots, k = 2)
+\method{BIC}{lmSubsets}(object, size, best = 1, \ldots)
 
-\method{variable.names}{lmSelect}(object, size = NULL, best = 1,
-\ldots, .full = FALSE, .neg = FALSE)
+\method{variable.names}{lmSelect}(object, best = 1, \ldots,
+.full = FALSE, .cmpl = FALSE)
 \method{formula}{lmSelect}(x, \ldots)
 \method{model.frame}{lmSelect}(formula, \ldots)
-\method{model.matrix}{lmSelect}(object, size = NULL, best = 1, \ldots)
+\method{model.matrix}{lmSelect}(object, best = 1, \ldots)
 \method{refit}{lmSelect}(object, \ldots)
 \method{coef}{lmSelect}(object, \ldots)
 \method{vcov}{lmSelect}(object, \ldots)
 \method{fitted}{lmSelect}(object, \ldots)
 \method{residuals}{lmSelect}(object, \ldots)
-\method{deviance}{lmSelect}(object, size = NULL, best = 1, \ldots)
-\method{logLik}{lmSelect}(object, size = NULL, best = 1, \ldots, df)
-\method{AIC}{lmSelect}(object, size = NULL, best = 1, \ldots, k = NULL)
-\method{BIC}{lmSelect}(object, size = NULL, best = 1, \ldots)
+\method{deviance}{lmSelect}(object, best = 1, \ldots)
+\method{logLik}{lmSelect}(object, best = 1, \ldots)
+\method{AIC}{lmSelect}(object, best = 1, \ldots, k = 2)
+\method{BIC}{lmSelect}(object, best = 1, \ldots)
 }
 
 
 \arguments{
-  \item{object, formula, x}{An object of class \code{mcsSubset}.}
+  \item{object, formula, x}{An object of class \code{lmSubsets}
+    or \code{lmSelect}.}
   \item{size}{The subset size.}
   \item{best}{The subset rank.}
-  \item{df}{Degrees of freedom.}
   \item{k}{AIC penalty.}
   \item{\dots}{Forwarded arguments.}
-  \item{.full}{For internal use.}
-  \item{.neg}{For internal use.}
+  \item{.full, .cmpl}{For internal use.}
 }
 
 
@@ -90,15 +92,15 @@
   The information is extracted from the model refitted to a given size.
   If a method is not available, \code{refit} can always be called
   explicitly to obtain a new \code{lm} object of the desired size or
-  rank.  In some cases, the \code{size} and \code{best} arguments may be
-  a vector specifying multiple values.
+  rank.
 
   The method \code{refit} returns an \code{lm} object fitted to the
   desired size and rank.
 }
 
 
-\seealso{\code{\link{lmSubsets}}, \code{\link{lmSelect}}, \code{\link{refit}}.}
+\seealso{\code{\link{lmSubsets}}, \code{\link{lmSelect}},
+  \code{\link{refit}}.}
 
 
 \examples{
@@ -115,30 +117,19 @@ residuals(xs, size = 3)
 fitted(xs, size = 3)
 model.matrix(xs, size = 3)
 
-## summarize (BIC)
-sx <- summary(xs, penalty = log(nrow(AirPollution)))
+## select best subsets (BIC)
+xz <- lmSelect(xs, penalty = "BIC")
 
 ## extract information (for best BIC subset)
-deviance(sx)
-logLik(sx)
-AIC(sx)
+deviance(xz)
+logLik(xz)
+AIC(xz)
+BIC(xz, best = 1:5)
 
 ## refit model
-lm5 <- refit(sx, size=5)
+lm5 <- refit(xs, size=5)
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
-
-## select 5 best subsets using AIC
-xs <- lmSelect(mortality ~ ., data = AirPollution, penalty = 2, nbest = 5)
-
-## summarize
-summary(xs)
-
-## extract deviance for best subset
-deviance(xs)
-
-## extract BIC for all subsets
-BIC(xs, best = 1:5)
 }
 
 

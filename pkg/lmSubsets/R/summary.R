@@ -1,3 +1,7 @@
+##
+## File:  summary.R
+##
+
 
 
 #############
@@ -9,161 +13,262 @@
 ##
 ## Args:
 ##   object  - (lmSubsets)
-##   penalty - (numeric|"AIC"|"BIC") passed to 'AIC.lmSubsets'
+##   penalty - ("AIC"|"BIC"|numeric)
 ##   ...     - ignored
 ##
 ## Rval: (summary.lmSubsets)
 ##
-summary.lmSubsets <- function (object, penalty = 2, ...) {
-  paste <- function (..., sep = "") base::paste(..., sep = sep)
+summary.lmSubsets <- function (object, penalty = "AIC", ...) {
+    ## aic
+    N <- object$nobs
+    if (is.null(w <- object$weights)) {
+        S <- 0
+    } else {
+        S <- sum(log(w))
+    }
 
-  x.names <- variable.names(object, .full = TRUE)
+    if (tolower(penalty) == "aic") {
+        penalty <- structure("AIC", k = 2)
+    } else if (tolower(penalty) == "bic") {
+        penalty <- structure("BIC", k = log(N))
+    } else if (is.numeric(penalty)) {
+        penalty <- structure("AIC", k = penalty)
+    } else {
+        stop ("invalid 'penalty'")
+    }
 
-  ## aic
-  aic <- AIC(object, size = 1:object$nvar, best = 1:object$nbest,
-             k = penalty)
-  aic <- matrix(aic$AIC, nrow = object$nbest)
-  ## penalty
-  object$penalty <- penalty
-  ## order
-  pi <- order(aic)
-  pi <- array(c((pi - 1) %%  object$nbest + 1,
-                (pi - 1) %/% object$nbest + 1),
-              dim = c(length(aic), 2))
-  nok <- is.na(aic[pi])
-  pi <- pi[!nok, , drop = FALSE]
-  ## nbest
-  object$nbest <- nrow(pi)
+    ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(object$rss)))
+    aic <- -2 * ll + attr(penalty, "k") * object$df
 
-  .cnames <- paste(1:object$nbest, ".")
-  ## tolerance
-  object$tolerance <- array(object$tolerance[pi[, 2]], dim = object$nbest,
-                            dimnames = list(.cnames))
-  ## rss
-  object$rss <- array(object$rss[pi], dim = object$nbest,
-                      dimnames = list(.cnames))
-  ## aic
-  object$aic <- array(aic[pi], dim = object$nbest,
-                      dimnames = list(.cnames))
-  ## which table
-  sel <- cbind(rep(1:object$nvar, nrow(pi)),
-               rep(pi[, 1], each = object$nvar),
-               rep(pi[, 2], each = object$nvar))
-  object$which <- array(object$which[sel], dim = c(object$nvar, object$nbest),
-                        dimnames = list(x.names, .cnames))
-  ## size
-  object$size <- array(apply(object$which, 2, sum), dim = object$nbest,
-                       dimnames = list(.cnames))
+    object$summary <- list(penalty = penalty, aic = aic)
 
-  ## class
-  class(object) <- "summary.lmSubsets"
+    ## class
+    class(object) <- c("summary.lmSubsets", "lmSubsets")
 
-  ## done
-  object
+    ## done
+    object
 }
+
+
+## summary for 'lmSelect' objects
+##
+## Args:
+##   object  - (mcsSubset)
+##   penalty - (("AIC"|"BIC"|numeric)[])
+##   ...     - ignored
+##
+## Rval: (summary.mcsSubset)
+##
+summary.lmSelect <- function (object, penalty = "BIC", ...) {
+    ## aic
+    N <- object$nobs
+    if (is.null(w <- object$weights)) {
+        S <- 0
+    } else {
+        S <- sum(log(w))
+    }
+
+    pen <- NULL
+    aic <- NULL
+    for (p in penalty) {
+        if (tolower(p) == "aic") {
+            k <- 2
+            pen <- structure(c(pen, "AIC"),
+                             k = c(attr(pen, "k"), k))
+        } else if (tolower(p) == "bic") {
+            k <- log(N)
+            pen <- structure(c(pen, "BIC"),
+                             k = c(attr(pen, "k"), k))
+        } else {
+            k <- as.numeric(p)
+            pen <- structure(c(pen, "AIC"),
+                             k = c(attr(pen, "k"), k))
+        }
+    
+        ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(object$rss)))
+        aic <- rbind(aic, -2 * ll + k * object$df)
+    }
+
+    object$summary <- list(penalty = pen,
+                           aic = matrix(aic, ncol = object$nbest))
+
+    ## class
+    class(object) <- c("summary.lmSelect", "lmSelect")
+
+    ## done
+    object
+}
+
+
+
+###########
+## PRINT ##
+###########
 
 
 ## print 'lmSubsets' summary
 ##
 ## Args:
 ##   x      - (summary.lmSubsets)
-##   digits - (integer)
 ##   ...    - ignored
 ##
 ## Rval: (summary.lmSubsets) invisible
 ##
-print.summary.lmSubsets <- function (x, digits = NULL, ...)
+print.summary.lmSubsets <- function (x, ...)
 {
     catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
     paste <- function (..., sep = "") base::paste(..., sep = sep)
 
-    ## digits
-    if (is.null(digits)) {
-        digits <- max(3, getOption("digits") - 3)
-    }
+
     ## call
     catln()
     catln("Call:")
     catln(deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
-    ## variable table
+
+
+    ## arguments
     catln()
-    catln("Selected variables (best first):")
-    which.x <- ifelse(x$which, "x", "")
-    rownames(which.x)[x$include] <- paste("+", rownames(which.x)[x$include])
-    rownames(which.x)[x$exclude] <- paste("-", rownames(which.x)[x$exclude])
-    print(which.x, quote = FALSE)
+    cat("Arguments:")
+    val <- as.matrix(c(paste(x$summary$penalty, " (k = ", format(attr(x$summary$penalty, "k"), nsmall = 2), ")")),
+                     ncol = 1)
+    colnames(val) <- ""
+    rownames(val) <- paste("  ", c("Value"), ":")
+    print(val, quote = FALSE)
+
+
     ## fit
     catln()
-    catln("Model fit:")
-    fit <- format(rbind(x$aic, x$rss), digits = digits)
-    fit <- rbind(fit, format(x$size))
-    rownames(fit) <- c("AIC", "RSS", "(size)")
+    catln("Model fit (value):")
+    catln("  best x size")
+    fit <- format(x$summary$aic[, x$size, drop = FALSE], nsmall = 2)
+    rownames(fit) <- paste("  ", rownames(fit))
     print(fit, quote = FALSE)
     catln()
-    catln("AIC: k = ", format(x$penalty, digits = digits))
+
 
     ## done
     invisible(x)
 }
 
 
+## print 'lmSelect' summary
+##
+## Args:
+##   x      - (summary.lmSelect)
+##   digits - (integer)
+##   ...    - ignored
+##
+## Rval: (summary.lmSelect) invisible
+##
+print.summary.lmSelect <- function (x, ...)
+{
+    catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
+    paste <- function (..., sep = "") base::paste(..., sep = sep)
+
+
+    ## call
+    catln()
+    catln("Call:")
+    catln("  ", deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
+
+
+    ## arguments
+    catln()
+    cat("Arguments:")
+    val <- as.matrix(c(paste(x$summary$penalty, paste("(k = ", format(attr(x$summary$penalty, "k"), nsmall = 2), ")"), sep = " ", collapse = ", ")),
+                     ncol = 1)
+    colnames(val) <- ""
+    rownames(val) <- paste("  ", c("Value"), ":")
+    print(val, quote = FALSE)
+
+
+    ## fit
+    catln()
+    catln("Model fit:")
+    fit <- format(rbind(x$df, x$rss, x$summary$aic), nsmall = 2)
+    rownames(fit) <- paste("  ", c("df", "Deviance", "Value", rep("", length(x$summary$penalty) - 1)))
+    print(fit, quote = FALSE)
+    catln()
+
+
+    ## done
+    invisible(x)
+}
+
+
+
+##########
+## PLOT ##
+##########
+
+
 ## plot 'lmSubsets' summary
 ##
 ## Args:
 ##   x      - (lmSubsets)
-##   type   - (character) plot type
-##   main   - (character) main title
-##   xlab   - (character) x label
-##   ylab   - (character) y label
-##   col    - (integer[]|character[]) color
-##   lty    - (integer) line type
-##   legend - (logical) legend?
-##   ...    - forwarded
+##   ...    - ignored
 ##
 ## Rval: (summary.lmSubsets) invisible
 ##
 ## All arguments are passed to 'plot.default'.
 ##
-plot.summary.lmSubsets <- function (x, type = "b", main = NULL, xlab = NULL,
-                                    ylab = "", col = c("blue", "red"), lty = 1,
-                                    legend = TRUE, ...)
-{
-    digits <- max(3, getOption("digits") - 3)
+plot.summary.lmSubsets <- function (x, ...) {
+    ## plot value
+    matplot(t(x$summary$aic[, x$size, drop = FALSE]), type = "o", lty = 3, pch = 21,
+            main = "lmSubsets (summary)", sub = "",
+            xlab = "Number of regressors", ylab = "Value")
 
-    ## type
-    type <- rep(type, length.out = 2)
-    ## main title
-    if (is.null(main)) {
-        main <- paste("AIC and residual sum of squares")
-    }
-    ## sub title
-    sub <- paste("AIC (k = ", format(x$penalty, digits = digits),
-                 ")", sep = "")
-    ## x label
-    if (is.null(xlab)) {
-        xlab <- "Best"
-    }
-    ## color
-    col <- rep(col, length.out = 2)
-    ## line type
-    lty <- rep(lty, length.out = 2)
-    ## best
-    best <- 1:x$nbest
-    ## plot rss
-    plot(best, x$rss, type = type[1], main = main, sub = sub,
-         xlab = xlab, ylab = ylab, col = col[1], lty = lty[1], ...)
-    ## plot aic
-    new.old <- getOption("new")
-    par(new = TRUE)
-    plot(best, x$aic, type = type[2], xlab = "", ylab = "",
-         col = col[2], lty = lty[2], axes = FALSE, ...)
-    par(new = new.old)
     ## legend
-    if (legend) {
-        legend("top", c("RSS", "AIC"), lty = lty, col = col, bty = "n")
-    }
-    ## axes
-    axis(4)
+    legend("topright", legend = "Value", lty = 3, pch = 21, pt.bg = "white")
+
+    ## done
+    invisible(x)
+}
+
+
+## plot 'lmSelect' summary
+##
+## Args:
+##   x      - (mcsSubset)
+##   ...    - ignored
+##
+## Rval: (summary.lmSelect) invisible
+##
+## All arguments are passed to 'plot.default'.
+##
+plot.summary.lmSelect <- function (x, ...) {
+    par(mar = c(5, 4, 4, 4) + 0.1)
+
+    ## start
+    plot.new()
+    box()
+
+    xlim <- c(1, x$nbest)
+
+    ## title
+    title(main = "lmSelect (summary)")
+
+    ## legend
+    legend("topleft", legend = c("Value", "Deviance"),
+           lty = c(1, 3), pch = 21,
+           col = c("red", "black"), pt.bg = c("red", "white"),
+           text.col = c("red", "black"))
+
+    ## plot deviance
+    plot.window(xlim = xlim, ylim = range(x$rss))
+    lines(x$rss, type = "o", lty = 3, pch = 21, col = "black", bg = "white")
+    axis(4, at = pretty(range(x$rss)))
+    mtext("Deviance", side = 4, line = 3, col = "black")
+
+    ## plot value
+    plot.window(xlim = xlim, ylim = range(x$summary$aic))
+    matplot(t(x$summary$aic), type = "o", lty = 1, pch = 21, col = 2:7, bg = 2:7, add = TRUE)
+    axis(2, at = pretty(range(x$summary$aic)))
+    mtext("Value", side = 2, line = 3)
+
+    ## x axis
+    axis(1, at = pretty(xlim))
+    mtext("Best", side = 1, line = 3)
 
     ## done
     invisible(x)
