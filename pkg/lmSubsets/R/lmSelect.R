@@ -553,8 +553,6 @@ plot.lmSelect <- function (x, ...) {
     plot.new()
     box()
 
-    xlim <- c(1, x$nbest)
-
     ## title
     title(main = "lmSelect")
 
@@ -564,21 +562,27 @@ plot.lmSelect <- function (x, ...) {
            col = c("red", "black"), pt.bg = c("red", "white"),
            text.col = c("red", "black"))
 
-    ## plot deviance
-    plot.window(xlim = xlim, ylim = range(x$rss))
-    lines(x$rss, type = "o", lty = 3, pch = 21, col = "black", bg = "white")
-    axis(4, at = pretty(range(x$rss)))
-    mtext("Deviance", side = 4, line = 3, col = "black")
-
-    ## plot value
-    plot.window(xlim = xlim, ylim = range(x$aic))
-    lines(x$aic, type = "o", col = "red", bg = "red", pch = 21)
-    axis(2, at = pretty(range(x$aic)))
-    mtext("Value", side = 2, line = 3)
-
     ## x axis
+    xlim <- c(1, x$nbest)
+    plot.window(xlim = xlim, ylim = c(0, 1))
     axis(1, at = pretty(xlim))
     mtext("Best", side = 1, line = 3)
+
+    ## plot deviance
+    ylim <- range(x$rss[!is.na(x$rss)])
+    plot.window(xlim = xlim, ylim = ylim)
+    axis(4, at = pretty(ylim))
+    mtext("Deviance", side = 4, line = 3, col = "black")
+    lines(x$rss, type = "o", lty = 3, pch = 21,
+          col = "black", bg = "white")
+
+    ## plot value
+    ylim <- range(x$aic[!is.na(x$aic)])
+    plot.window(xlim = xlim, ylim = ylim)
+    axis(2, at = pretty(ylim))
+    mtext("Value", side = 2, line = 3)
+    lines(x$aic, type = "o", lty = 1, pch = 21,
+          col = "red", bg = "red")
 
     ## done
     invisible(x)

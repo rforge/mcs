@@ -485,12 +485,12 @@ plot.lmSubsets <- function (x, ..., add = FALSE) {
         mtext("Deviance", side = 2, line = 3, col = "black")
     }
 
-    ## plot
-    for (i in x$size) {
-        lines(x = rep(i, x$nbest), y = x$rss[, i],
-              type = "o", lty = 3, pch = 21,
-              col = "black", bg = "white")
-    }
+    ## plot deviance
+    matplot(x = matrix(rep(x$size, each = x$nbest), nrow = x$nbest),
+            y = x$rss[, x$size, drop = FALSE],
+            type = "o", lty = 3, pch = 21,
+            col = "black", bg = "white",
+            add = TRUE)
 
     ## done
     invisible(x)

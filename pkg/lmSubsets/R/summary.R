@@ -213,6 +213,8 @@ print.summary.lmSelect <- function (x, ...)
 ## All arguments are passed to 'plot.default'.
 ##
 plot.summary.lmSubsets <- function (x, ...) {
+    par(mar = c(5, 4, 4, 4) + 0.1)
+
     ## start
     plot.new()
     box()
@@ -225,13 +227,16 @@ plot.summary.lmSubsets <- function (x, ...) {
            lty = 3, pch = 21,
            col = c("red", "black"), pt.bg = "white")
     
-    ## plot deviance
+    ## x axis
     xlim <- range(x$size)
+    plot.window(xlim = xlim, ylim = c(0, 1))
+    axis(1, at = pretty(xlim))
+    mtext("Size", side = 1, line = 3, col = "black")
+
+    ## plot deviance
     ylim <- range(x$rss[!is.na(x$rss)])
     plot.window(xlim = xlim, ylim = ylim)
-    axis(1, at = pretty(xlim))
     axis(4, at = pretty(ylim))
-    mtext("Size", side = 1, line = 3, col = "black")
     mtext("Deviance", side = 4, line = 3, col = "black")
     plot.lmSubsets(x, add = TRUE)
 
@@ -240,12 +245,11 @@ plot.summary.lmSubsets <- function (x, ...) {
     plot.window(xlim = xlim, ylim = ylim)
     axis(2, at = pretty(ylim))
     mtext("Value", side = 2, line = 3, col = "black")
-    for (i in x$size) {
-        lines(x = rep(i, x$nbest), y = x$summary$aic[, i],
-              type = "o", lty = 3, pch = 21,
-              col = "red", bg = "white")
-    }
-
+    matplot(x = matrix(rep(x$size, each = x$nbest), nrow = x$nbest),
+            y = x$summary$aic[, x$size, drop = FALSE],
+            type = "o", lty = 3, pch = 21,
+            col = "red", bg = "white",
+            add = TRUE)
 
     ## done
     invisible(x)
@@ -269,8 +273,6 @@ plot.summary.lmSelect <- function (x, ...) {
     plot.new()
     box()
 
-    xlim <- c(1, x$nbest)
-
     ## title
     title(main = "lmSelect (summary)")
 
@@ -280,21 +282,27 @@ plot.summary.lmSelect <- function (x, ...) {
            col = c("red", "black"), pt.bg = c("red", "white"),
            text.col = c("red", "black"))
 
-    ## plot deviance
-    plot.window(xlim = xlim, ylim = range(x$rss))
-    lines(x$rss, type = "o", lty = 3, pch = 21, col = "black", bg = "white")
-    axis(4, at = pretty(range(x$rss)))
-    mtext("Deviance", side = 4, line = 3, col = "black")
-
-    ## plot value
-    plot.window(xlim = xlim, ylim = range(x$summary$aic))
-    matplot(t(x$summary$aic), type = "o", lty = 1, pch = 21, col = 2:7, bg = 2:7, add = TRUE)
-    axis(2, at = pretty(range(x$summary$aic)))
-    mtext("Value", side = 2, line = 3)
-
     ## x axis
+    xlim <- c(1, x$nbest)
+    plot.window(xlim = xlim, ylim = c(0, 1))
     axis(1, at = pretty(xlim))
     mtext("Best", side = 1, line = 3)
+
+    ## plot deviance
+    ylim <- range(x$rss[!is.na(x$rss)])
+    plot.window(xlim = xlim, ylim = ylim)
+    axis(4, at = pretty(ylim))
+    mtext("Deviance", side = 4, line = 3, col = "black")
+    lines(x$rss, type = "o", lty = 3, pch = 21,
+          col = "black", bg = "white")
+
+    ## plot value
+    ylim <- range(x$summary$aic[!is.na(x$summary$aic)])
+    plot.window(xlim = xlim, ylim = ylim)
+    axis(2, at = pretty(ylim))
+    mtext("Value", side = 2, line = 3)
+    matplot(t(x$summary$aic), type = "o", lty = 1, pch = 21,
+            col = 2:7, bg = 2:7, add = TRUE)
 
     ## done
     invisible(x)
