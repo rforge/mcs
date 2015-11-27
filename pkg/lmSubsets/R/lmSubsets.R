@@ -440,7 +440,8 @@ print.lmSubsets <- function (x, ...) {
     catln()
     catln("Model fit (deviance):")
     catln("  best x size")
-    fit <- format(x$rss[, x$size], nsmall = 2)
+    rss <- x$rss[, x$size, drop = FALSE]
+    fit <- ifelse(is.na(rss), "", format(rss, nsmall = 2))
     rownames(fit) <- paste("  ", rownames(fit))
     print(fit, quote = FALSE)
     catln()
