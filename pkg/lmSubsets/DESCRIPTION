@@ -14,6 +14,7 @@ Authors@R: c(person(given = "Marc", family = "Hofmann",
              person(given = "Achim", family = "Zeileis",
                     role = "aut",
                     email = "Achim.Zeileis@R-project.org"))
+Maintainer: Marc Hofmann <marc.hofmann@gmail.com>
 Description: Variable subset selection in linear regression models.
 Depends: R (>= 2.7.0)
 Imports: stats, graphics

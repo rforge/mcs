@@ -108,8 +108,10 @@ data("AirPollution", package = "lmSubsets")
 xz <- lmSelect(mortality ~ ., data = AirPollution, nbest = 20)
 
 ## equivalent to:
-# xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
-# xz <- lmSelect(xs)
+\dontrun{
+xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
+xz <- lmSelect(xs)
+}
 
 ## visualize RSS
 plot(xz)
