@@ -213,7 +213,7 @@ print.summary.lmSelect <- function (x, ...)
 ## Args:
 ##   x      - (lmSubsets)
 ##   ...    - passed to 'plot.lmSubsets' and to 'matplot'.
-##   legend - (character)
+##   legend - (character[])
 ##
 ## Rval: (summary.lmSubsets) invisible
 ##
@@ -269,6 +269,7 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
 ## Args:
 ##   x      - (mcsSubset)
 ##   ...    - ignored
+##   legend - (character[])
 ##
 ## Rval: (summary.lmSelect) invisible
 ##

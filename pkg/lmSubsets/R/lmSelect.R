@@ -541,6 +541,10 @@ print.lmSelect <- function (x, ...)
 ## Args:
 ##   x      - (lmSelect)
 ##   ...    - ignored
+##   xlim   - (numeric[])
+##   ylim1  - (numeric[])
+##   ylim2  - (numeric[])
+##   legend - (character[])
 ##
 ## Rval:  (lmSelect) invisible
 ##
