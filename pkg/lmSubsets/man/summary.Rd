@@ -65,7 +65,7 @@ plot(sx)
 xz <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## summarize
-zx <- summary(xz, penalty = c("AIC", "BIC", 3:10))
+zx <- summary(xz, penalty = list("BIC", 3, 4, 5))
 zx
 plot(zx)
 }

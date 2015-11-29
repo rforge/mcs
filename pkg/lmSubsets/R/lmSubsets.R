@@ -454,46 +454,41 @@ print.lmSubsets <- function (x, ...) {
 ## plot method for 'lmSubsets' objects
 ##
 ## Args:
-##   x   - (lmSubsets)
-##   ... - ignored
-##   add - (logical) add to current plot
+##   x    -   (lmSubsets)
+##   ...  -   passed to 'matplot'
+##   legend - (character)
 ##
 ## Rval:  (lmSubsets) invisible
 ##
-## Graphical arguments are passed to 'plot.default'.
-##
-plot.lmSubsets <- function (x, ..., add = FALSE) {
-    if (!add) {
-        xlim <- range(x$size)
-        ylim <- range(x$rss[!is.na(x$rss)])
+plot.lmSubsets <- function (x, ..., legend) {
+    localPlot <- function (object, main, sub = NULL, xlab, ylab,
+                           type, lty, pch, col, bg, ...) {
+        if (missing(main)) main <- "All subsets"
+        if (missing(xlab)) xlab <- "Number of regressors"
+        if (missing(ylab)) ylab <- "Deviance"
 
-        ## start
-        plot.new()
-        box()
+        if (missing(type)) type <- "o"
+        if (missing(lty)) lty <- 3
+        if (missing(pch)) pch <- 21
+        if (missing(col)) col <- "black"
+        if (missing(bg)) bg <- "white"
 
-        ## title
-        title(main = "lmSubsets")
+        x <- matrix(rep(object$size, each = object$nbest), nrow = object$nbest)
+        y <- object$rss[, object$size, drop = FALSE]
 
-        ## legend
-        legend("topright", legend = "Deviance",
-               lty = 3, pch = 21, pt.bg = "white")
-        
-        ## window
-        plot.window(xlim = xlim, ylim = ylim)
-        axis(1, at = pretty(xlim))
-        axis(2, at = pretty(ylim))
-        mtext("Size", side = 1, line = 3, col = "black")
-        mtext("Deviance", side = 2, line = 3, col = "black")
+        matplot(x = x, y = y, main = main, sub = sub, xlab = xlab, ylab = ylab,
+                type = type, lty = lty, pch = pch, col = col, bg = bg, ...)
+
+        if (!is.null(legend)) {
+            legend("topright", legend = legend, lty = lty,
+                   pch = pch, col = col, pt.bg = bg)
+        }
     }
 
-    ## plot deviance
-    matplot(x = matrix(rep(x$size, each = x$nbest), nrow = x$nbest),
-            y = x$rss[, x$size, drop = FALSE],
-            type = "o", lty = 3, pch = 21,
-            col = "black", bg = "white",
-            add = TRUE)
+    if (missing(legend)) legend <- "Deviance (RSS)"
 
-    ## done
+    localPlot(x, ...)
+
     invisible(x)
 }
 

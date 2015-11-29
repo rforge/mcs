@@ -546,45 +546,52 @@ print.lmSelect <- function (x, ...)
 ##
 ## Graphical arguments are passed to 'plot.default'.
 ##
-plot.lmSelect <- function (x, ...) {
-    par(mar = c(5, 4, 4, 4) + 0.1)
+plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
+                           legend) {
+    localPlot <- function (object, main, sub = NULL, xlab, ylab,
+                           type, lty, pch, col, bg, ...) {
+        if (missing(main)) main <- "Best subsets"
+        if (missing(xlab)) xlab <- "Number of regressors"
+        if (missing(ylab)) ylab <- c("Deviance", "Value")
 
-    ## start
-    plot.new()
-    box()
+        type <- if (missing(type)) c("o", "o")         else rep(type, length = 2)
+        lty  <- if (missing(lty) ) c(3, 1)             else rep(lty , length = 2)
+        pch  <- if (missing(pch) ) c(21, 21)           else rep(pch , length = 2)
+        col  <- if (missing(col) ) c("black", "red")   else rep(col , length = 2)
+        bg   <- if (missing(bg)  ) c("white", "white") else rep(bg  , length = 2)
+        
+        x <- seq(object$nbest)
+        y1 <- object$rss
+        y2 <- object$aic
 
-    ## title
-    title(main = "lmSelect")
+        if (is.null(xlim)) xlim <- range(x)
+        if (is.null(ylim1)) ylim1 <- range(y1[is.finite(y1)])
+        if (is.null(ylim2)) ylim2 <- range(y2[is.finite(y2)])
 
-    ## legend
-    legend("topleft", legend = c("Value", "Deviance"),
-           lty = c(1, 3), pch = 21,
-           col = c("red", "black"), pt.bg = c("red", "white"),
-           text.col = c("red", "black"))
+        par(mar = c(5, 4, 4, 4) + 0.1)
 
-    ## x axis
-    xlim <- c(1, x$nbest)
-    plot.window(xlim = xlim, ylim = c(0, 1))
-    axis(1, at = pretty(xlim))
-    mtext("Best", side = 1, line = 3)
+        plot(x, y1, main = main, sub = sub, xlab = xlab, ylab = ylab[1],
+             type = type[1], xlim = xlim, ylim = ylim1, lty = lty[1],
+             pch = pch[1], col = col[1], bg = bg[1], ...)
 
-    ## plot deviance
-    ylim <- range(x$rss[!is.na(x$rss)])
-    plot.window(xlim = xlim, ylim = ylim)
-    axis(4, at = pretty(ylim))
-    mtext("Deviance", side = 4, line = 3, col = "black")
-    lines(x$rss, type = "o", lty = 3, pch = 21,
-          col = "black", bg = "white")
+        if (!is.null(legend)) {
+            legend("topleft", legend = legend, lty = lty,
+                   pch = pch, col = col, pt.bg = bg)
+        }
 
-    ## plot value
-    ylim <- range(x$aic[!is.na(x$aic)])
-    plot.window(xlim = xlim, ylim = ylim)
-    axis(2, at = pretty(ylim))
-    mtext("Value", side = 2, line = 3)
-    lines(x$aic, type = "o", lty = 1, pch = 21,
-          col = "red", bg = "red")
+        plot.window(xlim = xlim, ylim = ylim2)
 
-    ## done
+        axis(side = 4, at = pretty(ylim2))
+        mtext(ylab[2], side = 4, line = 3)
+
+        lines(x, y2, type = type[2], lty = lty[2], pch = pch[2],
+              col = col[2], bg = bg[2], ...)
+    }
+
+    if (missing(legend)) legend <- c(paste("Value (", x$penalty, ")", sep = ""), "Deviance (RSS)")
+
+    localPlot(x, ...)
+
     invisible(x)
 }
 
