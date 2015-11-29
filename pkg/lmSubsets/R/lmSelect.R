@@ -555,7 +555,7 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
     localPlot <- function (object, main, sub = NULL, xlab, ylab,
                            type, lty, pch, col, bg, ...) {
         if (missing(main)) main <- "Best subsets"
-        if (missing(xlab)) xlab <- "Number of regressors"
+        if (missing(xlab)) xlab <- "Best subset"
         if (missing(ylab)) ylab <- c("Deviance", "Value")
 
         type <- if (missing(type)) c("o", "o")         else rep(type, length = 2)

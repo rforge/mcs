@@ -324,7 +324,8 @@ plot.summary.lmSelect <- function (x, ..., legend) {
                 col = col[-(1:2)], bg = bg[-(1:2)], ..., add = TRUE)
     }
 
-    if (missing(legend)) legend <- c("Deviance (RSS)", paste("Value (", x$penalty, ")", sep = ""),
+    if (missing(legend)) legend <- c("Deviance (RSS)",
+                                     paste("Value (", x$penalty, ", k = ", format(attr(x$penalty, "k"), nsmall = 2), ")", sep = ""),
                                      paste("Value (", x$summary$penalty, ", k = ", format(attr(x$summary$penalty, "k"), nsmall = 2), ")", sep = ""))
 
     localPlot(x, ...)
