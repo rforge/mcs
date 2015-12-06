@@ -657,7 +657,7 @@ formula.lmSelect <- function (x, ...) {
     ## variable names (complementary submodel)
     x.names <- variable.names(x, ..., .cmpl = TRUE)
     ## update formula
-    f <- update(f, paste(".~.", paste(c("", x.names), collapse = "-")))
+    f <- update(f, paste(c(".~.", x.names), collapse = "-"))
 
     ## done
     f
