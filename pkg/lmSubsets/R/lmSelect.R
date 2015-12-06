@@ -121,16 +121,9 @@ lmSelect.formula <- function (formula, ..., lm = FALSE) {
     ## build 'lm' component
     if (ret.lm) {
         object <- eval(lm.call, parent.frame())
-
-        ret.m <- TRUE
-        ret.x <- TRUE
-        ret.y <- TRUE
     } else {
         ## mock-up
         dots <- list(...)
-        if (is.null(ret.m <- dots[["model"]])) ret.m <- TRUE
-        if (is.null(ret.x <- dots[["x"]])) ret.x <- FALSE
-        if (is.null(ret.y <- dots[["y"]])) ret.y <- FALSE
         ## model frame
         mf.call <- match.call(expand.dots = TRUE)
         m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"),
@@ -171,10 +164,12 @@ lmSelect.formula <- function (formula, ..., lm = FALSE) {
 
     ## return value
     rval$call <- call
-    if (!ret.m) rval$lm$model <- NULL
-    if (!ret.x) rval$lm$x <- NULL
-    if (!ret.y) rval$lm$y <- NULL
-    if (!ret.lm) rval$lm <- NULL
+    if (!ret.lm) {
+        rval$lm <- NULL
+        rval$.lm$model <- NULL
+        rval$.lm$x <- NULL
+        rval$.lm$y <- NULL
+    }
 
     ## done
     rval
