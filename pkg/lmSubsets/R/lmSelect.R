@@ -592,7 +592,7 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
               col = col[2], bg = bg[2], ...)
     }
 
-    if (missing(legend)) legend <- c(paste("Value (", x$penalty, ")", sep = ""), "Deviance (RSS)")
+    if (missing(legend)) legend <- c("Deviance (RSS)", paste("Value (", x$penalty, ")", sep = ""))
 
     localPlot(x, ...)
 
