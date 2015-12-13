@@ -580,7 +580,7 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
 
         if (!is.null(legend)) {
             legend("topleft", legend = legend, lty = lty,
-                   pch = pch, col = col, pt.bg = bg)
+                   pch = pch, col = col, pt.bg = bg, bty = "n")
         }
 
         plot.window(xlim = xlim, ylim = ylim2)

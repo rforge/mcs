@@ -481,7 +481,7 @@ plot.lmSubsets <- function (x, ..., legend) {
 
         if (!is.null(legend)) {
             legend("topright", legend = legend, lty = lty,
-                   pch = pch, col = col, pt.bg = bg)
+                   pch = pch, col = col, pt.bg = bg, bty = "n")
         }
     }
 
