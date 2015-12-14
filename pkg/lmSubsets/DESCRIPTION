@@ -19,6 +19,7 @@ Description: Variable subset selection in linear regression models.
 Depends: R (>= 2.7.0)
 Imports: stats, graphics
 License: GPL-2
+SystemRequirements: C++11
 URL: TODO: MCS homepage?
 Acknowledgements: TODO: Dietmar, Manfred, ...
 Projects: TODO: SNF, Geneva, Basel, ...
