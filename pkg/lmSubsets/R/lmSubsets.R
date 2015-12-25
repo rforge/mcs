@@ -16,12 +16,11 @@
 ##   ...     - forwarded to 'lm' and 'lmSubsets.lm'
 ##   lm      - (logical) if 'true', compute 'lm' component
 ##
-## Rval:  (lmSubsets)
-##   See 'lmSubsets.default'.
+## Rval:  (lmSubsets) see 'lmSubsets.lm'
 ##
 ## NOTE:  'lm'
 ##   If 'lm' is 'FALSE', the returned 'lm' component is
-##   an "empty" mockup.
+##   an "empty" mock-up.
 ##
 lmSubsets.formula <- function (formula, ..., lm = FALSE) {
     ret.lm <- lm;  lm <- NULL
@@ -104,11 +103,12 @@ lmSubsets.formula <- function (formula, ..., lm = FALSE) {
 ## interface for fitted lm regressions
 ##
 ## Args:
-##   object - (lm)
-##   ...    - forwarded to 'lmSubsets.default'
+##   object  - (lm)
+##   ...     - forwarded to 'lmSubsets.fit'
 ##
-## Rval:  (lmSubsets)
-##   See 'lmSubsets.default'.
+## Rval:  (lmSubsets) see 'lmSubsets.fit'
+##   call - (call)
+##   lm   - (lm)
 ##
 lmSubsets.lm <- function (object, ...) {
     ## keep call (of generic)
@@ -134,7 +134,7 @@ lmSubsets.lm <- function (object, ...) {
     o <- model.offset(mf)
 
     ## forward call
-    rval <- lmSubsets(x, y, weights = w, offset = o, ...)
+    rval <- lmSubsets.fit(x, y, weights = w, offset = o, ...)
 
     ## return value
     rval$call <- call
@@ -150,27 +150,83 @@ lmSubsets.lm <- function (object, ...) {
 ## Args:
 ##   object    - (matrix) model matrix
 ##   y         - (numeric[]) response variable
+##   ...       - forwarded to 'lmSubsets.formula'
+##
+## Rval:  (lmSubsets) see 'lmSubsets.formula'
+##
+lmSubsets.default <- function (object, y, ...) {
+    ## keep call (of generic)
+    call <- match.call()
+    call[[1]] <- as.name("lmSubsets")
+
+    ## model matrix and response
+    x <- as.matrix(object);  object <- NULL
+    y <- as.matrix(y)
+
+    ## dims
+    nvar <- NCOL(x)
+
+    ## intercept
+    has.intercept <- all(x[, 1] == 1)
+
+    ## variables names
+    x.names <- colnames(x)
+    if (is.null(x.names)) {
+        x.names <- paste("X", 1:nvar - has.intercept, sep = "")
+        colnames(x) <- x.names
+    }
+
+    y.name <- colnames(y)
+    if (is.null(y.name)) {
+        y.name <- "Y"
+        colnames(y) <- y.name
+    }
+
+    ## formula
+    f <- paste(y.name, "~", sep = "")
+    f <- paste(f, paste(x.names[(1 + has.intercept):nvar], collapse = "+"), sep = "")
+    f <- paste(f, ifelse(has.intercept, "+1", "+0"), sep = "")
+    f <- as.formula(f)
+
+    ## data frame
+    df <- as.data.frame(cbind(y, x))
+
+    ## forward call
+    rval <- lmSubsets(f, data = df, ...)
+
+    ## return value
+    rval$call <- call
+
+    ## done
+    rval
+}
+
+
+## workhorse function
+##
+## Args:
+##   x         - (matrix) model matrix
+##   y         - (numeric[]) model response
 ##   weights   - (numeric[]) 
 ##   offset    - (numeric[])
 ##   include   - (integer[]) regressors to force in
 ##   exclude   - (integer[]) regressors to force out
 ##   size      - (integer[]) subset sizes
-##   tolerance - 
+##   tolerance - (numeric[])
 ##   pradius   - (integer) preordering radius
 ##   nbest     - (integer) number of best subsets
 ##   ...       - ignored
 ##   .algo     - (character) for interal use
 ##
-## Rval:  (lmSubsets)
-##   call      - (call)
+## Rval:  (list)
 ##   nobs      - (integer)
 ##   nvar      - (integer)
-##   weights   - (numeric[])
+##   weights   - (numeric[]) 
 ##   offset    - (numeric[])
+##   intercept - (logical)
 ##   include   - (integer[])
 ##   exclude   - (integer[])
 ##   size      - (integer[])
-##   intercept - (logical)
 ##   tolerance - (numeric[])
 ##   nbest     - (integer)
 ##   df        - (integer[nbest,nvar])
@@ -184,21 +240,14 @@ lmSubsets.lm <- function (object, ...) {
 ##   'bba'  :  Branch and Bound Algorithm
 ##   'pbba' :  BBA with variable preordering
 ##   'hbba' :  PBBA with tolerances
-##   'xbba*':  experimental PBBA
+##   'xbba.':  experimental PBBA
 ##
-lmSubsets.default <- function (object, y, weights = NULL, offset = NULL,
-                               include = NULL, exclude = NULL,
-                               size = NULL, tolerance = 0, pradius = NULL,
-                               nbest = 1, ..., .algo = "hbba") {
-    ## keep call (of generic)
-    call <- match.call()
-    call[[1]] <- as.name("lmSubsets")
-
+lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
+                           include = NULL, exclude = NULL,
+                           size = NULL, tolerance = 0, pradius = NULL,
+                           nbest = 1, ..., .algo = "hbba") {
     ## model matrix
-    x <- as.matrix(object);  object <- NULL
-
-    ## intercept
-    intercept <- all(x[, 1] == 1)
+    x <- as.matrix(x)
 
     ## model weights and offset
     if (is.null(w <- weights)) w <- rep(1, NROW(x))
@@ -258,7 +307,7 @@ lmSubsets.default <- function (object, y, weights = NULL, offset = NULL,
         ## canonicalize exclude
         if (any(is.na(include))) {
             exclude <- na.omit(exclude)
-            warning ("invalid columns selected in 'excluded'; fixing 'exclude': ",
+            warning ("invalid columns selected in 'exclude'; fixing 'exclude': ",
                      "c(", paste(exclude, collapse = ","), ")")
         }
         exclude <- sort(unique(exclude))
@@ -272,12 +321,12 @@ lmSubsets.default <- function (object, y, weights = NULL, offset = NULL,
     }
 
     ## intercept
-    if (intercept) {
+    has.intercept <- all(x[, 1] == 1)
+    if (has.intercept) {
         if (any(include == 1)) {
             ## OK, already selected
         } else if (any(exclude == 1)) {
             ## not selected
-            intercept <- FALSE
         } else {
             ## select
             include <- c(1, include)
@@ -356,22 +405,20 @@ lmSubsets.default <- function (object, y, weights = NULL, offset = NULL,
                  nvar      = nvar,
                  weights   = weights[wok],
                  offset    = offset[wok],
+                 intercept = has.intercept,
                  include   = include,
                  exclude   = exclude,
-                 size      = NULL,
-                 intercept = intercept,
+                 size      = size,
                  tolerance = NULL,
                  nbest     = nbest,
                  df        = NULL,
                  rss       = NULL,
                  which     = NULL,
-                 .nodes = C_rval$nodes)
+                 .nodes    = C_rval$nodes)
     class(rval) <- "lmSubsets"
 
-    ## extract value & subsets
+    ## extract value and subsets
     .cnames <- paste(1:nbest, ".", sep = "")
-    ## size
-    rval$size <- size
     ## tolerance
     rval$tolerance <- array(tolerance, dim = nvar,
                             dimnames = list(1:nvar))
@@ -430,16 +477,16 @@ print.lmSubsets <- function (x, ...) {
                      ncol = 1)
     colnames(val) <- ""
     rownames(val) <- paste("  ",
-                           c("Number of observations", "Number of regressors",
-                             "Weights", "Offset", "Intercept", "Include", "Exclude",
-                             "Subset sizes", "Tolerance", "N best"),
+                           c("N observations", "N regressors", "Weights", "Offset",
+                             "Intercept", "Include", "Exclude", "Subset sizes",
+                             "Tolerance", "N best"),
                            ":")
     print(val, quote = FALSE)
 
     ## fit
     catln()
     catln("Model fit (deviance):")
-    catln("  best x size")
+    catln("  size x best")
     rss <- x$rss[, x$size, drop = FALSE]
     fit <- ifelse(is.na(rss), "", format(rss, nsmall = 2))
     rownames(fit) <- paste("  ", rownames(fit))
@@ -514,11 +561,6 @@ plot.lmSubsets <- function (x, ..., legend) {
 ##
 variable.names.lmSubsets <- function (object, size, best = 1, ...,
                                       .full = FALSE, .cmpl = FALSE) {
-    ## lm
-    if (is.null(object$.lm)) {
-        stop ("'lmSubsets' object does not have a 'lm' component")
-    }
-
     ## full model
     x.names <- variable.names(object$.lm)
     if (.full) {
@@ -546,11 +588,6 @@ variable.names.lmSubsets <- function (object, size, best = 1, ...,
 ## Rval:  (formula)
 ##
 formula.lmSubsets <- function (x, ...) {
-    ## lm
-    if (is.null(x$.lm)) {
-        stop ("'lmSubsets' object does not have a 'lm' component")
-    }
-
     ## full model
     f <- formula(x$.lm)
     ## variable names (complementary submodel)
@@ -572,11 +609,6 @@ formula.lmSubsets <- function (x, ...) {
 ## Rval:  (data.frame)
 ##
 model.frame.lmSubsets <- function (formula, ...) {
-    ## lm
-    if (is.null(formula$.lm)) {
-        stop ("'lmSubsets' object does not have a 'lm' component")
-    }
-
     ## full model
     mf <- model.frame(formula$.lm)
     ## formula
@@ -600,11 +632,6 @@ model.frame.lmSubsets <- function (formula, ...) {
 ## Rval:  (matrix)
 ##
 model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
-    ## lm
-    if (is.null(object$.lm)) {
-        stop ("'lmSubsets' object does not have a 'lm' component")
-    }
-
     ## full model
     x <- model.matrix(object$.lm)
     ## which
@@ -626,11 +653,6 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
 ## Rval:  (lm)
 ##
 refit.lmSubsets <- function (object, ...) {
-    ## lm
-    if (is.null(object$.lm)) {
-        stop ("'lmSubsets' object does not have a 'lm' component")
-    }
-
     ## extract formula
     f <- formula(object, ...)
     ## model frame call

@@ -5,6 +5,7 @@
 \alias{lmSubsets.lm}
 \alias{lmSubsets.formula}
 \alias{lmSubsets.default}
+\alias{lmSubsets.fit}
 
 \alias{print.lmSubsets}
 \alias{plot.lmSubsets}
@@ -23,7 +24,9 @@ lmSubsets(object, \dots)
 
 \method{lmSubsets}{lm}(object, \dots)
 
-\method{lmSubsets}{default}(object, y, weights = NULL, offset = NULL,
+\method{lmSubsets}{default}(object, y, \ldots)
+
+lmSubsets.fit(x, y, weights = NULL, offset = NULL,
 include = NULL, exclude = NULL, size = NULL, tolerance = 0,
 pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 }
@@ -32,7 +35,7 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 \arguments{
   \item{object, formula}{An object of class \code{lm}, \code{formula} or
     \code{matrix}.}
-  \item{y}{The response variable.}
+  \item{x, y}{The model matrix and response.}
   \item{weights, offset}{Part of the standard \code{formula} interface.}
   \item{include, exclude}{Index vectors designating variables that are
     forced in or out of the model, respectively.}
@@ -85,11 +88,11 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
   \item{nvar}{Number of variables.}
   \item{weights}{Weights vector.}
   \item{offset}{Offset component.}
+  \item{intercept}{\code{TRUE} if model has intercept term;
+    \code{FALSE} otherwise.}
   \item{include}{Included regressors.}
   \item{exclude}{Excluded regressors.}
   \item{size}{Subset sizes.}
-  \item{intercept}{\code{TRUE} if regression has an intercept term;
-    \code{FALSE} otherwise.}
   \item{tolerance}{Tolerance vector.}
   \item{nbest}{Number of best subsets.}
   \item{df}{Degrees of freedom.}
@@ -124,22 +127,22 @@ data("AirPollution", package = "lmSubsets")
 #################
 
 ## canonical example: fit best subsets
-xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
+sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## visualize RSS
-plot(xs)
+plot(sub1)
 
 ## summarize
-summary(xs)
+summary(sub1)
 
 ## plot summary
-plot(summary(xs))
+plot(summary(sub1))
 
 ## forced inclusion/exclusion of variables
-xs <- lmSubsets(mortality ~ ., data = AirPollution,
+sub2 <- lmSubsets(mortality ~ ., data = AirPollution,
                 include = "noncauc", exclude = "whitecollar")
 
-summary(xs)
+summary(sub2)
 }
 
 

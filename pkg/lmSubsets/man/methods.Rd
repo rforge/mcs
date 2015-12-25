@@ -108,26 +108,26 @@
 data("AirPollution", package = "lmSubsets")
 
 ## fit subsets (5 best subsets per size)
-xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 5)
+sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 5)
 
 ## extract information (for subset of size 3)
-coef(xs, size = 3)
-vcov(xs, size = 3)
-residuals(xs, size = 3)
-fitted(xs, size = 3)
-model.matrix(xs, size = 3)
+coef(sub1, size = 3)
+vcov(sub1, size = 3)
+residuals(sub1, size = 3)
+fitted(sub1, size = 3)
+model.matrix(sub1, size = 3)
 
-## select best subsets (BIC)
-xz <- lmSelect(xs, penalty = "BIC")
+## select best subsets
+sel1 <- lmSelect(sub1)
 
 ## extract information (for best BIC subset)
-deviance(xz)
-logLik(xz)
-AIC(xz)
-BIC(xz, best = 1:5)
+deviance(sel1)
+logLik(sel1)
+AIC(sel1)
+BIC(sel1, best = 1:5)
 
 ## refit model
-lm5 <- refit(xs, size=5)
+lm5 <- refit(sub1, size=5)
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
 }

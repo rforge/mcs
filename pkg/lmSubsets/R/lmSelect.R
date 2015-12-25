@@ -13,13 +13,12 @@
 ##
 ## Args:
 ##   object   - (lmSubsets)
-##   ...      - ignored
 ##   penalty  - ("AIC"|"BIC"|numeric) penalty per parameter
+##   ...      - ignored
 ##
-## Rval:  (lmSelect)
-##   See 'lmSelect.default'.
+## Rval:  (lmSelect) see 'lmSelect.lm'
 ##
-lmSelect.lmSubsets <- function (object, ..., penalty = "AIC") {
+lmSelect.lmSubsets <- function (object, penalty = "BIC", ...) {
     paste <- function (..., sep = "") base::paste(..., sep = sep)
 
     ## tolerance
@@ -97,8 +96,7 @@ lmSelect.lmSubsets <- function (object, ..., penalty = "AIC") {
 ##   ...       - forwarded to 'lm' and 'lmSelect.lm'
 ##   lm        - (logical) if 'true', compute 'lm' component
 ##
-## Rval:  (lmSelect)
-##   See 'lmSelect.default'.
+## Rval:  (lmSelect) see 'lmSelect.lm'
 ##
 ## NOTE:  'lm'
 ##   If 'lm' is 'FALSE', the returned 'lm' component is
@@ -184,14 +182,14 @@ lmSelect.formula <- function (formula, ..., lm = FALSE) {
 ## interface for fitted lm regressions
 ##
 ## Args:
-##   object       - (lm)
-##   ...          - forwarded to 'lmSelect.default'
-##   penalty      - ("AIC"|"BIC"|numeric) penalty per parameter
+##   object  - (lm)
+##   ...     - forwarded to 'lmSelect.fit'
 ##
-## Rval:  (lmSelect)
-##   See 'lmSelect.default'.
+## Rval:  (lmSelect) see 'lmSelect.fit'
+##   call - (call)
+##   lm   - (lm)
 ##
-lmSelect.lm <- function (object, ..., penalty = "AIC") {
+lmSelect.lm <- function (object, ...) {
     ## keep call (of generic)
     call <- match.call()
     call[[1]] <- as.name("lmSelect")
@@ -215,7 +213,7 @@ lmSelect.lm <- function (object, ..., penalty = "AIC") {
     o <- model.offset(mf)
     
     ## forward call
-    rval <- lmSelect(x, y, weights = w, offset = o, penalty = penalty, ...)
+    rval <- lmSelect.fit(x, y, weights = w, offset = o, ...)
 
     ## return value
     rval$call <- call
@@ -230,6 +228,63 @@ lmSelect.lm <- function (object, ..., penalty = "AIC") {
 ##
 ## Args:
 ##   object    - (matrix) model matrix
+##   y         - (numeric[]) response variable
+##   ...       - forwarded to 'lmSelect.formula'
+##
+## Rval:  (lmSubsets) see 'lmSelect.formula'
+##
+lmSelect.default <- function (object, ...) {
+    ## keep call (of generic)
+    call <- match.call()
+    call[[1]] <- as.name("lmSelect")
+
+    ## model matrix and response
+    x <- as.matrix(object);  object <- NULL
+    y <- as.matrix(y)
+
+    ## dims
+    nvar <- NCOL(x)
+
+    ## intercept
+    has.intercept <- all(x[, 1] == 1)
+
+    ## variables names
+    x.names <- colnames(x)
+    if (is.null(x.names)) {
+        x.names <- paste("X", 1:nvar - has.intercept, sep = "")
+        colnames(x) <- x.names
+    }
+
+    y.name <- colnames(y)
+    if (is.null(y.name)) {
+        y.name <- "Y"
+        colnames(y) <- y.name
+    }
+
+    ## formula
+    f <- paste(y.name, "~", sep = "")
+    f <- paste(f, paste(x.names[(1 + has.intercept):nvar], collapse = "+"), sep = "")
+    f <- paste(f, ifelse(has.intercept, "+1", "+0"), sep = "")
+    f <- as.formula(f)
+
+    ## data frame
+    df <- as.data.frame(cbind(y, x))
+
+    ## forward call
+    rval <- lmSelect(f, data = df, ...)
+
+    ## return value
+    rval$call <- call
+
+    ## done
+    rval
+}
+
+
+## default method
+##
+## Args:
+##   x         - (matrix) model matrix
 ##   y         - (numeric[]) response variable
 ##   weights   - (numeric[]) 
 ##   offset    - (numeric[])
@@ -248,10 +303,10 @@ lmSelect.lm <- function (object, ..., penalty = "AIC") {
 ##   nvar      - (integer)
 ##   weights   - (numeric[])
 ##   offset    - (numeric[])
+##   intercept - (logical)
 ##   include   - (integer[])
 ##   exclude   - (integer[])
 ##   size      - (integer[])
-##   intercept - (logical)
 ##   penalty   - (numeric)
 ##   tolerance - (numeric[])
 ##   nbest     - (integer)
@@ -269,20 +324,17 @@ lmSelect.lm <- function (object, ..., penalty = "AIC") {
 ##   'hbba' :  PBBA with tolerances
 ##   'xbba*':  experimental PBBA
 ##
-lmSelect.default <- function (object, y, weights = NULL, offset = NULL,
-                              include = NULL, exclude = NULL, penalty = "AIC",
-                              tolerance = 0, pradius = NULL, nbest = 1, ...,
-                              .algo = "hbba")
+lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
+                          include = NULL, exclude = NULL, penalty = "BIC",
+                          tolerance = 0, pradius = NULL, nbest = 1, ...,
+                          .algo = "hbba")
 {
     ## keep call (of generic)
     call <- match.call()
     call[[1]] <- as.name("lmSelect")
 
     ## model matrix
-    x <- as.matrix(object);  object <- NULL
-
-    ## intercept
-    intercept <- all(x[, 1] == 1)
+    x <- as.matrix(x)
 
     ## model weights and offset
     if (is.null(w <- weights)) w <- rep(1, NROW(x))
@@ -342,7 +394,7 @@ lmSelect.default <- function (object, y, weights = NULL, offset = NULL,
         ## canonicalize exclude
         if (any(is.na(include))) {
             exclude <- na.omit(exclude)
-            warning ("invalid columns selected in 'excluded'; fixing 'exclude': ",
+            warning ("invalid columns selected in 'exclude'; fixing 'exclude': ",
                      "c(", paste(exclude, collapse = ","), ")")
         }
         exclude <- sort(unique(exclude))
@@ -356,12 +408,12 @@ lmSelect.default <- function (object, y, weights = NULL, offset = NULL,
     }
 
     ## intercept
-    if (intercept) {
+    has.intercept <- all(x[, 1] == 1)
+    if (has.intercept) {
         if (any(include == 1)) {
             ## OK, already selected
         } else if (any(exclude == 1)) {
             ## not selected
-            intercept <- FALSE
         } else {
             ## select
             include <- c(1, include)
@@ -441,10 +493,10 @@ lmSelect.default <- function (object, y, weights = NULL, offset = NULL,
                  nvar      = nvar,
                  weights   = weights[wok],
                  offset    = offset[wok],
+                 intercept = has.intercept,
                  include   = include,
                  exclude   = exclude,
                  size      = size,
-                 intercept = intercept,
                  penalty   = penalty,
                  tolerance = NULL,
                  nbest     = nbest,
@@ -515,9 +567,9 @@ print.lmSelect <- function (x, ...)
                      ncol = 1)
     colnames(val) <- ""
     rownames(val) <- paste("  ",
-                           c("Number of observations", "Number of regressors",
-                             "Weights", "Offset", "Intercept", "Include", "Exclude",
-                             "Subset sizes", "Value", "Tolerance", "N best"),
+                           c("N observations", "N regressors", "Weights", "Offset",
+                             "Intercept", "Include", "Exclude", "Subset sizes",
+                             "Value", "Tolerance", "N best"),
                            ":")
     print(val, quote = FALSE)
 
@@ -620,11 +672,6 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
 ##
 variable.names.lmSelect <- function (object, best = 1, ...,
                                      .full = FALSE, .cmpl = FALSE) {
-    ## lm
-    if (is.null(object$.lm)) {
-        stop ("'lmSelect' object does not have a 'lm' component")
-    }
-
     ## full model
     x.names <- variable.names(object$.lm)
     if (.full) {
@@ -652,11 +699,6 @@ variable.names.lmSelect <- function (object, best = 1, ...,
 ## Rval:  (formula)
 ##
 formula.lmSelect <- function (x, ...) {
-    ## lm
-    if (is.null(x$.lm)) {
-        stop ("'lmSelect' object does not have a 'lm' component")
-    }
-
     ## full model
     f <- formula(x$.lm)
     ## variable names (complementary submodel)
@@ -678,11 +720,6 @@ formula.lmSelect <- function (x, ...) {
 ## Rval:  (data.frame)
 ##
 model.frame.lmSelect <- function (formula, ...) {
-    ## lm
-    if (is.null(formula$.lm)) {
-        stop ("'lmSelect' object does not have a 'lm' component")
-    }
-
     ## full model
     mf <- model.frame(formula$.lm)
     ## formula
@@ -705,11 +742,6 @@ model.frame.lmSelect <- function (formula, ...) {
 ## Rval:  (matrix)
 ##
 model.matrix.lmSelect <- function (object, best = 1, ...) {
-    ## lm
-    if (is.null(object$.lm)) {
-        stop ("'lmSelect' object does not have a 'lm' component")
-    }
-
     ## full model
     x <- model.matrix(object$.lm)
     ## which
@@ -731,11 +763,6 @@ model.matrix.lmSelect <- function (object, best = 1, ...) {
 ## Rval:  (lm)
 ##
 refit.lmSelect <- function (object, ...) {
-    ## lm
-    if (is.null(object$.lm)) {
-        stop ("'lmSelect' object does not have a 'lm' component")
-    }
-
     ## extract formula
     f <- formula(object, ...)
     ## model frame call

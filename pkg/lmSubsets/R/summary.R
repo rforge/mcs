@@ -18,7 +18,7 @@
 ##
 ## Rval: (summary.lmSubsets)
 ##
-summary.lmSubsets <- function (object, penalty = "AIC", ...) {
+summary.lmSubsets <- function (object, penalty = "BIC", ...) {
 
     ## aic
     N <- object$nobs
@@ -60,7 +60,7 @@ summary.lmSubsets <- function (object, penalty = "AIC", ...) {
 ##
 ## Rval: (summary.mcsSubset)
 ##
-summary.lmSelect <- function (object, penalty = "BIC", ...) {
+summary.lmSelect <- function (object, penalty = "AIC", ...) {
     ## log lik
     N <- object$nobs
     if (is.null(w <- object$weights)) {
@@ -144,7 +144,7 @@ print.summary.lmSubsets <- function (x, ...)
     ## fit
     catln()
     catln("Model fit (value):")
-    catln("  best x size")
+    catln("  size x best")
     aic <- x$summary$aic[, x$size, drop = FALSE]
     fit <- ifelse(is.na(aic), "", format(aic, nsmall = 2))
     rownames(fit) <- paste("  ", rownames(fit))

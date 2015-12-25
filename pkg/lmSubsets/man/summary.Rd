@@ -22,8 +22,8 @@
 
 
 \usage{
-\method{summary}{lmSubsets}(object, penalty = "AIC", \dots)
-\method{summary}{lmSelect}(object, penalty = "BIC", \dots)
+\method{summary}{lmSubsets}(object, penalty = "BIC", \dots)
+\method{summary}{lmSelect}(object, penalty = "AIC", \dots)
 }
 
 
@@ -54,20 +54,20 @@
 data("AirPollution", package = "lmSubsets")
 
 ## fit all subsets
-xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
+sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## summarize (AIC)
-sx <- summary(xs, penalty = "AIC")
-sx
-plot(sx)
+sub1.sum <- summary(sub1, penalty = "AIC")
+sub1.sum
+plot(sub1.sum)
 
 ## fit best subsets (AIC)
-xz <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
+sel1 <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## summarize
-zx <- summary(xz, penalty = list("BIC", 3, 4, 5))
-zx
-plot(zx)
+sel1.sum <- summary(sel1, penalty = list("AIC", 3, 4, 5))
+sel1.sum
+plot(sel1.sum)
 }
 
 \keyword{regression}

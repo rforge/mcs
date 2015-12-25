@@ -6,6 +6,7 @@
 \alias{lmSelect.lm}
 \alias{lmSelect.formula}
 \alias{lmSelect.default}
+\alias{lmSelect.fit}
 
 \alias{print.lmSelect}
 \alias{plot.lmSelect}
@@ -19,14 +20,16 @@
 \usage{
 lmSelect(object, \dots)
 
-\method{lmSelect}{lmSubsets}(object, \dots, penalty = "AIC")
+\method{lmSelect}{lmSubsets}(object, penalty = "BIC", \ldots)
 
 \method{lmSelect}{formula}(formula, \ldots, lm = FALSE)
 
-\method{lmSelect}{lm}(object, \dots, penalty = "AIC")
+\method{lmSelect}{lm}(object, \dots)
 
-\method{lmSelect}{default}(object, y, weights = NULL, offset = NULL,
-include = NULL, exclude = NULL, penalty = "AIC", tolerance = 0,
+\method{lmSelect}{default}(object, \dots)
+
+lmSelect.fit(x, y, weights = NULL, offset = NULL,
+include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
 pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 }
 
@@ -34,7 +37,7 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 \arguments{
   \item{formula, object}{An object of class \code{lm}, \code{formula} or
     \code{matrix}.}
-  \item{y}{The response variable.}
+  \item{x, y}{The model matrix and response.}
   \item{weights, offset}{Part of the standard \code{formula} interface.}
   \item{include, exclude}{Index vectors designating variables that are
     forced in or out of the model, respectively.}
@@ -64,11 +67,11 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
   \item{nvar}{Number of variables (not including intercept, if any).}
   \item{weights}{Weights vector.}
   \item{offset}{Offset component.}
+  \item{intercept}{\code{TRUE} if model has intercept term;
+    \code{FALSE} otherwise.}
   \item{include}{Included variables.}
   \item{exclude}{Excluded variables.}
   \item{size}{Subset sizes.}
-  \item{intercept}{\code{TRUE} if regression has an intercept term;
-    \code{FALSE} otherwise.}
   \item{penalty}{Penalty per parameter.}
   \item{tolerance}{Heuristic tolerance.}
   \item{nbest}{Number of best subsets.}
@@ -105,22 +108,22 @@ data("AirPollution", package = "lmSubsets")
 #################
 
 ## canonical example: fit best subsets
-xz <- lmSelect(mortality ~ ., data = AirPollution, nbest = 20)
+sel1 <- lmSelect(mortality ~ ., data = AirPollution, nbest = 20)
 
 ## equivalent to:
 \dontrun{
-xs <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
-xz <- lmSelect(xs)
+sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
+sel1 <- lmSelect(sub1)
 }
 
 ## visualize RSS
-plot(xz)
+plot(sel1)
 
 ## summarize
-summary(xz)
+summary(sel1)
 
 ## plot summary
-plot(summary(xz))
+plot(summary(sel1))
 }
 
 \keyword{regression}
