@@ -3,10 +3,13 @@
 
 \alias{methods}
 
+\alias{model.response}
+
 \alias{variable.names.lmSubsets}
-\alias{formula.lmSubsets}
 \alias{model.frame.lmSubsets}
+\alias{model.response.lmSubsets}
 \alias{model.matrix.lmSubsets}
+\alias{formula.lmSubsets}
 \alias{refit.lmSubsets}
 \alias{coef.lmSubsets}
 \alias{vcov.lmSubsets}
@@ -18,9 +21,10 @@
 \alias{BIC.lmSubsets}
 
 \alias{variable.names.lmSelect}
-\alias{formula.lmSelect}
 \alias{model.frame.lmSelect}
+\alias{model.response.lmSelect}
 \alias{model.matrix.lmSelect}
+\alias{formula.lmSelect}
 \alias{refit.lmSelect}
 \alias{coef.lmSelect}
 \alias{vcov.lmSelect}
@@ -42,31 +46,31 @@
 
 
 \usage{
-\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots,
-.full = FALSE, .cmpl = FALSE)
-\method{formula}{lmSubsets}(x, \ldots)
+\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots)
 \method{model.frame}{lmSubsets}(formula, \ldots)
+\method{model.response}{lmSubsets}(data, \ldots)
 \method{model.matrix}{lmSubsets}(object, size, best = 1, \ldots)
-\method{refit}{lmSubsets}(object, \ldots)
-\method{coef}{lmSubsets}(object, \ldots)
-\method{vcov}{lmSubsets}(object, \ldots)
-\method{fitted}{lmSubsets}(object, \ldots)
-\method{residuals}{lmSubsets}(object, \ldots)
+\method{formula}{lmSubsets}(x, size, best = 1, \ldots)
+\method{refit}{lmSubsets}(object, size, best = 1, \ldots)
+\method{coef}{lmSubsets}(object, size, best = 1, \ldots)
+\method{vcov}{lmSubsets}(object, size, best = 1, \ldots)
+\method{fitted}{lmSubsets}(object, size, best = 1, \ldots)
+\method{residuals}{lmSubsets}(object, size, best = 1, \ldots)
 \method{deviance}{lmSubsets}(object, size, best = 1, \ldots)
 \method{logLik}{lmSubsets}(object, size, best = 1, \ldots)
 \method{AIC}{lmSubsets}(object, size, best = 1, \ldots, k = 2)
 \method{BIC}{lmSubsets}(object, size, best = 1, \ldots)
 
-\method{variable.names}{lmSelect}(object, best = 1, \ldots,
-.full = FALSE, .cmpl = FALSE)
-\method{formula}{lmSelect}(x, \ldots)
+\method{variable.names}{lmSelect}(object, best = 1, \ldots)
 \method{model.frame}{lmSelect}(formula, \ldots)
+\method{model.response}{lmSelect}(data, \ldots)
 \method{model.matrix}{lmSelect}(object, best = 1, \ldots)
-\method{refit}{lmSelect}(object, \ldots)
-\method{coef}{lmSelect}(object, \ldots)
-\method{vcov}{lmSelect}(object, \ldots)
-\method{fitted}{lmSelect}(object, \ldots)
-\method{residuals}{lmSelect}(object, \ldots)
+\method{formula}{lmSelect}(x, best = 1, \ldots)
+\method{refit}{lmSelect}(object, best = 1, \ldots)
+\method{coef}{lmSelect}(object, best = 1, \ldots)
+\method{vcov}{lmSelect}(object, best = 1, \ldots)
+\method{fitted}{lmSelect}(object, best = 1, \ldots)
+\method{residuals}{lmSelect}(object, best = 1, \ldots)
 \method{deviance}{lmSelect}(object, best = 1, \ldots)
 \method{logLik}{lmSelect}(object, best = 1, \ldots)
 \method{AIC}{lmSelect}(object, best = 1, \ldots, k = 2)
@@ -75,13 +79,12 @@
 
 
 \arguments{
-  \item{object, formula, x}{An object of class \code{lmSubsets}
-    or \code{lmSelect}.}
+  \item{object, formula, data, x}{An object of class \code{lmSubsets} or
+    \code{lmSelect}.}
   \item{size}{The subset size.}
   \item{best}{The subset rank.}
   \item{k}{AIC penalty.}
   \item{\dots}{Forwarded arguments.}
-  \item{.full, .cmpl}{For internal use.}
 }
 
 
@@ -108,26 +111,26 @@
 data("AirPollution", package = "lmSubsets")
 
 ## fit subsets (5 best subsets per size)
-sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 5)
+lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 5)
 
 ## extract information (for subset of size 3)
-coef(sub1, size = 3)
-vcov(sub1, size = 3)
-residuals(sub1, size = 3)
-fitted(sub1, size = 3)
-model.matrix(sub1, size = 3)
+coef(lmSub.AP, size = 3)
+vcov(lmSub.AP, size = 3)
+residuals(lmSub.AP, size = 3)
+fitted(lmSub.AP, size = 3)
+model.matrix(lmSub.AP, size = 3)
 
 ## select best subsets
-sel1 <- lmSelect(sub1)
+lmSel.AP <- lmSelect(lmSub.AP)
 
 ## extract information (for best BIC subset)
-deviance(sel1)
-logLik(sel1)
-AIC(sel1)
-BIC(sel1, best = 1:5)
+deviance(lmSel.AP)
+logLik(lmSel.AP)
+AIC(lmSel.AP)
+BIC(lmSel.AP, best = 1:5)
 
 ## refit model
-lm5 <- refit(sub1, size=5)
+lm5 <- refit(lmSub.AP, size=5)
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
 }

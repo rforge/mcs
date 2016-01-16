@@ -5,7 +5,7 @@
 \title{Refitting Models}
 
 \description{
-  Generic function for refitting a models on various subsets
+  Generic function for refitting a model on various subsets
   or reweighted data sets.
 }
 

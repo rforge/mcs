@@ -72,8 +72,8 @@ namespace detail {
 
 
   template<typename TReal>
-  DcaState<TReal>::DcaState(const int size, const int mark,
-			    const int* const v, const TReal* const rz, const int ldrz) :
+  DcaState<TReal>::DcaState(const int size, const int mark, const int* const v,
+                            const TReal* const rz, const int ldrz) :
     DcaState(size, mark, size + 1)
   {
     const int n = size;
@@ -93,7 +93,8 @@ namespace detail {
 
   template<typename TReal>
   DcaState<TReal>::DcaState(const int m, const int size, const int mark,
-			    const int* const v, const TReal* const ay, const int lday) :
+                            const int* const v, const TReal* const ay,
+                            const int lday) :
     DcaState(size, mark, m)
   {
     const int n = size;
@@ -117,9 +118,9 @@ namespace detail {
     template<typename R>
     class TPreorder
   >
-  DcaState<TReal>::DcaState(const int size, const int mark,
-			    const int* const v, const TReal* const rz, const int ldrz,
-                            const TPreorder<TReal>& p) :
+  DcaState<TReal>::DcaState(const int size, const int mark, const int* const v,
+                            const TReal* const rz, const int ldrz,
+                            const TPreorder<TReal>& preo) :
     DcaState(size, mark, size + 1)
   {
     const int n = size;
@@ -136,7 +137,7 @@ namespace detail {
     std::copy_n(v, n, tmp->s);
     Lapack<TReal>::lacpy(n + 1, n + 1, rz, ldrz, tmp->rz, rzLdim_);
 
-    p.apply(*tmp, *nxt, rzLdim_);
+    preo.apply(*tmp, *nxt, rzLdim_);
   }
 
 
@@ -146,8 +147,8 @@ namespace detail {
     class TPreorder
   >
   DcaState<TReal>::DcaState(const int m, const int size, const int mark,
-			    const int* const v, const TReal* const ay, const int lday,
-                            const TPreorder<TReal>& p) :
+			    const int* const v, const TReal* const ay,
+                            const int lday, const TPreorder<TReal>& preo) :
     DcaState(size, mark, m)
   {
     const int n = size;
@@ -165,7 +166,7 @@ namespace detail {
     Lapack<TReal>::lacpy(m, n + 1, ay , lday, tmp->rz, rzLdim_);
     Lapack<TReal>::geqrf(m, n + 1, tmp->rz, rzLdim_);
 
-    p.apply(*tmp, *nxt, rzLdim_);
+    preo.apply(*tmp, *nxt, rzLdim_);
   }
 
 
@@ -216,9 +217,9 @@ namespace detail {
     class TPreorder
     >
   void
-  DcaState<TReal>::nextNode(const TPreorder<TReal>& p)
+  DcaState<TReal>::nextNode(const TPreorder<TReal>& preo)
   {
-    p.apply(*nextNode_, *currentNode_, rzLdim_);
+    preo.apply(*nextNode_, *currentNode_, rzLdim_);
     --nextNode_;
 
     const Node* const cur = currentNode_;
@@ -232,7 +233,7 @@ namespace detail {
 
   template<typename TReal>
   bool
-  DcaState<TReal>::isDone() const
+  DcaState<TReal>::isFinal() const
   {
     return currentNode_ == nextNode_;
   }
@@ -266,7 +267,7 @@ namespace detail {
   TReal
   DcaState<TReal>::minBound(const int size, const TReal* const tau) const
   {
-    return tau[size - mark_ - 1] * currentRss_;
+    return tau[size - 1] * currentRss_;
   }
 
 
@@ -276,9 +277,9 @@ namespace detail {
     class TCriterion
   >
   TReal
-  DcaState<TReal>::minBound(const int size, const TCriterion<TReal>& c) const
+  DcaState<TReal>::minBound(const int size, const TCriterion<TReal>& crit) const
   {
-    return c.value(size, currentRss_);
+    return crit.value(size, currentRss_);
   }
 
 

@@ -18,65 +18,76 @@ R_lmSubsets(const char* const* const algo, const int* const nobs,
             const int* const nvar, const int* const size,
             const int* const mark, const int* const nbest,
             const int* const pmin, const int* const v,
-            const double* const xy, double* rss, int* which,
-            const double* const tau, int* const nodes, int* const info)
+            const double* const xy, int* sDf, double* sRss, int* sWhich,
+            const double* const tau, int* const info, int* const nodes)
 {
   using namespace mcs::subset;
 
 
-  int    sIndex[(*size - *mark) * *nbest        ];
-  double sRss  [(*size - *mark) * *nbest        ];
-  int    s     [(*size - *mark) * *nbest * *size];
+  // workspace
+  int    wIndex [*size * *nbest              ];
+  double wRss   [*size * *nbest              ];
+  int    wSubset[*size * *nbest * (*size + 1)];
+
 
   *info = 0;
 
   if (std::strcmp(*algo, "dca") == 0)
     {
-      *nodes = dca(*nobs, *size, *mark, *nbest, v, xy, *nobs, sIndex, sRss, s);
+      dca(*nobs, *size, *mark, *nbest, v, xy,
+          *nobs, wIndex, wRss, wSubset, *nodes);
     }
   else if (std::strcmp(*algo, "bba") == 0)
     {
-      *nodes = bba(*nobs, *size, *mark, *nbest, v, xy, *nobs, sIndex, sRss, s);
+      bba(*nobs, *size, *mark, *nbest, v, xy,
+          *nobs, wIndex, wRss, wSubset, *nodes);
     }
   else if (std::strcmp(*algo, "pbba") == 0)
     {
-      *nodes = pbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s);
+      pbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
+           *nobs, wIndex, wRss, wSubset, *nodes);
     }
   else if (std::strcmp(*algo, "hbba") == 0)
     {
-      *nodes = hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s, tau + *mark);
+      hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
+           *nobs, wIndex, wRss, wSubset, tau, *nodes);
     }
   else if (std::strncmp(*algo, "xbba", 4) == 0)
     {
-      *nodes = xbba(*algo, *nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, s, info);
+      xbba(*algo, *nobs, *size, *mark, *nbest, *pmin, v, xy,
+           *nobs, wIndex, wRss, wSubset, *info, *nodes);
     }
   else
     {
-      *info = 1;
+      *info = -1;
     }
 
-  if (*info == 0)
+
+  if (*info >= 0)
     {
       for (int i = *mark; i < *size; ++i)
         {
           for (int j = 0; j < *nbest; ++j)
             {
-              int offset = (i - *mark) * *nbest + j;
-              int index  = sIndex[offset];
+              int offset = i * *nbest + j;
+              int index  = wIndex[offset];
 
-              offset += *mark * *nbest;
+	      const int n = wSubset[index * (*size + 1)];
 
-              rss[offset] = sRss[index];
+	      if (n > 0) {
+		sDf [offset] = n + 1;
+		sRss[offset] = wRss[index];
 
-              offset *= *nvar;
-              index  *= *size;
-              for (int k = 0; k < i + 1; ++k)
-                {
-                  int v = s[index + k];
+		offset *= *nvar;
+		index  *= (*size + 1);
+		for (int k = 0; k < i + 1; ++k)
+		  {
+		    int v = wSubset[index + k + 1];
 
-                  which[offset + v] = 1;
-                }
-            }
+		    sWhich[offset + v] = 1;
+		  }
+	      }
+	    }
         }
     }
 }
@@ -89,67 +100,79 @@ R_lmSelect(const char* const* const algo, const int* const nobs,
            const int* const nvar, const int* const size,
            const int* const mark, const int* const nbest,
            const int* const pmin, const int* const v,
-           const double* const xy, double* rss, double* aic, int* which,
-           const double* penalty, const double* const tau,
-           int* const nodes, int* const info)
+           const double* const xy, int* sDf, double* sRss, double* sVal,
+	   int* sWhich, const double* penalty, const double* const tau,
+           int* const info, int* const nodes)
 {
   using namespace mcs::subset;
 
 
-  Criteria::Aic<double> c(*penalty, *nobs);
+  Criteria::Aic<double> aic(*penalty, *nobs);
 
-  int    sIndex[*nbest        ];
-  double sRss  [*nbest        ];
-  double sCrit [*nbest        ];
-  int    sSize [*nbest        ];
-  int    s     [*nbest * *size];
+
+  // workspace
+  int    wIndex [*nbest              ];
+  double wRss   [*nbest              ];
+  double wVal   [*nbest              ];
+  int    wSubset[*nbest * (*size + 1)];
+
 
   *info = 0;
 
   if (std::strcmp(*algo, "dca") == 0)
     {
-      *nodes = dca(*nobs, *size, *mark, *nbest, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c);
+      dca(*nobs, *size, *mark, *nbest, v, xy,
+          *nobs, wIndex, wRss, wVal, wSubset, aic, *nodes);
     }
   else if (std::strcmp(*algo, "bba") == 0)
     {
-      *nodes = bba(*nobs, *size, *mark, *nbest, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c);
+      bba(*nobs, *size, *mark, *nbest, v, xy,
+          *nobs, wIndex, wRss, wVal, wSubset, aic, *nodes);
     }
   else if (std::strcmp(*algo, "pbba") == 0)
     {
-      *nodes = pbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c);
+      pbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
+           *nobs, wIndex, wRss, wVal, wSubset, aic, *nodes);
     }
   else if (std::strcmp(*algo, "hbba") == 0)
     {
-      *nodes = hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c, *tau);
+      hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
+           *nobs, wIndex, wRss, wVal, wSubset, aic, *tau, *nodes);
     }
   else if (std::strncmp(*algo, "xbba", 4) == 0)
     {
-      *nodes = xbba(*algo, *nobs, *size, *mark, *nbest, *pmin, v, xy, *nobs, sIndex, sRss, sCrit, sSize, s, c, info);
+      xbba(*algo, *nobs, *size, *mark, *nbest, *pmin, v, xy,
+           *nobs, wIndex, wRss, wVal, wSubset, aic, *info, *nodes);
     }
   else
     {
-      *info = 1;
+      *info = -1;
     }
 
-  if (*info == 0)
+
+  if (*info >= 0)
     {
       for (int i = 0; i < *nbest; ++i)
         {
           int offset = i;
-          int index  = sIndex[offset];
-          int n      = sSize[index];
+          int index  = wIndex[offset];
 
-          rss[offset] = sRss[index];
-          aic[offset] = sCrit[index];
+	  const int n = wSubset[index * (*size + 1)];
 
-          offset *= *nvar;
-          index  *= *size;
-          for (int j = 0; j < n; ++j)
-            {
-              int v = s[index + j];
+	  if (n > 0) {
+	    sDf [offset] = n + 1;
+	    sRss[offset] = wRss[index];
+	    sVal[offset] = wVal[index];
 
-              which[offset + v] = 1;
-            }
+	    offset *= *nvar;
+	    index  *= (*size + 1);
+	    for (int j = 0; j < wSubset[index]; ++j)
+	      {
+		int v = wSubset[index + j + 1];
+
+		sWhich[offset + v] = 1;
+	      }
+	  }
         }
     }
 }

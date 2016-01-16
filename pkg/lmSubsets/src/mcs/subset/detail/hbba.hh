@@ -30,7 +30,7 @@ namespace detail {
   >
   int
   hbba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-       const TCriterion<TReal>& c, const TPreorder<TReal>& p,
+       const TCriterion<TReal>& crit, const TPreorder<TReal>& preo,
        const TReal tau);
 
 
@@ -41,7 +41,7 @@ namespace detail {
    >
   int
   hbba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table,
-       const TPreorder<TReal>& p, const TReal* const tau);
+       const TPreorder<TReal>& preo, const TReal* const tau);
 
 
 

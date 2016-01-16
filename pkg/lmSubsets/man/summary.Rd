@@ -54,20 +54,16 @@
 data("AirPollution", package = "lmSubsets")
 
 ## fit all subsets
-sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
+lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## summarize (AIC)
-sub1.sum <- summary(sub1, penalty = "AIC")
-sub1.sum
-plot(sub1.sum)
+summary(lmSub.AP, penalty = "AIC")
 
-## fit best subsets (AIC)
-sel1 <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
+## fit best subsets (BIC)
+lmSel.AP <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## summarize
-sel1.sum <- summary(sel1, penalty = list("AIC", 3, 4, 5))
-sel1.sum
-plot(sel1.sum)
+summary(lmSel.AP, penalty = list("AIC", 3, 4, 5))
 }
 
 \keyword{regression}

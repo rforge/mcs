@@ -19,9 +19,9 @@ namespace detail {
   >
   int
   bba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-      const TCriterion<TReal>& c)
+      const TCriterion<TReal>& crit)
   {
-    while (!state.isDone())
+    while (!state.isFinal())
       {
         state.nextNode();
         state.reportSubleading(table);
@@ -33,7 +33,7 @@ namespace detail {
 
         for (int j = k; j < n - 1; ++j)
           {
-	    if (state.minBound(j + 1, c) >= max)
+	    if (state.minBound(j + 1, crit) >= max)
 	      {
 		break;
 	      }
@@ -41,8 +41,6 @@ namespace detail {
             state.dropColumn(j);
           }
       }
-
-    table.sortSubsets();
 
     return state.nodeCount();
   }
@@ -52,7 +50,7 @@ namespace detail {
   int
   bba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table)
   {
-    while (!state.isDone())
+    while (!state.isFinal())
       {
         state.nextNode();
         state.reportSubleading(table);
@@ -72,8 +70,6 @@ namespace detail {
             state.dropColumn(j);
           }
       }
-
-    table.sortSubsets();
 
     return state.nodeCount();
   }

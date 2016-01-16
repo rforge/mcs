@@ -23,17 +23,21 @@ namespace subset {
     template<typename R>
     class TCriterion
   >
-  int dca(const int m, const int size, const int mark, const int nbest,
-          const int* const v, const TReal* const ay, const int lday,
-	  int* const sIndex, TReal* const sRss, TReal* const sCrit,
-          int* const sSize, int* const s, const TCriterion<TReal>& c)
+  void
+  dca(const int m, const int size, const int mark, const int nbest,
+      const int* const v, const TReal* const ay, const int lday,
+      int* const sIndex, TReal* const sRss, TReal* const sVal,
+      int* const sWhich, const TCriterion<TReal>& crit, int& nodes)
   {
     using namespace detail;
 
     DcaState<TReal>            state(m, size, mark, v, ay, lday);
-    DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss, sCrit, sSize, s, c);
+    DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss,
+                                     sVal, sWhich, crit);
 
-    return dca(state, table);
+    nodes = dca(state, table);
+
+    table.sortIndex(sIndex);
   }
 
 
@@ -42,45 +46,55 @@ namespace subset {
     template<typename R>
     class TCriterion
   >
-  int dca(const int size, const int mark, const int nbest,
-          const int* const v, const TReal* const rz, const int ldrz,
-	  int* const sIndex, TReal* const sRss, TReal* const sCrit,
-          int* const sSize, int* const s, const TCriterion<TReal>& c)
+  void
+  dca(const int size, const int mark, const int nbest,
+      const int* const v, const TReal* const rz, const int ldrz,
+      int* const sIndex, TReal* const sRss, TReal* const sVal,
+      int* const sWhich, const TCriterion<TReal>& crit, int& nodes)
   {
     using namespace detail;
 
     DcaState<TReal>            state(size, mark, v, rz, ldrz);
-    DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss, sCrit, sSize, s, c);
+    DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss,
+                                     sVal, sWhich, crit);
 
-    return dca(state, table);
+    nodes = dca(state, table);
+
+    table.sortIndex(sIndex);
   }
 
 
   template<typename TReal>
-  int dca(const int m, const int size, const int mark, const int nbest,
-          const int* const v, const TReal* const ay, const int lday,
-	  int* const sIndex, TReal* const sRss, int* const s)
+  void
+  dca(const int m, const int size, const int mark, const int nbest,
+      const int* const v, const TReal* const ay, const int lday,
+      int* const sIndex, TReal* const sRss, int* const sWhich, int& nodes)
   {
     using namespace detail;
 
     DcaState<TReal>                state(m, size, mark, v, ay, lday);
-    DcaTable<TReal,Criteria::None> table(size, mark, nbest, sIndex, sRss, s);
+    DcaTable<TReal,Criteria::None> table(size, nbest, sIndex, sRss, sWhich);
 
-    return dca(state, table);
+    nodes = dca(state, table);
+
+    table.sortIndex(sIndex);
   }
 
 
   template<typename TReal>
-  int dca(const int size, const int mark, const int nbest,
-          const int* const v, const TReal* const rz, const int ldrz,
-	  int* const sIndex, TReal* const sRss, int* const s)
+  void
+  dca(const int size, const int mark, const int nbest,
+      const int* const v, const TReal* const rz, const int ldrz,
+      int* const sIndex, TReal* const sRss, int* const sWhich, int& nodes)
   {
     using namespace detail;
 
     DcaState<TReal>                state(size, mark, v, rz, ldrz);
-    DcaTable<TReal,Criteria::None> table(size, mark, nbest, sIndex, sRss, s);
+    DcaTable<TReal,Criteria::None> table(size, nbest, sIndex, sRss, sWhich);
 
-    return dca(state, table);
+    nodes = dca(state, table);
+
+    table.sortIndex(sIndex);
   }
 
 

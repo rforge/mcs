@@ -28,7 +28,7 @@ namespace detail {
   >
   int
   bba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-      const TCriterion<TReal>& c);
+      const TCriterion<TReal>& crit);
 
 
   template<typename TReal>

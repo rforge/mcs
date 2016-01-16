@@ -21,11 +21,11 @@ namespace detail {
   >
   int
   pbba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-       const TCriterion<TReal>& c, const TPreorder<TReal>& p)
+       const TCriterion<TReal>& crit, const TPreorder<TReal>& preo)
   {
-    while (!state.isDone())
+    while (!state.isFinal())
       {
-        state.nextNode(p);
+        state.nextNode(preo);
         state.reportSubleading(table);
 
         const int n = state.currentSize();
@@ -35,7 +35,7 @@ namespace detail {
 
         for (int j = k; j < n - 1; ++j)
           {
-	    if (state.minBound(j + 1, c) >= max)
+	    if (state.minBound(j + 1, crit) >= max)
 	      {
 		break;
 	      }
@@ -43,8 +43,6 @@ namespace detail {
             state.dropColumn(j);
           }
       }
-
-    table.sortSubsets();
 
     return state.nodeCount();
   }
@@ -57,11 +55,11 @@ namespace detail {
    >
   int
   pbba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table,
-       const TPreorder<TReal>& p)
+       const TPreorder<TReal>& preo)
   {
-    while (!state.isDone())
+    while (!state.isFinal())
       {
-        state.nextNode(p);
+        state.nextNode(preo);
         state.reportSubleading(table);
 
         const int n = state.currentSize();
@@ -79,8 +77,6 @@ namespace detail {
             state.dropColumn(j);
           }
       }
-
-    table.sortSubsets();
 
     return state.nodeCount();
   }

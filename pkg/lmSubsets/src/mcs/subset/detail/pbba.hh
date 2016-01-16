@@ -30,7 +30,7 @@ namespace detail {
   >
   int
   pbba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-       const TCriterion<TReal>& c, const TPreorder<TReal>& p);
+       const TCriterion<TReal>& crit, const TPreorder<TReal>& preo);
 
 
   template<
@@ -40,7 +40,7 @@ namespace detail {
    >
   int
   pbba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table,
-       const TPreorder<TReal>& p);
+       const TPreorder<TReal>& preo);
 
 
 

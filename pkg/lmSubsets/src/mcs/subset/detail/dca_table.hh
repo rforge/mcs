@@ -27,18 +27,16 @@ namespace detail {
 
     int*   sIndex_;
     TReal* sRss_;
-    TReal* sCrit_;
-    int*   sSize_;
-    int*   s_;
+    TReal* sVal_;
+    int*   sWhich_;
 
-    TCriterion<TReal> c_;
+    TCriterion<TReal> crit_;
 
 
   public:
 
-    DcaTable(int size, int nbest,
-             int* sIndex, TReal* sRss, TReal* sCrit, int* sSize, int* s,
-	     const TCriterion<TReal>& c);
+    DcaTable(int size, int nbest, int* sIndex, TReal* sRss, TReal* sVal,
+             int* sWhich, const TCriterion<TReal>& crit);
 
     TReal
     maxBound() const;
@@ -47,7 +45,7 @@ namespace detail {
     addSubset(int size, TReal rss, const int* s);
 
     void
-    sortSubsets();
+    sortIndex(int* sIndex);
 
   };
 
@@ -60,18 +58,16 @@ namespace detail {
   private:
 
     int size_;
-    int mark_;
     int nbest_;
 
     int*   sIndex_;
     TReal* sRss_;
-    int*   s_;
+    int*   sWhich_;
 
 
   public:
 
-    DcaTable(int size, int mark, int nbest,
-             int* sIndex, TReal* sRss, int* s);
+    DcaTable(int size, int nbest, int* sIndex, TReal* sRss, int* sWhich);
 
     TReal
     maxBound(int size) const;
@@ -80,7 +76,7 @@ namespace detail {
     addSubset(int size, TReal rss, const int* s);
 
     void
-    sortSubsets();
+    sortIndex(int* sIndex);
 
   };
 

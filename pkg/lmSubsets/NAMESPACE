@@ -1,37 +1,37 @@
-
-
-import("stats", "graphics")
-
-
+## dynamic library
+##
 useDynLib("lmSubsets")
+
+
+## import packages
+##
+import("stats", "graphics")
 
 
 ## export new generics
 ##
-export("lmSubsets",
-       "lmSelect",
-       "refit")
+export("refit",
+       "model.response")
 
 
 ################
 ## 'lmSubsets' #
 ################
 
-## 'lmSubsets' generator methods
+## generator functions
 ##
-S3method("lmSubsets", "formula")
-S3method("lmSubsets", "lm")
-S3method("lmSubsets", "default")
+export("lmSubsets",
+       "lmSubsets.fit")
 
-
-## 'lmSubsets' extractor methods
+## extractor methods
 ##
 S3method("print"         , "lmSubsets")
 S3method("plot"          , "lmSubsets")
 S3method("variable.names", "lmSubsets")
-S3method("formula"       , "lmSubsets")
 S3method("model.frame"   , "lmSubsets")
+S3method("model.response", "lmSubsets")
 S3method("model.matrix"  , "lmSubsets")
+S3method("formula"       , "lmSubsets")
 S3method("refit"         , "lmSubsets")
 S3method("coef"          , "lmSubsets")
 S3method("vcov"          , "lmSubsets")
@@ -42,7 +42,7 @@ S3method("logLik"        , "lmSubsets")
 S3method("AIC"           , "lmSubsets")
 S3method("BIC"           , "lmSubsets")
 
-## 'lmSubsets' summary methods
+## summary methods
 ##
 S3method("summary", "lmSubsets")
 S3method("print"  , "summary.lmSubsets")
@@ -53,22 +53,20 @@ S3method("plot"   , "summary.lmSubsets")
 ## 'lmSelect' #
 ###############
 
-## 'lmSelect' generator methods
-##
-S3method("lmSelect", "lmSubsets")
-S3method("lmSelect", "formula")
-S3method("lmSelect", "lm")
-S3method("lmSelect", "default")
+## generator functions
+export("lmSelect",
+       "lmSelect.fit",
+       "lmSubsets.select")
 
-
-## 'lmSelect' extractor methods
+## extractor methods
 ##
 S3method("print"         , "lmSelect")
 S3method("plot"          , "lmSelect")
 S3method("variable.names", "lmSelect")
-S3method("formula"       , "lmSelect")
 S3method("model.frame"   , "lmSelect")
+S3method("model.response", "lmSelect")
 S3method("model.matrix"  , "lmSelect")
+S3method("formula"       , "lmSelect")
 S3method("refit"         , "lmSelect")
 S3method("coef"          , "lmSelect")
 S3method("vcov"          , "lmSelect")
@@ -79,7 +77,7 @@ S3method("logLik"        , "lmSelect")
 S3method("AIC"           , "lmSelect")
 S3method("BIC"           , "lmSelect")
 
-## 'lmSelect' summary methods
+## summary methods
 ##
 S3method("summary", "lmSelect")
 S3method("print"  , "summary.lmSelect")

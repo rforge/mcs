@@ -53,27 +53,27 @@ namespace detail {
 
   public:
 
-    DcaState(int size, int mark,
-             const int* v, const TReal* rz, int ldrz);
+    DcaState(int size, int mark, const int* v,
+             const TReal* rz, int ldrz);
 
-    DcaState(int m, int size, int mark,
-             const int* v, const TReal* ay, int lday);
-
-    template<
-      template<typename R>
-      class TPreorder
-      >
-    DcaState(int size, int mark,
-             const int* v, const TReal* rz, int ldrz,
-             const TPreorder<TReal>& p);
+    DcaState(int m, int size, int mark, const int* v,
+             const TReal* ay, int lday);
 
     template<
       template<typename R>
       class TPreorder
       >
-    DcaState(int m, int size, int mark,
-             const int* v, const TReal* ay, int lday,
-             const TPreorder<TReal>& p);
+    DcaState(int size, int mark, const int* v,
+             const TReal* rz, int ldrz,
+             const TPreorder<TReal>& preo);
+
+    template<
+      template<typename R>
+      class TPreorder
+      >
+    DcaState(int m, int size, int mark, const int* v,
+             const TReal* ay, int lday,
+             const TPreorder<TReal>& preo);
 
     void
     dropColumn(int mark);
@@ -86,10 +86,10 @@ namespace detail {
       class TPreorder
       >
     void
-    nextNode(const TPreorder<TReal>& p);
+    nextNode(const TPreorder<TReal>& preo);
 
     bool
-    isDone() const;
+    isFinal() const;
 
     int
     currentSize() const;
@@ -108,7 +108,7 @@ namespace detail {
       class TCriterion
     >
     TReal
-    minBound(int mark, const TCriterion<TReal>& c) const;
+    minBound(int mark, const TCriterion<TReal>& crit) const;
 
     template<
       template<typename R>

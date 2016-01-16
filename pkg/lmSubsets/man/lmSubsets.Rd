@@ -2,9 +2,6 @@
 
 
 \alias{lmSubsets}
-\alias{lmSubsets.lm}
-\alias{lmSubsets.formula}
-\alias{lmSubsets.default}
 \alias{lmSubsets.fit}
 
 \alias{print.lmSubsets}
@@ -18,13 +15,8 @@
 
 
 \usage{
-lmSubsets(object, \dots)
-
-\method{lmSubsets}{formula}(formula, \ldots, lm = FALSE)
-
-\method{lmSubsets}{lm}(object, \dots)
-
-\method{lmSubsets}{default}(object, y, \ldots)
+lmSubsets(formula, data, subset, weights, na.action,
+model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 lmSubsets.fit(x, y, weights = NULL, offset = NULL,
 include = NULL, exclude = NULL, size = NULL, tolerance = 0,
@@ -33,10 +25,9 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
 
 
 \arguments{
-  \item{object, formula}{An object of class \code{lm}, \code{formula} or
-    \code{matrix}.}
+  \item{formula, data, subset, weights, na.action, model, contrasts,
+    offset}{Standard formula interface.}
   \item{x, y}{The model matrix and response.}
-  \item{weights, offset}{Part of the standard \code{formula} interface.}
   \item{include, exclude}{Index vectors designating variables that are
     forced in or out of the model, respectively.}
   \item{size}{Vector of subset sizes.}
@@ -44,19 +35,18 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
   \item{pradius}{Preordering radius.}
   \item{nbest}{Number of best subsets.}
   \item{\dots}{Ignored.}
-  \item{lm}{If \code{true}, compute \code{lm} component.}
   \item{.algo}{Internal use.}
 }
 
 
 \details{
   The function \code{lmSubsets} computes all-variable-subsets regression
-  for ordinary linear models.  The function is generic and provides
-  various methods to conveniently specify the regressor and response
-  variables.  The standard \code{formula} interface (see
-  \code{\link[stats]{lm}}) can be used, or the information can be
-  extracted from an already fitted \code{lm} object.  The regressor
-  matrix and response variable can also be passed in directly.
+  for ordinary linear models.  It provides various methods to
+  conveniently specify the regressor and response variables.  The
+  standard \code{formula} interface (see \code{\link[stats]{lm}}) can be
+  used, or the information can be extracted from an already fitted
+  \code{lm} object.  The regressor matrix and response variable can also
+  be passed in directly.
 
   The method computes the \code{nbest} best subset models for every
   subset size, where the "best" models are the models with the lowest
@@ -127,22 +117,18 @@ data("AirPollution", package = "lmSubsets")
 #################
 
 ## canonical example: fit best subsets
-sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
+lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## visualize RSS
-plot(sub1)
+plot(lmSub.AP)
 
 ## summarize
-summary(sub1)
-
-## plot summary
-plot(summary(sub1))
+summary(lmSub.AP)
 
 ## forced inclusion/exclusion of variables
-sub2 <- lmSubsets(mortality ~ ., data = AirPollution,
-                include = "noncauc", exclude = "whitecollar")
-
-summary(sub2)
+lmSub.AP.2 <- lmSubsets(lmSub.AP, include = "noncauc",
+                        exclude = "whitecollar")
+summary(lmSub.AP.2)
 }
 
 

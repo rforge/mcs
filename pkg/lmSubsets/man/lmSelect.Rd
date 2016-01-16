@@ -2,11 +2,8 @@
 
 
 \alias{lmSelect}
-\alias{lmSelect.lmSubsets}
-\alias{lmSelect.lm}
-\alias{lmSelect.formula}
-\alias{lmSelect.default}
 \alias{lmSelect.fit}
+\alias{lmSubsets.select}
 
 \alias{print.lmSelect}
 \alias{plot.lmSelect}
@@ -18,27 +15,22 @@
 \description{Best-subsets regression for ordinary linear models.}
 
 \usage{
-lmSelect(object, \dots)
-
-\method{lmSelect}{lmSubsets}(object, penalty = "BIC", \ldots)
-
-\method{lmSelect}{formula}(formula, \ldots, lm = FALSE)
-
-\method{lmSelect}{lm}(object, \dots)
-
-\method{lmSelect}{default}(object, \dots)
+lmSelect(formula, data, subset, weights, na.action,
+model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 lmSelect.fit(x, y, weights = NULL, offset = NULL,
 include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
 pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
+
+lmSubsets.select(object, penalty = "BIC", ...)
 }
 
 
 \arguments{
-  \item{formula, object}{An object of class \code{lm}, \code{formula} or
-    \code{matrix}.}
+  \item{object}{An object of class \code{lmSubsets}.}
+  \item{formula, data, subset, weights, na.action, model, contrasts,
+    offset}{Standard formula interface.}
   \item{x, y}{The model matrix and response.}
-  \item{weights, offset}{Part of the standard \code{formula} interface.}
   \item{include, exclude}{Index vectors designating variables that are
     forced in or out of the model, respectively.}
   \item{penalty}{Penalty per parameter (see \code{\link[stats]{AIC}}).}
@@ -46,7 +38,6 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
   \item{pradius}{Preordering radius.}
   \item{nbest}{Number of best subsets.}
   \item{\dots}{Ignored.}
-  \item{lm}{If \code{true}, compute \code{lm} component.}
   \item{.algo}{Internal use.}
 }
 
@@ -77,7 +68,7 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hbba")
   \item{nbest}{Number of best subsets.}
   \item{df}{Degrees of freedom.}
   \item{rss}{Residual sum of squares.}
-  \item{aic}{Subset values.}
+  \item{val}{Subset values.}
   \item{which}{Selected variables.}
 }
 
@@ -108,22 +99,19 @@ data("AirPollution", package = "lmSubsets")
 #################
 
 ## canonical example: fit best subsets
-sel1 <- lmSelect(mortality ~ ., data = AirPollution, nbest = 20)
+lmSel.AP <- lmSelect(mortality ~ ., data = AirPollution, nbest = 20)
 
 ## equivalent to:
 \dontrun{
-sub1 <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
-sel1 <- lmSelect(sub1)
+lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
+lmSel.AP <- lmSelect(lmSub.AP)
 }
 
 ## visualize RSS
-plot(sel1)
+plot(lmSel.AP)
 
 ## summarize
-summary(sel1)
-
-## plot summary
-plot(summary(sel1))
+summary(lmSel.AP)
 }
 
 \keyword{regression}

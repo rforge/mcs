@@ -20,7 +20,7 @@ namespace detail {
   int
   dca(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table)
   {
-    while (!state.isDone())
+    while (!state.isFinal())
       {
         state.nextNode();
         state.reportSubleading(table);
@@ -33,8 +33,6 @@ namespace detail {
             state.dropColumn(j);
           }
       }
-
-    table.sortSubsets();
 
     return state.nodeCount();
   }
