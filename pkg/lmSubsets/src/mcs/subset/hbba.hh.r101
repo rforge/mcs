@@ -25,42 +25,24 @@ namespace subset {
     template<typename R>
     class TCriterion
   >
-<<<<<<< .mine
-  void
-  hbba(const int m, const int size, const int mark, const int nbest,
-       const int* const v, const TReal* const ay, const int lday,
-       int* const sIndex, TReal* const sRss, TReal* const sVal,
-       int* const sWhich, const TCriterion<TReal>& crit, const TReal tau,
-       int& nodes)
-=======
   void
   hbba(const int m, const int size, const int mark, const int nbest,
        const int pmin, const int* const v, const TReal* const ay,
        const int lday, int* const sIndex, TReal* const sRss, TReal* const sVal,
        int* const sWhich, const TCriterion<TReal>& crit, const TReal tau,
        int& nodes)
->>>>>>> .r101
   {
     using namespace detail;
 
-<<<<<<< .mine
-=======
     Preorder::Full<TReal> preo(size, pmin);
 
->>>>>>> .r101
     DcaState<TReal>            state(m, size, mark, v, ay, lday);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss,
                                      sVal, sWhich, crit);
 
-<<<<<<< .mine
-    nodes = hbba(state, table, crit, tau);
-
-    table.sortIndex(sIndex);
-=======
     nodes = hbba(state, table, crit, preo, tau);
 
     table.sortIndex(sIndex);
->>>>>>> .r101
   }
 
 
@@ -69,116 +51,64 @@ namespace subset {
     template<typename R>
     class TCriterion
   >
-<<<<<<< .mine
-  void
-  hbba(const int size, const int mark, const int nbest, const int* const v,
-       const TReal* const rz, const int ldrz, int* const sIndex,
-       TReal* const sRss, TReal* const sVal, int* const sWhich,
-       const TCriterion<TReal>& crit, const TReal tau, int& nodes)
-=======
   void
   hbba(const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const rz, const int ldrz,
        int* const sIndex, TReal* const sRss, TReal* const sVal,
        int* const sWhich, const TCriterion<TReal>& crit, const TReal tau,
        int& nodes)
->>>>>>> .r101
   {
     using namespace detail;
 
-<<<<<<< .mine
-=======
     Preorder::Full<TReal> preo(size, pmin);
 
->>>>>>> .r101
     DcaState<TReal>            state(size, mark, v, rz, ldrz);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss,
                                      sVal, sWhich, crit);
 
-<<<<<<< .mine
-    nodes = hbba(state, table, crit, tau);
-
-    table.sortIndex(sIndex);
-=======
     nodes = hbba(state, table, crit, preo, tau);
 
     table.sortIndex(sIndex);
->>>>>>> .r101
   }
 
 
   template<typename TReal>
-<<<<<<< .mine
-  void
-  hbba(const int m, const int size, const int mark, const int nbest,
-=======
   void
   hbba(const int m, const int size, const int mark, const int nbest, const int pmin,
->>>>>>> .r101
        const int* const v, const TReal* const ay, const int lday,
-<<<<<<< .mine
-       int* const sIndex, TReal* const sRss, int* const sWhich,
-       const TReal* tau, int& nodes)
-=======
        int* const sIndex, TReal* const sRss, int* const sWhich, const TReal* tau,
        int& nodes)
->>>>>>> .r101
   {
     using namespace detail;
 
-<<<<<<< .mine
-=======
     Preorder::Full<TReal> preo(size, pmin);
 
->>>>>>> .r101
     DcaState<TReal>                state(m, size, mark, v, ay, lday);
     DcaTable<TReal,Criteria::None> table(size, nbest, sIndex, sRss, sWhich);
 
-<<<<<<< .mine
-    nodes = hbba(state, table, tau);
-
-    table.sortIndex(sIndex);
-=======
     nodes = hbba(state, table, preo, tau);
 
     table.sortIndex(sIndex);
->>>>>>> .r101
   }
 
 
   template<typename TReal>
-<<<<<<< .mine
-  void
-  hbba(const int size, const int mark, const int nbest, const int* const v,
-       const TReal* const rz, const int ldrz, int* const sIndex,
-       TReal* const sRss, int* const sWhich, const TReal* tau, int& nodes)
-=======
   void
   hbba(const int size, const int mark, const int nbest, const int pmin,
        const int* const v, const TReal* const rz, const int ldrz,
        int* const sIndex, TReal* const sRss, int* const sWhich,
        const TReal* tau, int& nodes)
->>>>>>> .r101
   {
     using namespace detail;
 
-<<<<<<< .mine
-=======
     Preorder::Full<TReal> preo(size, pmin);
 
->>>>>>> .r101
     DcaState<TReal>                state(size, mark, v, rz, ldrz);
     DcaTable<TReal,Criteria::None> table(size, nbest, sIndex, sRss, sWhich);
 
-<<<<<<< .mine
-    nodes = hbba(state, table, tau);
-
-    table.sortIndex(sIndex);
-=======
     nodes = hbba(state, table, preo, tau);
 
     table.sortIndex(sIndex);
->>>>>>> .r101
   }
 
 

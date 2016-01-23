@@ -6,14 +6,10 @@
 \alias{model.response}
 
 \alias{variable.names.lmSubsets}
-\alias{model.frame.lmSubsets}
-\alias{model.response.lmSubsets}
-\alias{model.matrix.lmSubsets}
-<<<<<<< .mine
-\alias{model.response.lmSubsets}
-=======
 \alias{formula.lmSubsets}
->>>>>>> .r101
+\alias{model.frame.lmSubsets}
+\alias{model.matrix.lmSubsets}
+\alias{model.response.lmSubsets}
 \alias{refit.lmSubsets}
 \alias{coef.lmSubsets}
 \alias{vcov.lmSubsets}
@@ -25,14 +21,10 @@
 \alias{BIC.lmSubsets}
 
 \alias{variable.names.lmSelect}
-\alias{model.frame.lmSelect}
-\alias{model.response.lmSelect}
-\alias{model.matrix.lmSelect}
-<<<<<<< .mine
-\alias{model.response.lmSelect}
-=======
 \alias{formula.lmSelect}
->>>>>>> .r101
+\alias{model.frame.lmSelect}
+\alias{model.matrix.lmSelect}
+\alias{model.response.lmSelect}
 \alias{refit.lmSelect}
 \alias{coef.lmSelect}
 \alias{vcov.lmSelect}
@@ -54,37 +46,21 @@
 
 
 \usage{
-<<<<<<< .mine
 \method{variable.names}{lmSubsets}(object, size, best = 1, \ldots)
 \method{formula}{lmSubsets}(x, size, best = 1, \ldots)
 \method{model.frame}{lmSubsets}(formula, size, best = 1, \ldots)
-=======
-\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots)
-\method{model.frame}{lmSubsets}(formula, \ldots)
->>>>>>> .r101
-\method{model.response}{lmSubsets}(data, \ldots)
 \method{model.matrix}{lmSubsets}(object, size, best = 1, \ldots)
-<<<<<<< .mine
 \method{model.response}{lmSubsets}(data, \ldots)
 \method{refit}{lmSubsets}(object, size, best = 1, \ldots)
 \method{coef}{lmSubsets}(object, size, best = 1, \ldots)
 \method{vcov}{lmSubsets}(object, size, best = 1, \ldots)
 \method{fitted}{lmSubsets}(object, size, best = 1, \ldots)
 \method{residuals}{lmSubsets}(object, size, best = 1, \ldots)
-=======
-\method{formula}{lmSubsets}(x, size, best = 1, \ldots)
-\method{refit}{lmSubsets}(object, size, best = 1, \ldots)
-\method{coef}{lmSubsets}(object, size, best = 1, \ldots)
-\method{vcov}{lmSubsets}(object, size, best = 1, \ldots)
-\method{fitted}{lmSubsets}(object, size, best = 1, \ldots)
-\method{residuals}{lmSubsets}(object, size, best = 1, \ldots)
->>>>>>> .r101
 \method{deviance}{lmSubsets}(object, size, best = 1, \ldots)
 \method{logLik}{lmSubsets}(object, size, best = 1, \ldots)
 \method{AIC}{lmSubsets}(object, size, best = 1, \ldots, k = 2)
 \method{BIC}{lmSubsets}(object, size, best = 1, \ldots)
 
-<<<<<<< .mine
 \method{variable.names}{lmSelect}(object, best = 1, \ldots)
 \method{formula}{lmSelect}(x, best, \ldots)
 \method{model.frame}{lmSelect}(formula, best, \ldots)
@@ -95,18 +71,6 @@
 \method{vcov}{lmSelect}(object, best = 1, \ldots)
 \method{fitted}{lmSelect}(object, best = 1, \ldots)
 \method{residuals}{lmSelect}(object, best = 1, \ldots)
-=======
-\method{variable.names}{lmSelect}(object, best = 1, \ldots)
-\method{model.frame}{lmSelect}(formula, \ldots)
-\method{model.response}{lmSelect}(data, \ldots)
-\method{model.matrix}{lmSelect}(object, best = 1, \ldots)
-\method{formula}{lmSelect}(x, best = 1, \ldots)
-\method{refit}{lmSelect}(object, best = 1, \ldots)
-\method{coef}{lmSelect}(object, best = 1, \ldots)
-\method{vcov}{lmSelect}(object, best = 1, \ldots)
-\method{fitted}{lmSelect}(object, best = 1, \ldots)
-\method{residuals}{lmSelect}(object, best = 1, \ldots)
->>>>>>> .r101
 \method{deviance}{lmSelect}(object, best = 1, \ldots)
 \method{logLik}{lmSelect}(object, best = 1, \ldots)
 \method{AIC}{lmSelect}(object, best = 1, \ldots, k = 2)
@@ -166,11 +130,7 @@ AIC(lmSel.AP)
 BIC(lmSel.AP, best = 1:5)
 
 ## refit model
-<<<<<<< .mine
 lm5 <- refit(lmSub.AP, size = 5)
-=======
-lm5 <- refit(lmSub.AP, size=5)
->>>>>>> .r101
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
 }

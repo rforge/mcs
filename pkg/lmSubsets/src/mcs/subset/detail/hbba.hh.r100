@@ -24,28 +24,24 @@ namespace detail {
   template<
     typename TReal,
     template<typename R>
-    class TCriterion
+    class TCriterion,
+    template<typename R>
+    class TPreorder
   >
   int
   hbba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-<<<<<<< .mine
-       const TCriterion<TReal>& crit, const TReal tau);
-=======
-       const TCriterion<TReal>& crit, const TPreorder<TReal>& preo,
+       const TCriterion<TReal>& c, const TPreorder<TReal>& p,
        const TReal tau);
->>>>>>> .r101
 
 
   template<
-    typename TReal
+    typename TReal,
+    template<typename R>
+    class TPreorder
    >
   int
   hbba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table,
-<<<<<<< .mine
-       const TReal* const tau);
-=======
-       const TPreorder<TReal>& preo, const TReal* const tau);
->>>>>>> .r101
+       const TPreorder<TReal>& p, const TReal* const tau);
 
 
 

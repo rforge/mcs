@@ -10,8 +10,7 @@ import("stats", "graphics")
 
 ## export new generics
 ##
-export("refit",
-       "model.response")
+export("refit")
 
 
 ################

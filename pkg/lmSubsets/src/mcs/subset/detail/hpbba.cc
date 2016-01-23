@@ -1,8 +1,8 @@
-#ifndef MCS_SUBSET_DETAIL_HBBA_CC
-#define MCS_SUBSET_DETAIL_HBBA_CC
+#ifndef MCS_SUBSET_DETAIL_HPBBA_CC
+#define MCS_SUBSET_DETAIL_HPBBA_CC
 
 
-#include "mcs/subset/detail/hbba.hh"
+#include "mcs/subset/detail/hpbba.hh"
 
 
 
@@ -15,24 +15,18 @@ namespace detail {
   template<
     typename TReal,
     template<typename R>
-    class TCriterion
+    class TCriterion,
+    template<typename R>
+    class TPreorder
   >
   int
-  hbba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-<<<<<<< .mine
-       const TCriterion<TReal>& crit, const TReal tau)
-=======
-       const TCriterion<TReal>& crit, const TPreorder<TReal>& preo,
-       const TReal tau)
->>>>>>> .r101
+  hpbba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
+	const TCriterion<TReal>& crit, const TPreorder<TReal>& preo,
+	const TReal tau)
   {
     while (!state.isFinal())
       {
-<<<<<<< .mine
-        state.nextNode();
-=======
         state.nextNode(preo);
->>>>>>> .r101
         state.reportSubleading(table);
 
         const int n = state.currentSize();
@@ -59,23 +53,17 @@ namespace detail {
 
 
   template<
-    typename TReal
+    typename TReal,
+    template<typename R>
+    class TPreorder
    >
   int
-  hbba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table,
-<<<<<<< .mine
-       const TReal* const tau)
-=======
-       const TPreorder<TReal>& preo, const TReal* const tau)
->>>>>>> .r101
+  hpbba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table,
+	const TPreorder<TReal>& preo, const TReal* const tau)
   {
     while (!state.isFinal())
       {
-<<<<<<< .mine
-        state.nextNode();
-=======
         state.nextNode(preo);
->>>>>>> .r101
         state.reportSubleading(table);
 
         const int n = state.currentSize();

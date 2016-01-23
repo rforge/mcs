@@ -50,13 +50,8 @@ R_lmSubsets(const char* const* const algo, const int* const nobs,
     }
   else if (std::strcmp(*algo, "hbba") == 0)
     {
-<<<<<<< .mine
       hbba(*nobs, *size, *mark, *nbest, v, xy,
            *nobs, wIndex, wRss, wSubset, tau, *nodes);
-=======
-      hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
-           *nobs, wIndex, wRss, wSubset, tau, *nodes);
->>>>>>> .r101
     }
   else if (std::strcmp(*algo, "hpbba") == 0)
     {
@@ -147,13 +142,8 @@ R_lmSelect(const char* const* const algo, const int* const nobs,
     }
   else if (std::strcmp(*algo, "hbba") == 0)
     {
-<<<<<<< .mine
       hbba(*nobs, *size, *mark, *nbest, v, xy,
            *nobs, wIndex, wRss, wVal, wSubset, aic, *tau, *nodes);
-=======
-      hbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
-           *nobs, wIndex, wRss, wVal, wSubset, aic, *tau, *nodes);
->>>>>>> .r101
     }
   else if (std::strcmp(*algo, "hpbba") == 0)
     {

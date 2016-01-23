@@ -47,20 +47,13 @@
 ##   'dca'  :  Dropping Column Algorithm (no branch and bound)
 ##   'bba'  :  Branch and Bound Algorithm
 ##   'pbba' :  BBA with variable preordering
-##   'hbba' :  Heuristic BBA
-##   'hpbba':  Heuristic, preordering BBA
+##   'hbba' :  PBBA with tolerances
 ##   'xbba.':  experimental PBBA
 ##
 lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
-<<<<<<< .mine
-                           include = NULL, exclude = NULL, size = NULL,
-                           tolerance = 0, pradius = NULL, nbest = 1, ...,
-                           .algo = "hpbba") {
-=======
                            include = NULL, exclude = NULL, size = NULL,
                            tolerance = 0, pradius = NULL, nbest = 1, ...,
                            .algo = "hbba") {
->>>>>>> .r101
     ## model weights and offset
     if (is.null(w <- weights)) w <- rep(1, NROW(x))
     if (is.null(o <- offset)) o <- rep(0, NROW(x))
@@ -169,7 +162,7 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
     if (is.null(pradius)) {
         pmin <- 8
     } else {
-        pmin <- size.max - size.min - pradius + 1
+        pmin <- size.max - pradius
     }
 
     ## tolerance
@@ -189,12 +182,9 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
     C_rss <- rep(0, nvar * nbest)
     C_which <- rep(0, nvar * nbest * nvar)
 
-<<<<<<< .mine
-=======
     C_tau[C_tau == +Inf] <- .Machine$double.xmax
     C_tau <- c(0, C_tau)
 
->>>>>>> .r101
     C_args <- list(
         algo    = as.character(.algo),
         nobs    = as.integer(nobs),
@@ -209,14 +199,8 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
         rss     = as.double(C_rss),
         which   = as.logical(C_which),
         tau     = as.double(C_tau),
-<<<<<<< .mine
-        info    = integer(1),
-        nodes   = integer(1),
-        NAOK    = TRUE
-=======
         info    = integer(1),
         nodes   = integer(1)
->>>>>>> .r101
     )
 
     C_rval <- do.call(".C", c("R_lmSubsets", C_args))
@@ -471,50 +455,26 @@ plot.lmSubsets <- function (x, ..., legend) {
 ## Rval:  (character[])
 ##   variable names
 ##
-<<<<<<< .mine
-variable.names.lmSubsets <- function (object, size, best = 1, ...) {
-    x.names <- dimnames(object$which)[[1]]
-
-    if (missing(size)) {
-        return (x.names)
-=======
 variable.names.lmSubsets <- function (object, size, best = 1, ...) {
     x.names <- dimnames(object$which)[[1]]
 
     if (!missing(size)) {
         x.names <- x.names[object$which[, best, size]]
->>>>>>> .r101
     }
 
-<<<<<<< .mine
-    x.names[object$which[, best, size]]
-=======
     x.names
->>>>>>> .r101
 }
 
 
 ## extract model frame
 ##
 ## Args:
-<<<<<<< .mine
-##   x    - (lmSubsets)
-##   size - (integer)
-##   best - (integer)
-##   ...  - ignored
-=======
 ##   object - (lmSubsets)
 ##   ...    - ignored
->>>>>>> .r101
 ##
 ## Rval:  (character[])
 ##   variable names
 ##
-<<<<<<< .mine
-formula.lmSubsets <- function (x, size, best = 1, ...) {
-    if (missing(size)) {
-        f <- formula(x$terms)
-=======
 model.frame.lmSubsets <- function(formula, ...) {
     mf <- formula[["model"]]
     if (is.null(mf)) {
@@ -527,25 +487,7 @@ model.frame.lmSubsets <- function(formula, ...) {
         cl[[1L]] <- quote(stats::model.frame)
         cl$xlev <- formula$xlevels
         cl$formula <- terms(formula)
->>>>>>> .r101
 
-<<<<<<< .mine
-        return (f)
-    }
-
-    e <- new.env();
-    e$x <- model.matrix(x, size = size, best = best)
-    e$y <- model.response(x)
-
-    if (x$intercept) {
-        e$x <- e$x[, -1]
-        f <- formula("y ~ x + 1", env = e)
-    } else {
-        f <- formula("y ~ x + 0", env = e)
-    }
-    
-    f
-=======
         env <- environment(formula$terms)
 	if (is.null(env)) {
             env <- parent.frame()
@@ -555,66 +497,25 @@ model.frame.lmSubsets <- function(formula, ...) {
     }
 
     mf
->>>>>>> .r101
 }
 
 
 ## extract model response
 ##
 ## Args:
-<<<<<<< .mine
-##   object - (lmSubsets)
-##   size   - (integer)
-##   best   - (integer)
-##   ...    - ignored
-=======
 ##   data - (lmSubsets)
 ##   ...  - ignored
->>>>>>> .r101
 ##
-<<<<<<< .mine
-## Rval:  (character[])
-##   variable names
-=======
 ## Rval:  (formula)
->>>>>>> .r101
 ##
-<<<<<<< .mine
-model.frame.lmSubsets <- function(formula, size, best = 1, ...) {
-    mf <- formula[["model"]]
-=======
 model.response.lmSubsets <- function (data, ...) {
     y <- data[["y"]]
     if (is.null(y)) {
         mf <- model.frame(data)
         y <- model.response(mf)
     }
->>>>>>> .r101
 
-<<<<<<< .mine
-    if (!missing(size) || is.null(mf)) {
-        cl <- formula$call
-        m <- c("formula", "data", "subset",
-               "weights", "na.action", "offset")
-        m <- match(m, names(cl), 0L)
-        cl <- cl[c(1L, m)]
-        cl$drop.unused.levels <- TRUE
-        cl[[1L]] <- quote(stats::model.frame)
-        cl$xlev <- formula$xlevels
-        cl$formula <- stats::formula(formula, size = size, best = best)
-
-        env <- environment(formula$terms)
-        if (is.null(env)) {
-            env <- parent.frame()
-        }
-
-        mf <- eval(cl, env)
-    }
-
-    mf
-=======
     y
->>>>>>> .r101
 }
 
 
@@ -629,59 +530,22 @@ model.response.lmSubsets <- function (data, ...) {
 ## Rval:  (matrix)
 ##
 model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
-<<<<<<< .mine
-    x <- object[["x"]]
-    if (is.null(x)) {
-        data <- model.frame(object)
-        x <- model.matrix.default(object, data = data, contrasts.arg = object$contrasts)
-    }
-=======
     ## full model
     x <- object[["x"]]
     if (is.null(x)) {
         data <- model.frame(object)
         x <- model.matrix.default(object, data = data, contrasts.arg = object$contrasts)
     }
->>>>>>> .r101
 
-<<<<<<< .mine
-    if (missing(size)) {
-        return (x)
-    }
-
-    x[, object$which[, best, size]]
-=======
     if (missing(size)) {
         return (x)
     }
 
     ## subset model
     x[, object$which[, best, size]]
->>>>>>> .r101
 }
 
 
-<<<<<<< .mine
-## extract model response
-##
-## Args:
-##   data - (lmSubsets)
-##   ...  - ignored
-##
-## Rval:  (formula)
-##
-model.response.lmSubsets <- function (data, ...) {
-    y <- data[["y"]]
-    if (is.null(y)) {
-        mf <- model.frame(data)
-        y <- model.response(mf)
-    }
-
-    y
-}
-
-
-=======
 ## extract formula
 ##
 ## Args:
@@ -708,7 +572,6 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 }
 
 
->>>>>>> .r101
 ## refit
 ##
 ## Args:
@@ -719,15 +582,8 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 ##
 ## Rval:  (lm)
 ##
-<<<<<<< .mine
-refit.lmSubsets <- function (object, size, best = 1, ...) {
-    f <- formula(object, size = size, best = best)
-
-    lm(f, ...)
-=======
 refit.lmSubsets <- function (object, size, best = 1, ...) {
     lm(formula(object, size = size, best = best), ...)
->>>>>>> .r101
 }
 
 
@@ -810,26 +666,18 @@ residuals.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer)
+##   size   - (integer[])
 ##   best   - (integer)
 ##   ...    - ignored
 ##
 ## Rval:  (numeric[])
 ##
-## Returns the RSS for the specified subset.
+## Returns the RSS for the specified subset(s).
 ##
 deviance.lmSubsets <- function (object, size, best = 1, ...) {
     ## size
-<<<<<<< .mine
-    if (missing(size)) {
-        d <- deviance(refit(object, model = FALSE))
-=======
     if (missing(size)) {
         stop ("missing argument 'size'")
-    }
->>>>>>> .r101
-
-        return (d)
     }
 
     ## extract RSS
@@ -848,18 +696,13 @@ deviance.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 ## Rval: (logLik)
 ##
+## Note:
+##   Can handle multiple objects.
+##
 logLik.lmSubsets <- function (object, size, best = 1, ...) {
     ## size
-<<<<<<< .mine
-    if (missing(size)) {
-        ll <- logLik(refit(object, model = FALSE))
-=======
     if (missing(size)) {
         stop ("missing argument 'size'")
-    }
->>>>>>> .r101
-
-        return (ll)
     }
 
     ## weights
