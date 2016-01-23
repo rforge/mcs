@@ -23,8 +23,6 @@ include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
 pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
 
 lmSubsets.select(object, penalty = "BIC", ...)
-
-lmSubsets.select(object, penalty = "BIC", ...)
 }
 
 

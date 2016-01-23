@@ -19,20 +19,11 @@ namespace detail {
   >
   int
   hbba(DcaState<TReal>& state, DcaTable<TReal,TCriterion>& table,
-<<<<<<< .mine
        const TCriterion<TReal>& crit, const TReal tau)
-=======
-       const TCriterion<TReal>& crit, const TPreorder<TReal>& preo,
-       const TReal tau)
->>>>>>> .r101
   {
     while (!state.isFinal())
       {
-<<<<<<< .mine
         state.nextNode();
-=======
-        state.nextNode(preo);
->>>>>>> .r101
         state.reportSubleading(table);
 
         const int n = state.currentSize();
@@ -63,19 +54,11 @@ namespace detail {
    >
   int
   hbba(DcaState<TReal>& state, DcaTable<TReal,Criteria::None>& table,
-<<<<<<< .mine
        const TReal* const tau)
-=======
-       const TPreorder<TReal>& preo, const TReal* const tau)
->>>>>>> .r101
   {
     while (!state.isFinal())
       {
-<<<<<<< .mine
         state.nextNode();
-=======
-        state.nextNode(preo);
->>>>>>> .r101
         state.reportSubleading(table);
 
         const int n = state.currentSize();

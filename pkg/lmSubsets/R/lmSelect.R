@@ -590,42 +590,19 @@ variable.names.lmSelect <- function (object, best = 1, ...) {
 }
 
 
-## extract model frame
+## extract formula
 ##
 ## Args:
-<<<<<<< .mine
 ##   x    - (lmSelect)
 ##   best - (integer)
 ##   ...  - ignored
-=======
-##   object - (lmSubsets)
-##   ...    - ignored
->>>>>>> .r101
 ##
-## Rval:  (character[])
-##   variable names
+## Rval:  (formula)
 ##
-<<<<<<< .mine
 formula.lmSelect <- function (x, best, ...) {
     if (missing(best)) {
         f <- formula(x$terms)
-=======
-model.frame.lmSelect <- function(formula, ...)
-{
-    mf <- formula[["model"]]
-    if (is.null(mf)) {
-        cl <- formula$call
-        m <- c("formula", "data", "subset",
-               "weights", "na.action", "offset")
-        m <- match(m, names(cl), 0L)
-        cl <- cl[c(1L, m)]
-        cl$drop.unused.levels <- TRUE
-        cl[[1L]] <- quote(stats::model.frame)
-        cl$xlev <- formula$xlevels
-        cl$formula <- terms(formula)
->>>>>>> .r101
 
-<<<<<<< .mine
         return (f)
     }
 
@@ -641,53 +618,23 @@ model.frame.lmSelect <- function(formula, ...)
     }
     
     f
-=======
-        env <- environment(formula$terms)
-	if (is.null(env)) {
-            env <- parent.frame()
-        }
-
-        mf <- eval(cl, env)
-    }
-
-    mf
->>>>>>> .r101
 }
 
 
-## extract model response
+## extract model frame
 ##
 ## Args:
-<<<<<<< .mine
 ##   object - (lmSubsets)
 ##   best   - (integer)
 ##   ...    - ignored
-=======
-##   x    - (lmSubsets)
-##   ...  - ignored
->>>>>>> .r101
 ##
-<<<<<<< .mine
 ## Rval:  (character[])
 ##   variable names
-=======
-## Rval:  (formula)
->>>>>>> .r101
 ##
-<<<<<<< .mine
 model.frame.lmSelect <- function(formula, best, ...)
 {
     mf <- formula[["model"]]
-=======
-model.response.lmSelect <- function (data, ...) {
-    y <- data[["y"]]
-    if (is.null(y)) {
-        mf <- model.frame(data)
-        y <- model.response(mf)
-    }
->>>>>>> .r101
 
-<<<<<<< .mine
     if (!missing(best) || is.null(mf)) {
         cl <- formula$call
         m <- c("formula", "data", "subset",
@@ -708,9 +655,6 @@ model.response.lmSelect <- function (data, ...) {
     }
 
     mf
-=======
-    y
->>>>>>> .r101
 }
 
 
@@ -750,42 +694,12 @@ model.matrix.lmSelect <- function (object, best, ...) {
         x <- model.matrix.default(object, data = data, contrasts.arg = object$contrasts)
     }
 
-<<<<<<< .mine
     if (missing(best)) {
         return (x)
     }
 
     ## subset model
     x[, object$which[, best]]
-=======
-    ## subset model
-    x[, object$which[, best]]
->>>>>>> .r101
-}
-
-
-## extract formula
-##
-## Args:
-##   x    - (lmSelect)
-##   best - (integer)
-##   ...  - ignored
-##
-## Rval:  (formula)
-##
-formula.lmSelect <- function (x, best = 1, ...) {
-    e <- new.env()
-    e$x <- model.matrix(x, best = best)
-    e$y <- model.response(x, "numeric")
-
-    if (x$intercept) {
-        e$x <- e$x[, -1]
-        f <- formula("y ~ x + 1", env = e)
-    } else {
-        f <- formula("y ~ x + 0", env = e)
-    }
-
-    f
 }
 
 
@@ -798,15 +712,10 @@ formula.lmSelect <- function (x, best = 1, ...) {
 ##
 ## Rval:  (lm)
 ##
-<<<<<<< .mine
 refit.lmSelect <- function (object, best = 1, ...) {
     f <- formula(object, best = best)
 
     lm(f, ...)
-=======
-refit.lmSelect <- function (object, best = 1, ...) {
-    lm(formula(object, best = best), ...)
->>>>>>> .r101
 }
 
 
