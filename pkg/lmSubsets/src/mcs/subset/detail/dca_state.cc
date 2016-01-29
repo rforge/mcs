@@ -48,7 +48,7 @@ namespace detail {
     sWork_      ((size - mark + 1) *  size            ),
     rzWork_     ((size - mark + 1) * (size + 1) * ldim),
     rzLdim_     {ldim}                                 ,
-    nodeStack_  (size)                                 ,
+    nodeStack_  (size - mark + 1)                                 ,
     currentNode_(nodeStack_.data())                    ,
     nextNode_   (nodeStack_.data())                    ,
     currentRss_ {Math<TReal>::MAX}                     ,
@@ -57,16 +57,13 @@ namespace detail {
     int*   s  = sWork_.data();
     TReal* rz = rzWork_.data();
 
-    currentNode_->s  = s;
-    currentNode_->rz = rz;
-
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < (size - mark + 1); ++i)
       {
-        s  += size;
-        rz += (size + 1) * rzLdim_;
-
 	nodeStack_[i].s  = s;
         nodeStack_[i].rz = rz;
+
+        s  += size;
+        rz += (size + 1) * rzLdim_;
       }
   }
 

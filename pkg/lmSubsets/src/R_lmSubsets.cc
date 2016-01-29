@@ -25,14 +25,48 @@ R_lmSubsets(const char* const* const algo, const int* const nobs,
   using namespace mcs::subset;
 
 
+  // validation
+  *info = 0;
+
+  if (*nobs < 1)
+    {
+      *info = -2;
+    }
+  else if (*nvar >= *nobs)
+    {
+      *info = -3;
+    }
+  else if (*size > *nvar)
+    {
+      *info = -4;
+    }
+  else if ((*mark < 0) || (*mark >= *size))
+    {
+      *info = -5;
+    }
+  else if (*nbest < 1)
+    {
+      *info = -6;
+    }
+  else if (*pmin < 0)
+    {
+      *info = -7;
+    }
+
+
+  if (*info < 0)
+    {
+      return;
+    }
+
+
   // workspace
   int    wIndex [*size * *nbest              ];
   double wRss   [*size * *nbest              ];
   int    wSubset[*size * *nbest * (*size + 1)];
 
 
-  *info = 0;
-
+  // execute
   if (std::strcmp(*algo, "dca") == 0)
     {
       dca(*nobs, *size, *mark, *nbest, v, xy,
@@ -66,35 +100,35 @@ R_lmSubsets(const char* const* const algo, const int* const nobs,
   else
     {
       *info = -1;
+
+      return;
     }
 
 
-  if (*info >= 0)
+  // output
+  for (int i = *mark; i < *size; ++i)
     {
-      for (int i = *mark; i < *size; ++i)
-        {
-          for (int j = 0; j < *nbest; ++j)
-            {
-              int offset = i * *nbest + j;
-              int index  = wIndex[offset];
+      for (int j = 0; j < *nbest; ++j)
+	{
+	  int offset = i * *nbest + j;
+	  int index  = wIndex[offset];
 
-	      const int n = wSubset[index * (*size + 1)];
+	  const int n = wSubset[index * (*size + 1)];
 
-	      if (n > 0) {
-		sDf [offset] = n + 1;
-		sRss[offset] = wRss[index];
+	  if (n > 0) {
+	    sDf [offset] = n + 1;
+	    sRss[offset] = wRss[index];
 
-		offset *= *nvar;
-		index  *= (*size + 1);
-		for (int k = 0; k < i + 1; ++k)
-		  {
-		    int v = wSubset[index + k + 1];
+	    offset *= *nvar;
+	    index  *= (*size + 1);
+	    for (int k = 0; k < i + 1; ++k)
+	      {
+		int v = wSubset[index + k + 1];
 
-		    sWhich[offset + v] = 1;
-		  }
+		sWhich[offset + v] = 1;
 	      }
-	    }
-        }
+	  }
+	}
     }
 }
 
@@ -113,7 +147,38 @@ R_lmSelect(const char* const* const algo, const int* const nobs,
   using namespace mcs::subset;
 
 
-  Criteria::Aic<double> aic(*penalty, *nobs);
+  // validation
+  *info = 0;
+
+  if (*nobs < 1)
+    {
+      *info = -2;
+    }
+  else if (*nvar >= *nobs)
+    {
+      *info = -3;
+    }
+  else if (*size > *nvar)
+    {
+      *info = -4;
+    }
+  else if ((*mark < 0) || (*mark >= *size))
+    {
+      *info = -5;
+    }
+  else if (*nbest < 1)
+    {
+      *info = -6;
+    }
+  else if (*pmin < 0)
+    {
+      *info = -7;
+    }
+
+  if (*info < 0)
+    {
+      return;
+    }
 
 
   // workspace
@@ -123,7 +188,8 @@ R_lmSelect(const char* const* const algo, const int* const nobs,
   int    wSubset[*nbest * (*size + 1)];
 
 
-  *info = 0;
+  // execute
+  Criteria::Aic<double> aic(*penalty, *nobs);
 
   if (std::strcmp(*algo, "dca") == 0)
     {
@@ -158,33 +224,33 @@ R_lmSelect(const char* const* const algo, const int* const nobs,
   else
     {
       *info = -1;
+
+      return;
     }
 
 
-  if (*info >= 0)
+  // output
+  for (int i = 0; i < *nbest; ++i)
     {
-      for (int i = 0; i < *nbest; ++i)
-        {
-          int offset = i;
-          int index  = wIndex[offset];
+      int offset = i;
+      int index  = wIndex[offset];
 
-	  const int n = wSubset[index * (*size + 1)];
+      const int n = wSubset[index * (*size + 1)];
 
-	  if (n > 0) {
-	    sDf [offset] = n + 1;
-	    sRss[offset] = wRss[index];
-	    sVal[offset] = wVal[index];
+      if (n > 0) {
+	sDf [offset] = n + 1;
+	sRss[offset] = wRss[index];
+	sVal[offset] = wVal[index];
 
-	    offset *= *nvar;
-	    index  *= (*size + 1);
-	    for (int j = 0; j < wSubset[index]; ++j)
-	      {
-		int v = wSubset[index + j + 1];
+	offset *= *nvar;
+	index  *= (*size + 1);
+	for (int j = 0; j < wSubset[index]; ++j)
+	  {
+	    int v = wSubset[index + j + 1];
 
-		sWhich[offset + v] = 1;
-	      }
+	    sWhich[offset + v] = 1;
 	  }
-        }
+      }
     }
 }
 

@@ -35,7 +35,7 @@ lmSubsets.select <- function (object, penalty = "BIC", ...) {
     if (is.null(w <- object$weights)) {
         S <- 0
     } else {
-        S <- sum(log(w))
+        S <- sum(log(w[w != 0]))
     }
 
     if (tolower(penalty) == "aic") {
@@ -138,13 +138,6 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
                           tolerance = 0, pradius = NULL, nbest = 1, ...,
                           .algo = "hpbba")
 {
-    ## keep call (of generic)
-    call <- match.call()
-    call[[1]] <- as.name("lmSelect")
-
-    ## model matrix
-    x <- as.matrix(x)
-
     ## model weights and offset
     if (is.null(w <- weights)) w <- rep(1, NROW(x))
     if (is.null(o <- offset)) o <- rep(0, NROW(x))
@@ -297,13 +290,15 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
     )
 
     C_rval <- do.call(".C", c("R_lmSelect", C_args))
+    if (C_rval$info < 0) {
+        stop ("invalid argument: ", names(C_rval)[-C_rval$info])
+    }
 
     ## return value
     rval <- list(call      = call,
                  nobs      = nobs,
                  nvar      = nvar,
-                 weights   = weights[wok],
-                 offset    = offset[wok],
+                 weights   = weights,
                  intercept = has.intercept,
                  include   = include,
                  exclude   = exclude,
@@ -320,7 +315,7 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
     class(rval) <- "lmSelect"
 
     ## extract value and subsets
-    .cnames <- paste(1:nbest, ".", sep = "")
+    .cnames <- format.ordinal(1:nbest)
     ## tolerance
     rval$tolerance <- tolerance
     ## df
@@ -382,7 +377,7 @@ lmSelect <- function (formula, data, subset, weights, na.action,
 
     ## keep call (of generic)
     cl <- match.call()
-    cl[[1]] <- as.name("lmSubsets")
+    cl[[1]] <- as.name("lmSelect")
 
     ## model frame
     mf <- match.call(expand.dots = FALSE)
@@ -390,7 +385,6 @@ lmSelect <- function (formula, data, subset, weights, na.action,
            "weights", "na.action", "offset")
     m <- match(m, names(mf), 0L)
     mf <- mf[c(1L, m)]
-    mf$formula <- mf$object;  mf$object <- NULL
     mf$drop.unused.levels <- TRUE
     mf[[1L]] <- quote(stats::model.frame)
     mf <- eval(mf, parent.frame())
@@ -493,8 +487,18 @@ print.lmSelect <- function (x, ...)
     fit <- format(rbind(x$df, x$rss, x$val), nsmall = 2)
     rownames(fit) <- paste("  ", c("df", "Deviance", "Value"))
     print(fit, quote = FALSE)
-    catln()
 
+
+    ## which
+    catln()
+    catln("Which:")
+    which <- apply(x$which[, , drop = FALSE], 1, format.which)
+    which <- matrix(which, dimnames = list(names(which), "best"))
+    rownames(which) <- paste("  ", rownames(which))
+    print(which, quote = FALSE)
+
+
+    catln()
 
     ## done
     invisible(x)
@@ -505,7 +509,7 @@ print.lmSelect <- function (x, ...)
 ##
 ## Args:
 ##   x      - (lmSelect)
-##   ...    - ignored
+##   ...    - forwarded to plotting functions
 ##   xlim   - (numeric[])
 ##   ylim1  - (numeric[])
 ##   ylim2  - (numeric[])
@@ -517,18 +521,19 @@ print.lmSelect <- function (x, ...)
 ##
 plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
                            legend) {
-    localPlot <- function (object, main, sub = NULL, xlab, ylab,
-                           type, lty, pch, col, bg, ...) {
+    localPlot <- function (object, main, sub = NULL, xlab, ylab, type = "o",
+                           lty = c(3, 1), pch = c(21, 16), col = "black",
+                           bg = "white", ...) {
         if (missing(main)) main <- "Best subsets"
         if (missing(xlab)) xlab <- "Best subset"
         if (missing(ylab)) ylab <- c("Deviance", "Value")
 
-        type <- if (missing(type)) c("o", "o")         else rep(type, length = 2)
-        lty  <- if (missing(lty) ) c(3, 1)             else rep(lty , length = 2)
-        pch  <- if (missing(pch) ) c(21, 21)           else rep(pch , length = 2)
-        col  <- if (missing(col) ) c("black", "red")   else rep(col , length = 2)
-        bg   <- if (missing(bg)  ) c("white", "white") else rep(bg  , length = 2)
-        
+        type <- rep(type, length = 2)
+        lty  <- rep(lty , length = 2)
+        pch  <- rep(pch , length = 2)
+        col  <- rep(col , length = 2)
+        bg   <- rep(bg  , length = 2)
+
         x <- seq(object$nbest)
         y1 <- object$rss
         y2 <- object$val
@@ -544,8 +549,8 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
              pch = pch[1], col = col[1], bg = bg[1], ...)
 
         if (!is.null(legend)) {
-            legend("topleft", legend = legend, lty = lty,
-                   pch = pch, col = col, pt.bg = bg, bty = "n")
+            legend("topleft", legend = legend, lty = lty, pch = pch, col = col,
+                   pt.bg = bg, bty = "n")
         }
 
         plot.window(xlim = xlim, ylim = ylim2)
@@ -553,13 +558,17 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
         axis(side = 4, at = pretty(ylim2))
         mtext(ylab[2], side = 4, line = 3)
 
-        lines(x, y2, type = type[2], lty = lty[2], pch = pch[2],
-              col = col[2], bg = bg[2], ...)
+        lines(x, y2, type = type[1], lty = lty[2], pch = pch[2], col = col[2],
+              bg = bg[2], ...)
     }
 
-    if (missing(legend)) legend <- c("Deviance (RSS)", paste("Value (", x$penalty, ")", sep = ""))
+    if (inherits(x, "summary.lmSelect")) {
+        if (missing(legend)) legend <- c("Deviance (RSS)", paste("Value (", x$penalty, ")", sep = ""))
 
-    localPlot(x, ...)
+        localPlot(x, ...)
+    } else {
+        plot(summary(x, ...))
+    }
 
     invisible(x)
 }
@@ -825,7 +834,7 @@ logLik.lmSelect <- function (object, best = 1, ...) {
     if (is.null(w <- object$weights)) {
         S <- 0
     } else {
-        S <- sum(log(w))
+        S <- sum(log(w[w != 0]))
     }
 
     ## extract rss

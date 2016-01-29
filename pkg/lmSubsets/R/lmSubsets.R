@@ -203,13 +203,15 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
     )
 
     C_rval <- do.call(".C", c("R_lmSubsets", C_args))
+    if (C_rval$info < 0) {
+        stop ("invalid argument: ", names(C_rval)[-C_rval$info])
+    }
 
     ## return value
     rval <- list(call      = call,
                  nobs      = nobs,
                  nvar      = nvar,
-                 weights   = weights[wok],
-                 offset    = offset[wok],
+                 weights   = weights,
                  intercept = has.intercept,
                  include   = include,
                  exclude   = exclude,
@@ -224,7 +226,7 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
     class(rval) <- "lmSubsets"
 
     ## extract value and subsets
-    .cnames <- paste(1:nbest, ".", sep = "")
+    .cnames <- format.ordinal(1:nbest)
     ## tolerance
     rval$tolerance <- array(tolerance, dim = nvar,
                             dimnames = list(1:nvar))
@@ -380,14 +382,26 @@ print.lmSubsets <- function (x, ...) {
                            ":")
     print(val, quote = FALSE)
 
+
     ## fit
     catln()
     catln("Model fit (deviance):")
-    catln("  size x best")
+    catln("  best x size")
     rss <- x$rss[, x$size, drop = FALSE]
     fit <- ifelse(is.na(rss), "", format(rss, nsmall = 2))
     rownames(fit) <- paste("  ", rownames(fit))
     print(fit, quote = FALSE)
+
+
+    ## which
+    catln()
+    catln("Which (size):")
+    catln("  variable x best")
+    which <- apply(x$which[, , , drop = FALSE], c(1, 2), format.which)
+    rownames(which) <- paste("  ", rownames(which))
+    print(which, quote = FALSE)
+
+
     catln()
 
     ## done
@@ -399,29 +413,33 @@ print.lmSubsets <- function (x, ...) {
 ##
 ## Args:
 ##   x    -   (lmSubsets)
-##   ...  -   passed to 'matplot'
+##   ...  -   passed to plotting functions
 ##   legend - (character)
 ##
 ## Rval:  (lmSubsets) invisible
 ##
 plot.lmSubsets <- function (x, ..., legend) {
-    localPlot <- function (object, main, sub = NULL, xlab, ylab,
-                           type, lty, pch, col, bg, ...) {
+    localPlot <- function (object, main, sub = NULL, xlab, ylab, type = "o",
+                           lty = c(1, 3), pch = c(16, 21), col = "black",
+                           bg = "white", ...) {
         if (missing(main)) main <- "All subsets"
         if (missing(xlab)) xlab <- "Number of regressors"
         if (missing(ylab)) ylab <- "Deviance"
 
-        if (missing(type)) type <- "o"
-        if (missing(lty)) lty <- 3
-        if (missing(pch)) pch <- 21
-        if (missing(col)) col <- "black"
-        if (missing(bg)) bg <- "white"
+        type <- rep(type, length = 2)
+        lty  <- rep(lty, length = 2)
+        pch  <- rep(pch, length = 2)
+        col  <- rep(col, length = 2)
+        bg   <- rep(bg, length = 2)
 
         x <- matrix(rep(object$size, each = object$nbest), nrow = object$nbest)
-        y <- object$rss[, object$size, drop = FALSE]
+        y <- object$rss[object$nbest:1, object$size, drop = FALSE]
 
         matplot(x = x, y = y, main = main, sub = sub, xlab = xlab, ylab = ylab,
-                type = type, lty = lty, pch = pch, col = col, bg = bg, ...)
+                type = type[2], lty = lty[2], pch = pch[2], col = col[2],
+                bg = bg[2], ...)
+        lines(x[1, ], y[object$nbest, ], type = type[1], lty = lty[1],
+              pch = pch[1], col = col[1], bg = bg[1], ...)
 
         if (!is.null(legend)) {
             legend("topright", legend = legend, lty = lty,
@@ -429,9 +447,13 @@ plot.lmSubsets <- function (x, ..., legend) {
         }
     }
 
-    if (missing(legend)) legend <- "Deviance (RSS)"
+    if (inherits(x, "summary.lmSubsets")) {
+        if (missing(legend)) legend <- "Deviance (RSS)"
 
-    localPlot(x, ...)
+        localPlot(x, ...)
+    } else {
+        plot(summary(x, ...))
+    }
 
     invisible(x)
 }
@@ -719,7 +741,7 @@ logLik.lmSubsets <- function (object, size, best = 1, ...) {
     if (is.null(w <- object$weights)) {
         S <- 0
     } else {
-        S <- sum(log(w))
+        S <- sum(log(w[w != 0]))
     }
 
     ## extract rss

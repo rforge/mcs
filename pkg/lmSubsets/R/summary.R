@@ -25,7 +25,7 @@ summary.lmSubsets <- function (object, penalty = "BIC", ...) {
     if (is.null(w <- object$weights)) {
         S <- 0
     } else {
-        S <- sum(log(w))
+        S <- sum(log(w[w != 0]))
     }
 
     if (tolower(penalty) == "aic") {
@@ -41,7 +41,7 @@ summary.lmSubsets <- function (object, penalty = "BIC", ...) {
     ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(object$rss)))
     aic <- -2 * ll + attr(penalty, "k") * object$df
 
-    object$summary <- list(penalty = penalty, aic = aic)
+    object$summary <- list(penalty = penalty, val = aic)
 
     ## class
     class(object) <- c("summary.lmSubsets", "lmSubsets")
@@ -66,7 +66,7 @@ summary.lmSelect <- function (object, penalty = "AIC", ...) {
     if (is.null(w <- object$weights)) {
         S <- 0
     } else {
-        S <- sum(log(w))
+        S <- sum(log(w[w != 0]))
     }
 
     ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(object$rss)))
@@ -95,7 +95,7 @@ summary.lmSelect <- function (object, penalty = "AIC", ...) {
 
     ## summary
     object$summary <- list(penalty = structure(pp, k = kk),
-                           aic     = aic                  )
+                           val     = aic                  )
 
     ## class
     class(object) <- c("summary.lmSelect", "lmSelect")
@@ -144,13 +144,14 @@ print.summary.lmSubsets <- function (x, ...)
     ## fit
     catln()
     catln("Model fit (value):")
-    catln("  size x best")
-    aic <- x$summary$aic[, x$size, drop = FALSE]
-    fit <- ifelse(is.na(aic), "", format(aic, nsmall = 2))
+    catln("  best x size")
+    val <- x$summary$val[, x$size, drop = FALSE]
+    fit <- ifelse(is.na(val), "", format(val, nsmall = 2))
     rownames(fit) <- paste("  ", rownames(fit))
     print(fit, quote = FALSE)
-    catln()
 
+
+    catln()
 
     ## done
     invisible(x)
@@ -191,11 +192,12 @@ print.summary.lmSelect <- function (x, ...)
     ## fit
     catln()
     catln("Model fit:")
-    fit <- format(rbind(x$df, x$rss, x$summary$aic), nsmall = 2)
+    fit <- format(rbind(x$df, x$rss, x$summary$val), nsmall = 2)
     rownames(fit) <- paste("  ", c("df", "Deviance", "Value", rep("", length(x$summary$penalty) - 1)))
     print(fit, quote = FALSE)
-    catln()
 
+
+    catln()
 
     ## done
     invisible(x)
@@ -212,37 +214,40 @@ print.summary.lmSelect <- function (x, ...)
 ##
 ## Args:
 ##   x      - (lmSubsets)
-##   ...    - passed to 'plot.lmSubsets' and to 'matplot'.
+##   ...    - passed to plotting functions
 ##   legend - (character[])
 ##
 ## Rval: (summary.lmSubsets) invisible
 ##
 plot.summary.lmSubsets <- function (x, ..., legend) {
     localPlot <- function (object, main, sub = NULL, xlab, ylab,
-                           type, lty, pch, col, bg, ...) {
+                           type.sum = "o", lty.sum = c(1, 3),
+                           pch.sum = c(16, 21), col.sum = "red",
+                           bg.sum = "white", type = "o", lty = c(1, 3),
+                           pch = c(16, 21), col = "black", bg = "white", ...) {
         if (missing(main)) main <- "All subsets (summary)"
         if (missing(xlab)) xlab <- "Number of regressors"
         if (missing(ylab)) ylab <- c("Deviance", "Value")
 
-        type <- if (missing(type)) c("o", "o")         else rep(type, length = 2)
-        lty  <- if (missing(lty) ) c(3, 3)             else rep(lty , length = 2)
-        pch  <- if (missing(pch) ) c(21, 21)           else rep(pch , length = 2)
-        col  <- if (missing(col) ) c("black", "red")   else rep(col , length = 2)
-        bg   <- if (missing(bg)  ) c("white", "white") else rep(bg  , length = 2)
+        type.sum <- rep(type.sum, length = 2)
+        lty.sum  <- rep(lty.sum , length = 2)
+        pch.sum  <- rep(pch.sum , length = 2)
+        col.sum  <- rep(col.sum , length = 2)
+        bg.sum   <- rep(bg.sum  , length = 2)
 
         x <- matrix(rep(object$size, each = object$nbest), nrow = object$nbest)
-        y <- object$summary$aic[, object$size, drop = FALSE]
+        y <- object$summary$val[object$nbest:1, object$size, drop = FALSE]
 
         par(mar = c(5, 4, 4, 4) + 0.1)
 
-        plot.lmSubsets(object, main = main, sub = sub, xlab = xlab,
-                       ylab = ylab[1], type = type[1], lty = lty[1],
-                       pch = pch[1], col = col[1], bg = bg[1], ...,
-                       legend = NULL)
+        plot.lmSubsets(object, main = main, sub = sub, xlab = xlab, ylab = ylab,
+                       type = type, lty = lty, pch = pch,
+                       col = col, bg = bg, ..., legend = NULL)
 
         if (!is.null(legend)) {
-            legend("topright", legend = legend, lty = lty,
-                   pch = pch, col = col, pt.bg = bg, bty = "n")
+            legend("topright", legend = legend, lty = c(lty[1], lty.sum[1]),
+                   pch = c(pch[1], pch.sum[1]), col = c(col[1], col.sum[1]),
+                   pt.bg = c(bg[1], bg.sum[1]), bty = "n")
         }
 
         xlim <- range(object$size)
@@ -252,8 +257,11 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
         axis(side = 4, at = pretty(ylim))
         mtext(ylab[2], side = 4, line = 3)
 
-        matplot(x = x, y = y, type = type[2], lty = lty[2], pch = pch[2],
-                col = col[2], bg = bg[2], ..., add = TRUE)
+        matplot(x = x, y = y, type = type.sum[2], lty = lty.sum[2],
+                pch = pch.sum[2], col = col.sum[2], bg = bg.sum[2], ...,
+                add = TRUE)
+        lines(x[1, ], y[object$nbest, ], type = type.sum[1], lty = lty.sum[1],
+              pch = pch.sum[1], col = col.sum[1], bg = bg.sum[1], ...)
     }
 
     if (missing(legend)) legend <- c("Deviance (RSS)", paste("Value (", x$summary$penalty, ")", sep = ""))
@@ -276,52 +284,42 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
 ## All arguments are passed to 'plot.default'.
 ##
 plot.summary.lmSelect <- function (x, ..., legend) {
-    localPlot <- function (object, main, sub = NULL, xlab, ylab,
-                           type, lty, pch, col, bg, ...) {
+    localPlot <- function (object, main, sub = NULL, xlab, ylab, type.sum = "o",
+                           lty.sum = 1, pch.sum = 21, col.sum, bg.sum = "white",
+                           type = c("o", "o"), lty = c(3, 1), pch = c(21, 16),
+                           col = c("black", "black"), bg = c("white", "white"),
+                           ...) {
         n <- length(object$summary$penalty)
 
         if (missing(main)) main <- "All subsets (summary)"
+        if (missing(xlab)) xlab <- "Number of regressors"
+        if (missing(ylab)) ylab <- c("Deviance", "Value")
 
-        if (missing(type)) {
-            type <- c("o", "o", rep("o", n))
-        } else {
-            type <- rep(type, length = n + 2)
-        }
-        if (missing(lty)) {
-            lty <- c(3, 1, rep(1, n))
-        } else {
-            lty <- rep(lty, length = n + 2)
-        }
-        if (missing(pch)) {
-            pch <- c(21, 21, rep(21, n))
-        } else {
-            pch <- rep(pch, length = n + 2)
-        }
-        if (missing(col)) {
-            col <- c("black", "black", rep(c("red", "green3", "cyan", "blue", "magenta"), n))
-        } else {
-            col <- rep(col, length = n + 2)
-        }
-        if (missing(bg)) {
-            bg <- c("white", "white", rep("white", n))
-        } else {
-            bg <- rep(bg, length = n + 2)
+        if (missing(col.sum)) {
+            col.sum <- c("red", "green3", "cyan", "blue", "magenta")
         }
 
-        aic <- c(object$aic, object$summary$aic)
-        ylim <- range(aic[is.finite(aic)])
-        plot.lmSelect(object, main = main, sub = sub, xlab = xlab,
-                      ylab = ylab, type = type[1:2], lty = lty[1:2], pch = pch[1:2],
-                      col = col[1:2], bg = bg[1:2], ..., ylim2 = ylim, legend = NULL)
+        type.sum <- rep(type.sum, length = n)
+        lty.sum  <- rep(lty.sum , length = n)
+        pch.sum  <- rep(pch.sum , length = n)
+        col.sum  <- rep(col.sum , length = n)
+        bg.sum   <- rep(bg.sum  , length = n)
+
+        val <- c(object$val, object$summary$val)
+        ylim <- range(val[is.finite(val)])
+        plot.lmSelect(object, main = main, sub = sub, xlab = xlab, ylab = ylab,
+                      type = type, lty = lty, pch = pch, col = col, bg = bg,
+                      ..., ylim2 = ylim, legend = NULL)
 
         if (!is.null(legend)) {
-            legend("topleft", legend = legend, lty = lty,
-                   pch = pch, col = col, pt.bg = bg, bty = "n")
+            legend("topleft", legend = legend, lty = c(lty, lty.sum),
+                   pch = c(pch, pch.sum), col = c(col, col.sum),
+                   pt.bg = c(bg, bg.sum), bty = "n")
         }
 
-        y <- object$summary$aic
-        matplot(t(y), type = type[-(1:2)], lty = lty[-(1:2)], pch = pch[-(1:2)],
-                col = col[-(1:2)], bg = bg[-(1:2)], ..., add = TRUE)
+        y <- object$summary$val
+        matplot(t(y), type = type.sum, lty = lty.sum, pch = pch.sum,
+                col = col.sum, bg = bg.sum, ..., add = TRUE)
     }
 
     if (missing(legend)) legend <- c("Deviance (RSS)",
