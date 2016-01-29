@@ -236,7 +236,7 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
     if (is.null(pradius)) {
         pmin <- 8
     } else {
-        pmin <- size.max - size.min - pradius + 1
+        pmin <- size.max - size.min - pradius + 2
     }
 
     ## penalty

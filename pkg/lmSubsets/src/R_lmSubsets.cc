@@ -95,7 +95,7 @@ R_lmSubsets(const char* const* const algo, const int* const nobs,
   else if (std::strncmp(*algo, "xbba", 4) == 0)
     {
       xbba(*algo, *nobs, *size, *mark, *nbest, *pmin, v, xy,
-           *nobs, wIndex, wRss, wSubset, *info, *nodes);
+           *nobs, wIndex, wRss, wSubset, tau, *info, *nodes);
     }
   else
     {
@@ -219,7 +219,7 @@ R_lmSelect(const char* const* const algo, const int* const nobs,
   else if (std::strncmp(*algo, "xbba", 4) == 0)
     {
       xbba(*algo, *nobs, *size, *mark, *nbest, *pmin, v, xy,
-           *nobs, wIndex, wRss, wVal, wSubset, aic, *info, *nodes);
+           *nobs, wIndex, wRss, wVal, wSubset, aic, *tau, *info, *nodes);
     }
   else
     {

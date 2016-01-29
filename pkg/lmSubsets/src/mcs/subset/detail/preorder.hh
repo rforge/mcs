@@ -42,6 +42,7 @@ namespace detail {
     private:
 
       int pmin_;
+      int pmax_;
 
       mutable std::vector<Givens<TReal>> givens_;
       mutable std::vector<TReal>         bounds_;
@@ -50,7 +51,9 @@ namespace detail {
 
     public:
 
+      Full(int size);
       Full(int size, int pmin);
+      Full(int size, int pmin, int pmax);
 
       void
       apply(typename DcaState<TReal>::Node& in,
@@ -68,6 +71,7 @@ namespace detail {
     private:
 
       int pmin_;
+      int pmax_;
 
       mutable std::vector<Givens<TReal>> givens_;
       mutable std::vector<TReal>         bounds_;
@@ -75,7 +79,9 @@ namespace detail {
 
     public:
 
+      Single1(int size);
       Single1(int size, int pmin);
+      Single1(int size, int pmin, int pmax);
 
       void
       apply(typename DcaState<TReal>::Node& in,
@@ -93,6 +99,7 @@ namespace detail {
     private:
 
       int pmin_;
+      int pmax_;
 
       mutable std::vector<Givens<TReal>> givens_;
       mutable std::vector<TReal>         bounds_;
@@ -100,7 +107,9 @@ namespace detail {
 
     public:
 
+      Single2(int size);
       Single2(int size, int pmin);
+      Single2(int size, int pmin, int pmax);
 
       void
       apply(typename DcaState<TReal>::Node& in,

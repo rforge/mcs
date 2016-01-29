@@ -11,7 +11,7 @@
 #include "mcs/subset/detail/dca_table.hh"
 #include "mcs/subset/detail/dca_state.hh"
 
-#include "mcs/subset/detail/pbba.hh"
+#include "mcs/subset/detail/hpbba.hh"
 
 #include <cstring>
 
@@ -32,26 +32,28 @@ namespace subset {
        const int nbest, const int pmin, const int* const v,
        const TReal* const ay, const int lday, int* const sIndex,
        TReal* const sRss, TReal* const sVal, int* const sWhich,
-       const TCriterion<TReal>& crit, int& info, int& nodes)
+       const TCriterion<TReal>& crit, const TReal tau, int& info, int& nodes)
   {
     using namespace detail;
 
 
-    Preorder::Full<TReal> preo1(size, pmin);
+    Preorder::Full<TReal> preo1(size);
 
     DcaState<TReal>            state(m, size, mark, v, ay, lday, preo1);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss,
                                      sVal, sWhich, crit);
 
 
-    if (std::strcmp(algo, "xbba1")) {
-      Preorder::Single1<TReal> preo(size, pmin);
+    const int pmax = size - mark - 1;
 
-      nodes = pbba(state, table, crit, preo);
-    } else if (std::strcmp(algo, "xbba2")) {
-      Preorder::Single2<TReal> preo(size, pmin);
+    if (std::strcmp(algo, "xbba1") == 0) {
+      Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = pbba(state, table, crit, preo);
+      nodes = hpbba(state, table, crit, preo, tau);
+    } else if (std::strcmp(algo, "xbba2") == 0) {
+      Preorder::Single2<TReal> preo(size, pmin, pmax);
+
+      nodes = hpbba(state, table, crit, preo, tau);
     } else {
       info = -1;
     }
@@ -67,26 +69,29 @@ namespace subset {
   xbba(const char* const algo, const int size, const int mark, const int nbest,
        const int pmin, const int* const v, const TReal* const rz,
        const int ldrz, int* const sIndex, TReal* const sRss, TReal* const sVal,
-       int* const sWhich, const TCriterion<TReal>& crit, int& info, int& nodes)
+       int* const sWhich, const TCriterion<TReal>& crit, const TReal tau,
+       int& info, int& nodes)
   {
     using namespace detail;
 
 
-    Preorder::Full<TReal> preo1(size, pmin);
+    Preorder::Full<TReal> preo1(size);
 
     DcaState<TReal>            state(size, mark, v, rz, ldrz, preo1);
     DcaTable<TReal,TCriterion> table(size, nbest, sIndex, sRss,
                                      sVal, sWhich, crit);
 
 
-    if (std::strcmp(algo, "xbba1")) {
-      Preorder::Single1<TReal> preo(size, pmin);
+    const int pmax = size - mark - 1;
 
-      nodes = pbba(state, table, crit, preo);
-    } else if (std::strcmp(algo, "xbba2")) {
-      Preorder::Single2<TReal> preo(size, pmin);
+    if (std::strcmp(algo, "xbba1") == 0) {
+      Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = pbba(state, table, crit, preo);
+      nodes = hpbba(state, table, crit, preo, tau);
+    } else if (std::strcmp(algo, "xbba2") == 0) {
+      Preorder::Single2<TReal> preo(size, pmin, pmax);
+
+      nodes = hpbba(state, table, crit, preo, tau);
     } else {
       info = -1;
     }
@@ -98,25 +103,28 @@ namespace subset {
   xbba(const char* const algo, const int m, const int size, const int mark,
        const int nbest, const int pmin, const int* const v,
        const TReal* const ay, const int lday, int* const sIndex,
-       TReal* const sRss, int* const sWhich, int& info, int& nodes)
+       TReal* const sRss, int* const sWhich, const TReal* tau, int& info,
+       int& nodes)
   {
     using namespace detail;
 
 
-    Preorder::Full<TReal> preo1(size, pmin);
+    Preorder::Full<TReal> preo1(size);
 
     DcaState<TReal>                 state(m, size, mark, v, ay, lday, preo1);
     DcaTable<TReal, Criteria::None> table(size, nbest, sIndex, sRss, sWhich);
 
 
-    if (std::strcmp(algo, "xbba1")) {
-      Preorder::Single1<TReal> preo(size, pmin);
+    const int pmax = size - mark - 1;
 
-      nodes = pbba(state, table, preo);
-    } else if (std::strcmp(algo, "xbba2")) {
-      Preorder::Single2<TReal> preo(size, pmin);
+    if (std::strcmp(algo, "xbba1") == 0) {
+      Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = pbba(state, table, preo);
+      nodes = hpbba(state, table, preo, tau);
+    } else if (std::strcmp(algo, "xbba2") == 0) {
+      Preorder::Single2<TReal> preo(size, pmin, pmax);
+
+      nodes = hpbba(state, table, preo, tau);
     } else {
       info = -1;
     }
@@ -128,25 +136,27 @@ namespace subset {
   xbba(const char* const algo, const int size, const int mark, const int nbest,
        const int pmin, const int* const v, const TReal* const rz,
        const int ldrz, int* const sIndex, TReal* const sRss, int* const sWhich,
-       int& info, int& nodes)
+       const TReal* tau, int& info, int& nodes)
   {
     using namespace detail;
 
 
-    Preorder::Full<TReal> preo1(size, pmin);
+    Preorder::Full<TReal> preo1(size);
 
     DcaState<TReal>                 state(size, mark, v, rz, ldrz, preo1);
     DcaTable<TReal, Criteria::None> table(size, nbest, sIndex, sRss, sWhich);
 
 
-    if (std::strcmp(algo, "xbba1")) {
-      Preorder::Single1<TReal> preo(size, pmin);
+    const int pmax = size - mark - 1;
 
-      nodes = pbba(state, table, preo);
-    } else if (std::strcmp(algo, "xbba2")) {
-      Preorder::Single2<TReal> preo(size, pmin);
+    if (std::strcmp(algo, "xbba1") == 0) {
+      Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = pbba(state, table, preo);
+      nodes = hpbba(state, table, preo, tau);
+    } else if (std::strcmp(algo, "xbba2") == 0) {
+      Preorder::Single2<TReal> preo(size, pmin, pmax);
+
+      nodes = hpbba(state, table, preo, tau);
     } else {
       info = -1;
     }
