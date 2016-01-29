@@ -48,7 +48,7 @@ namespace detail {
     class TCriterion
   >
   TReal
-  DcaTable<TReal,TCriterion>::maxBound() const
+  DcaTable<TReal,TCriterion>::bestValue() const
   {
     const int index  = sIndex_[0];
 
@@ -125,7 +125,7 @@ namespace detail {
 
   template<typename TReal>
   TReal
-  DcaTable<TReal,Criteria::None>::maxBound(const int size) const
+  DcaTable<TReal,Criteria::None>::bestValue(const int size) const
   {
     const int offset = (size - 1) * nbest_;
     const int index  = sIndex_[offset];

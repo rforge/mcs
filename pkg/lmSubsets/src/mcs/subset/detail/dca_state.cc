@@ -254,7 +254,7 @@ namespace detail {
 
   template<typename TReal>
   TReal
-  DcaState<TReal>::minBound() const
+  DcaState<TReal>::lowerBound() const
   {
     return currentRss_;
   }
@@ -262,7 +262,7 @@ namespace detail {
 
   template<typename TReal>
   TReal
-  DcaState<TReal>::minBound(const int size, const TReal* const tau) const
+  DcaState<TReal>::lowerBound(const int size, const TReal* const tau) const
   {
     return tau[size - 1] * currentRss_;
   }
@@ -274,7 +274,7 @@ namespace detail {
     class TCriterion
   >
   TReal
-  DcaState<TReal>::minBound(const int size, const TCriterion<TReal>& crit) const
+  DcaState<TReal>::lowerBound(const int size, const TCriterion<TReal>& crit) const
   {
     return crit.value(size, currentRss_);
   }

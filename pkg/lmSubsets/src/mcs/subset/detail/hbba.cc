@@ -29,11 +29,11 @@ namespace detail {
         const int n = state.currentSize();
         const int k = state.currentMark();
 
-	const TReal max = table.maxBound();
+	const TReal best = table.bestValue();
 
 	for (int h = n - 1; h > k; --h)
 	  {
-	    if (tau * state.minBound(h, crit) < max)
+	    if (tau * state.lowerBound(h, crit) < best)
 	      {
 		for (int j = k; j < h; ++j)
 		  {
@@ -66,7 +66,7 @@ namespace detail {
 
 	for (int h = n - 1; h > k; --h)
 	  {
-	    if (state.minBound(h, tau) < table.maxBound(h))
+	    if (state.lowerBound(h, tau) < table.bestValue(h))
 	      {
 		for (int j = k; j < h; ++j)
 		  {

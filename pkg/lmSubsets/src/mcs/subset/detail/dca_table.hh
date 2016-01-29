@@ -39,7 +39,7 @@ namespace detail {
              int* sWhich, const TCriterion<TReal>& crit);
 
     TReal
-    maxBound() const;
+    bestValue() const;
 
     void
     addSubset(int size, TReal rss, const int* s);
@@ -70,7 +70,7 @@ namespace detail {
     DcaTable(int size, int nbest, int* sIndex, TReal* sRss, int* sWhich);
 
     TReal
-    maxBound(int size) const;
+    bestValue(int size) const;
 
     void
     addSubset(int size, TReal rss, const int* s);

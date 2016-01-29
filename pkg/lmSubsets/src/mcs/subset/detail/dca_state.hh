@@ -98,17 +98,17 @@ namespace detail {
     currentMark() const;
 
     TReal
-    minBound() const;
+    lowerBound() const;
 
     TReal
-    minBound(int size, const TReal* tau) const;
+    lowerBound(int size, const TReal* tau) const;
 
     template<
       template<typename R>
       class TCriterion
     >
     TReal
-    minBound(int mark, const TCriterion<TReal>& crit) const;
+    lowerBound(int mark, const TCriterion<TReal>& crit) const;
 
     template<
       template<typename R>
