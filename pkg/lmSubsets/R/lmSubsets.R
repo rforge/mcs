@@ -33,7 +33,8 @@
 ##   intercept - (logical)
 ##   include   - (integer[])
 ##   exclude   - (integer[])
-##   size      - (integer[])
+##   nmin      - (integer)
+##   nmax      - (integer)
 ##   tolerance - (numeric[])
 ##   nbest     - (integer)
 ##   df        - (integer[nbest,nvar])
@@ -52,9 +53,9 @@
 ##   'xbba.':  experimental PBBA
 ##
 lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
-                           include = NULL, exclude = NULL, size = NULL,
-                           tolerance = 0, pradius = NULL, nbest = 1, ...,
-                           .algo = "hpbba") {
+                           include = NULL, exclude = NULL, nmin = NULL,
+                           nmax = NULL, tolerance = 0, pradius = NULL,
+                           nbest = 1, ..., .algo = "hpbba") {
     ## model weights and offset
     if (is.null(w <- weights)) w <- rep(1, NROW(x))
     if (is.null(o <- offset)) o <- rep(0, NROW(x))
@@ -144,36 +145,25 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
     which <- setdiff(which, exclude)
 
     ## size
-    size.min <- length(include) + 1
-    size.max <- length(which)
-    if (is.null(size)) {
-        size <- size.min:size.max
-    } else {
-        size <- match(size, size.min:size.max)
-        size <- (size.min:size.max)[size]
-        if (any(is.na(size))) {
-            size <- na.omit(size)
-            warning ("invalid sizes selected in 'size'; fixing 'size': ",
-                     "c(", paste(size, collapse = ","), ")")
-        }
-    }
+    size <- length(which)
+    mark <- length(include)
+    nmin <- max(nmin, mark + 1)
+    nmax <- min(nmax, size)
 
     ## preordering radius
     ## TODO: validate
     if (is.null(pradius)) {
         pmin <- 8
     } else {
-        pmin <- size.max - size.min - pradius + 2
+        pmin <- size - mark - pradius + 1
     }
 
     ## tolerance
     ## TODO: validate
     tolerance <- rep(tolerance, length.out = nvar)
-    tolerance[-size] <- +Inf
+    tolerance[-(nmin:nmax)] <- +Inf
 
     ## call C
-    C_mark <- size.min - 1
-    C_size <- size.max
     C_v <- which - 1
     C_xy <- cbind(x[, which], y)
     C_tau <- tolerance + 1
@@ -187,8 +177,8 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
         algo    = as.character(.algo),
         nobs    = as.integer(nobs),
         nvar    = as.integer(nvar),
-        size    = as.integer(C_size),
-        mark    = as.integer(C_mark),
+        size    = as.integer(size),
+        mark    = as.integer(mark),
         nbest   = as.integer(nbest),
         pmin    = as.integer(pmin),
         v       = as.integer(C_v),
@@ -215,7 +205,8 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
                  intercept = has.intercept,
                  include   = include,
                  exclude   = exclude,
-                 size      = size,
+                 nmin      = nmin,
+                 nmax      = nmax,
                  tolerance = NULL,
                  nbest     = nbest,
                  df        = NULL,
@@ -368,17 +359,14 @@ print.lmSubsets <- function (x, ...) {
                        if (is.null(x$weights)) "No" else "Yes",
                        if (is.null(x$offset)) "No" else "Yes",
                        if (x$intercept) "Yes" else "No",
-                       paste(x.names[x$include], collapse = " "),
-                       paste(x.names[x$exclude], collapse = " "),
-                       paste(format(rbind(x$size, format(x$tolerance[x$size], nsmall = 2)))[1, ], collapse = "|"),
-                       paste(format(rbind(x$size, format(x$tolerance[x$size], nsmall = 2)))[2, ], collapse = "|"),
+                       format(x$nmin),
+                       format(x$nmax),
                        format(x$nbest)),
                      ncol = 1)
     colnames(val) <- ""
     rownames(val) <- paste("  ",
-                           c("N observations", "N regressors", "Weights", "Offset",
-                             "Intercept", "Include", "Exclude", "Subset sizes",
-                             "Tolerance", "N best"),
+                           c("N observations", "N regressors", "Weights",
+                             "Offset", "Intercept", "N min", "N max", "N best"),
                            ":")
     print(val, quote = FALSE)
 
@@ -386,10 +374,11 @@ print.lmSubsets <- function (x, ...) {
     ## fit
     catln()
     catln("Model fit (deviance):")
-    catln("  best x size")
-    rss <- x$rss[, x$size, drop = FALSE]
+    catln("  best x size (tolerance)")
+    rss <- x$rss[, x$nmin:x$nmax, drop = FALSE]
     fit <- ifelse(is.na(rss), "", format(rss, nsmall = 2))
     rownames(fit) <- paste("  ", rownames(fit))
+    colnames(fit) <- paste(colnames(fit), " (", x$tolerance[x$nmin:x$nmax], ")")
     print(fit, quote = FALSE)
 
 
@@ -398,6 +387,8 @@ print.lmSubsets <- function (x, ...) {
     catln("Which (size):")
     catln("  variable x best")
     which <- apply(x$which[, , , drop = FALSE], c(1, 2), format.which)
+    rownames(which)[x$include] <- paste("+", rownames(which)[x$include])
+    rownames(which)[x$exclude] <- paste("-", rownames(which)[x$exclude])
     rownames(which) <- paste("  ", rownames(which))
     print(which, quote = FALSE)
 
@@ -432,8 +423,9 @@ plot.lmSubsets <- function (x, ..., legend) {
         col  <- rep(col, length = 2)
         bg   <- rep(bg, length = 2)
 
-        x <- matrix(rep(object$size, each = object$nbest), nrow = object$nbest)
-        y <- object$rss[object$nbest:1, object$size, drop = FALSE]
+        x <- matrix(rep(object$nmin:object$nmax, each = object$nbest),
+                    nrow = object$nbest)
+        y <- object$rss[object$nbest:1, object$nmin:object$nmax, drop = FALSE]
 
         matplot(x = x, y = y, main = main, sub = sub, xlab = xlab, ylab = ylab,
                 type = type[2], lty = lty[2], pch = pch[2], col = col[2],

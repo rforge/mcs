@@ -145,7 +145,7 @@ print.summary.lmSubsets <- function (x, ...)
     catln()
     catln("Model fit (value):")
     catln("  best x size")
-    val <- x$summary$val[, x$size, drop = FALSE]
+    val <- x$summary$val[, x$nmin:x$nmax, drop = FALSE]
     fit <- ifelse(is.na(val), "", format(val, nsmall = 2))
     rownames(fit) <- paste("  ", rownames(fit))
     print(fit, quote = FALSE)
@@ -235,8 +235,10 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
         col.sum  <- rep(col.sum , length = 2)
         bg.sum   <- rep(bg.sum  , length = 2)
 
-        x <- matrix(rep(object$size, each = object$nbest), nrow = object$nbest)
-        y <- object$summary$val[object$nbest:1, object$size, drop = FALSE]
+        x <- matrix(rep(object$nmin:object$nmax, each = object$nbest),
+                    nrow = object$nbest)
+        y <- object$summary$val[object$nbest:1, object$nmin:object$nmax,
+                                drop = FALSE]
 
         par(mar = c(5, 4, 4, 4) + 0.1)
 
@@ -250,7 +252,7 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
                    pt.bg = c(bg[1], bg.sum[1]), bty = "n")
         }
 
-        xlim <- range(object$size)
+        xlim <- c(object$nmin, object$nmax)
         ylim <- range(y[is.finite(y)])
         plot.window(xlim = xlim, ylim = ylim)
 

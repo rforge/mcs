@@ -19,8 +19,8 @@ lmSubsets(formula, data, subset, weights, na.action,
 model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 lmSubsets.fit(x, y, weights = NULL, offset = NULL,
-include = NULL, exclude = NULL, size = NULL, tolerance = 0,
-pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
+include = NULL, exclude = NULL, nmin = NULL, nmax = NULL,
+tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
 }
 
 
@@ -30,7 +30,7 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
   \item{x, y}{The model matrix and response.}
   \item{include, exclude}{Index vectors designating variables that are
     forced in or out of the model, respectively.}
-  \item{size}{Vector of subset sizes.}
+  \item{nmin, nmax}{Minimum and maximum number of regressors.}
   \item{tolerance}{Vector of tolerances.}
   \item{pradius}{Preordering radius.}
   \item{nbest}{Number of best subsets.}
@@ -82,7 +82,7 @@ pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
     \code{FALSE} otherwise.}
   \item{include}{Included regressors.}
   \item{exclude}{Excluded regressors.}
-  \item{size}{Subset sizes.}
+  \item{nmin, nmax}{Minimum and maximum subset sizes.}
   \item{tolerance}{Tolerance vector.}
   \item{nbest}{Number of best subsets.}
   \item{df}{Degrees of freedom.}

@@ -62,7 +62,7 @@ lmSubsets.select(object, penalty = "BIC", ...)
     \code{FALSE} otherwise.}
   \item{include}{Included variables.}
   \item{exclude}{Excluded variables.}
-  \item{size}{Subset sizes.}
+  \item{nmin, nmax}{Minimum and maximum subset sizes.}
   \item{penalty}{Penalty per parameter.}
   \item{tolerance}{Heuristic tolerance.}
   \item{nbest}{Number of best subsets.}

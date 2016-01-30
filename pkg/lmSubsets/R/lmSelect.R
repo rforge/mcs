@@ -21,7 +21,7 @@
 ##
 lmSubsets.select <- function (object, penalty = "BIC", ...) {
     ## tolerance
-    tolerance <- object$tolerance[object$size]
+    tolerance <- object$tolerance[object$nmin:object$nmax]
     if (!all(tolerance[1] == tolerance)) {
         stop ("non-homogeneous tolerance")
     }
@@ -77,8 +77,6 @@ lmSubsets.select <- function (object, penalty = "BIC", ...) {
                  rep(pi[, 2]      , each  = object$nvar))
     object$which <- array(object$which[sel], dim = c(object$nvar, object$nbest),
                           dimnames = list(x.names, .cnames))
-    ## size
-    object$size <- NULL
 
     ## class
     class(object) <- "lmSelect"
@@ -113,7 +111,8 @@ lmSubsets.select <- function (object, penalty = "BIC", ...) {
 ##   intercept - (logical)
 ##   include   - (integer[])
 ##   exclude   - (integer[])
-##   size      - (integer[])
+##   nmin      - (integer)
+##   nmax      - (integer)
 ##   penalty   - (numeric)
 ##   tolerance - (numeric[])
 ##   nbest     - (integer)
@@ -227,16 +226,17 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
     which <- setdiff(which, exclude)
 
     ## size
-    size.min <- length(include) + 1
-    size.max <- length(which)
-    size <- size.min:size.max
+    size <- length(which)
+    mark <- length(include)
+    nmin <- mark + 1
+    nmax <- size
 
     ## preordering radius
     ## TODO: validate
     if (is.null(pradius)) {
         pmin <- 8
     } else {
-        pmin <- size.max - size.min - pradius + 2
+        pmin <- size - mark - pradius + 1
     }
 
     ## penalty
@@ -255,8 +255,6 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
     ## TODO: validate
 
     ## call C
-    C_mark <- size.min - 1
-    C_size <- size.max
     C_v <- which - 1
     C_xy <- cbind(x[, which], y)
     C_tau <- tolerance + 1
@@ -273,8 +271,8 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
         algo    = as.character(.algo),
         nobs    = as.integer(nobs),
         nvar    = as.integer(nvar),
-        size    = as.integer(C_size),
-        mark    = as.integer(C_mark),
+        size    = as.integer(size),
+        mark    = as.integer(mark),
         nbest   = as.integer(nbest),
         pmin    = as.integer(pmin),
         v       = as.integer(C_v),
@@ -302,7 +300,8 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
                  intercept = has.intercept,
                  include   = include,
                  exclude   = exclude,
-                 size      = size,
+                 nmin      = nmin,
+                 nmax      = nmax,
                  penalty   = penalty,
                  tolerance = NULL,
                  nbest     = nbest,
@@ -465,18 +464,17 @@ print.lmSelect <- function (x, ...)
                        if (is.null(x$weights)) "No" else "Yes",
                        if (is.null(x$offset)) "No" else "Yes",
                        if (x$intercept) "Yes" else "No",
-                       paste(x.names[x$include], collapse = " "),
-                       paste(x.names[x$exclude], collapse = " "),
-                       paste(x$size, collapse = " "),
+                       format(x$nmin),
+                       format(x$nmax),
                        paste(x$penalty, " (k = ", format(attr(x$penalty, "k"), nsmall = 2), ")"),
-                       format(x$tolerance, nsmall = 2),
+                       format(x$tolerance),
                        format(x$nbest)),
                      ncol = 1)
     colnames(val) <- ""
     rownames(val) <- paste("  ",
-                           c("N observations", "N regressors", "Weights", "Offset",
-                             "Intercept", "Include", "Exclude", "Subset sizes",
-                             "Value", "Tolerance", "N best"),
+                           c("N observations", "N regressors", "Weights",
+                             "Offset", "Intercept", "N min", "N max", "Value",
+                             "Tolerance", "N best"),
                            ":")
     print(val, quote = FALSE)
 
@@ -494,6 +492,8 @@ print.lmSelect <- function (x, ...)
     catln("Which:")
     which <- apply(x$which[, , drop = FALSE], 1, format.which)
     which <- matrix(which, dimnames = list(names(which), "best"))
+    rownames(which)[x$include] <- paste("+", rownames(which)[x$include])
+    rownames(which)[x$exclude] <- paste("-", rownames(which)[x$exclude])
     rownames(which) <- paste("  ", rownames(which))
     print(which, quote = FALSE)
 
