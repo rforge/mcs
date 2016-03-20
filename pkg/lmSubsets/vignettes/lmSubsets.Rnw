@@ -116,7 +116,8 @@ Network at \url{http://CRAN.R-project.org/package=lmSubsets}.
     \citep{subselect} based on \cite{DuarteSilva:2001}.
   \item Exhaustive search for generalized linear models: \pkg{bestglm} \citep{bestglm}.
   \item Approximate solutions via genetic algorithms for generalized linear models and beyond:
-     \pkg{glmulti} \citep{Calcagno+DeMazancourt:2010}, \pkg{kofnGA} \citep{Wolters:2015}.
+     \pkg{glmulti} \citep{Calcagno+DeMazancourt:2010}, \pkg{kofnGA} \citep{Wolters:2015},
+     \pkg{mogavs} \citep{Sinha+Malo+Kuosmanen:2015,mogavs}.
   \item Regularized estimation of parametric models with automatic variable selection:
     lasso or elastic net estimation for generalized linear models \citep{Friedman+Hastie+Tibshirani:2010},
     model-based boosting \citep{Buehlmann+Hothorn:2007,Hothorn+Buehlmann+Kneib:2010}.
