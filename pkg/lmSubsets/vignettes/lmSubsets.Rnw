@@ -10,12 +10,10 @@
 % vignette                                                           %
 %--------------------------------------------------------------------%
 %
-%% \VignetteIndexEntry{lmSubsets: Efficient Computation of Best-Subset
-%%   Linear Regressions in R}
-%% \VignetteKeywords{linear regression, model selection, variable
-%%   selection, best-subset regression, R}
-%% \VignettePackage{lmSubsets}
-%% \VignetteDepends{stats}
+% \VignetteIndexEntry{lmSubsets: Efficient Computation of Best-Subset Linear Regressions in R}
+% \VignetteKeywords{linear regression, model selection, variable selection, best-subset regression, R}
+% \VignettePackage{lmSubsets}
+% \VignetteDepends{stats,graphics}
 %
 %
 %--------------------------------------------------------------------%
