@@ -9,7 +9,7 @@
 \alias{plot.lmSelect}
 
 
-\title{All-Subsets Regression}
+\title{Best-Subsets Regression}
 
 
 \description{Best-subsets regression for ordinary linear models.}
@@ -31,8 +31,7 @@ lmSubsets.select(object, penalty = "BIC", ...)
   \item{formula, data, subset, weights, na.action, model, contrasts,
     offset}{Standard formula interface.}
   \item{x, y}{The model matrix and response.}
-  \item{include, exclude}{Index vectors designating variables that are
-    forced in or out of the model, respectively.}
+  \item{include, exclude}{Force regressors in or out.}
   \item{penalty}{Penalty per parameter (see \code{\link[stats]{AIC}}).}
   \item{tolerance}{Heuristic tolerance.}
   \item{pradius}{Preordering radius.}
@@ -44,7 +43,7 @@ lmSubsets.select(object, penalty = "BIC", ...)
 
 \details{
   The function \code{lmSelect} computes best-variable-subsets regression
-  for ordinary linear models: The \code{nbest} best subset models are
+  for ordinary linear models:  The \code{nbest} best subset models are
   computed according to an information criterion of the AIC family.
 
   See \code{\link{lmSubsets}} for further information.
@@ -99,19 +98,19 @@ data("AirPollution", package = "lmSubsets")
 #################
 
 ## canonical example: fit best subsets
-lmSel.AP <- lmSelect(mortality ~ ., data = AirPollution, nbest = 20)
+best.AirPoll <- lmSelect(mortality ~ ., data = AirPollution, nbest = 20)
 
 ## equivalent to:
 \dontrun{
-lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
-lmSel.AP <- lmSelect(lmSub.AP)
+all.AirPoll <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
+best.AirPoll <- lmSelect(all.AirPoll)
 }
 
 ## visualize RSS
-plot(lmSel.AP)
+plot(best.AirPoll)
 
 ## summarize
-summary(lmSel.AP)
+summary(best.AirPoll)
 }
 
 \keyword{regression}

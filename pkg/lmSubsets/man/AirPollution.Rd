@@ -66,15 +66,15 @@ data("AirPollution", package = "lmSubsets")
 for (i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 
 ## fit subsets
-lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution)
-plot(lmSub.AP)
+all.AirPoll <- lmSubsets(mortality ~ ., data = AirPollution)
+plot(all.AirPoll)
 
 ## summary with BIC
-summary(lmSub.AP, penalty = log(nrow(AirPollution)))
+summary(all.AirPoll, penalty = log(nrow(AirPollution)))
 
 ## refit best model
-lm6 <- refit(lmSub.AP, size = 6)
-summary(lm6)
+lm6.AirPoll <- refit(all.AirPoll, size = 6)
+summary(lm6.AirPoll)
 }
 
 

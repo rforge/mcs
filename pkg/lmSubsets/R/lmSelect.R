@@ -60,7 +60,7 @@ lmSubsets.select <- function (object, penalty = "BIC", ...) {
     pi <- pi[!nok          , , drop = FALSE]
     pi <- pi[1:object$nbest, , drop = FALSE]
 
-    x.names <- variable.names(object, .full = TRUE)
+    x.names <- variable.names(object)
     .cnames <- paste(1:object$nbest, ".", sep = "")
     ## df
     object$df <- array(object$df[pi], dim = object$nbest,
@@ -447,57 +447,52 @@ print.lmSelect <- function (x, ...)
     catln <- function (...) base::cat(..., "\n", sep = "")
     paste <- function (..., sep = "") base::paste(..., sep = sep)
 
-    x.names <- dimnames(x$which)[[1]]
-
-
     ## call
     catln()
     catln("Call:")
     catln("  ", deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
 
-
     ## arguments
     catln()
     cat("Arguments:")
-    val <- as.matrix(c(format(x$nobs),
-                       format(x$nvar),
-                       if (is.null(x$weights)) "No" else "Yes",
-                       if (is.null(x$offset)) "No" else "Yes",
-                       if (x$intercept) "Yes" else "No",
-                       format(x$nmin),
-                       format(x$nmax),
-                       paste(x$penalty, " (k = ", format(attr(x$penalty, "k"), nsmall = 2), ")"),
-                       format(x$tolerance),
-                       format(x$nbest)),
-                     ncol = 1)
-    colnames(val) <- ""
-    rownames(val) <- paste("  ",
-                           c("N observations", "N regressors", "Weights",
-                             "Offset", "Intercept", "N min", "N max", "Value",
-                             "Tolerance", "N best"),
-                           ":")
-    print(val, quote = FALSE)
-
+    output <- format(attr(x$penalty, "k"), nsmall = 2)
+    output <- paste(x$penalty, " (penalty = ", output, ")")
+    output <- c(format(x$nobs), format(x$nvar),
+                if (is.null(x$weights)) "No" else "Yes",
+                if (is.null(x$offset)) "No" else "Yes",
+                if (x$intercept) "Yes" else "No",
+                format(x$nmin), format(x$nmax),
+                output,
+                format(x$tolerance), format(x$nbest))
+    output <- as.matrix(output, ncol = 1)
+    colnames(output) <- ""
+    rownames(output) <- paste("  ", c("N observations", "N regressors", "Weights",
+                                      "Offset", "Intercept", "N min", "N max", "Value",
+                                      "Tolerance", "N best"), ":")
+    print(output, quote = FALSE)
 
     ## fit
     catln()
     catln("Model fit:")
-    fit <- format(rbind(x$df, x$rss, x$val), nsmall = 2)
-    rownames(fit) <- paste("  ", c("df", "Deviance", "Value"))
-    print(fit, quote = FALSE)
-
+    output <- rbind(x$df, x$rss, x$val)
+    star <- apply(output[-1, ], 1, which.min)
+    star <- cbind(2:nrow(output), star)
+    output <- format(output, nsmall = 2)
+    output[star] <- paste(output[star], "*", sep = "")
+    rownames(output) <- paste("  ", c("df", "Deviance", "VALUE"))
+    print(output, quote = FALSE)
 
     ## which
     catln()
     catln("Which:")
-    which <- apply(x$which[, , drop = FALSE], 1, format.which)
-    which <- matrix(which, dimnames = list(names(which), "best"))
-    rownames(which)[x$include] <- paste("+", rownames(which)[x$include])
-    rownames(which)[x$exclude] <- paste("-", rownames(which)[x$exclude])
-    rownames(which) <- paste("  ", rownames(which))
-    print(which, quote = FALSE)
+    output <- apply(x$which[, , drop = FALSE], 1, format.which)
+    output <- matrix(output, dimnames = list(names(output), "best"))
+    rownames(output)[x$include] <- paste("+", rownames(output)[x$include])
+    rownames(output)[x$exclude] <- paste("-", rownames(output)[x$exclude])
+    rownames(output) <- paste("  ", rownames(output))
+    print(output, quote = FALSE)
 
-
+    ## pad
     catln()
 
     ## done
@@ -521,10 +516,11 @@ print.lmSelect <- function (x, ...)
 ##
 plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
                            legend) {
-    localPlot <- function (object, main, sub = NULL, xlab, ylab, type = "o",
+    localPlot <- function (object, main, sub, xlab, ylab, type = "o",
                            lty = c(3, 1), pch = c(21, 16), col = "black",
                            bg = "white", ...) {
         if (missing(main)) main <- "Best subsets"
+        if (missing(sub))  sub  <- paste("nbest =", object$nbest, sep = " ")
         if (missing(xlab)) xlab <- "Best subset"
         if (missing(ylab)) ylab <- c("Deviance", "Value")
 
@@ -562,14 +558,16 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
               bg = bg[2], ...)
     }
 
-    if (inherits(x, "summary.lmSelect")) {
-        if (missing(legend)) legend <- c("Deviance (RSS)", paste("Value (", x$penalty, ")", sep = ""))
-
-        localPlot(x, ...)
-    } else {
-        plot(summary(x, ...))
+    ## default legend
+    if (missing(legend)) {
+        legend <- paste("Value (", x$penalty, ")", sep = "")
+        legend <- c("Deviance (RSS)", legend)
     }
 
+    ## plot
+    localPlot(x, ...)
+
+    ## done
     invisible(x)
 }
 
@@ -584,18 +582,20 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
 ##
 ## Args:
 ##   object - (lmSelect)
-##   best   - (integer)
+##   best   - (integer[])
 ##   ...    - ignored
+##   drop   - (logical)
 ##
 ## Rval:  (character[])
 ##   variable names
 ##
-variable.names.lmSelect <- function (object, best = 1, ...) {
+variable.names.lmSelect <- function (object, best = 1, ..., drop = TRUE) {
     ## full model
     x.names <- dimnames(object$which)[[1]]
 
-    ## subset model
-    x.names[object$which[, best]]
+    ## submodel
+    which <- object$which[, best]
+    x.names[which]
 }
 
 
@@ -667,6 +667,35 @@ model.frame.lmSelect <- function(formula, best, ...)
 }
 
 
+## extract model matrix
+##
+## Args:
+##   object - (lmSelect)
+##   best   - (integer)
+##   ...    - ignored
+##
+## Rval:  (numeric[,])
+##
+model.matrix.lmSelect <- function (object, best, ...) {
+    ## full model
+    x <- object[["x"]]
+    if (is.null(x)) {
+        data <- model.frame(object)
+        x <- model.matrix.default(object, data = data,
+                                  contrasts.arg = object$contrasts)
+    }
+
+    ## 'best' processing
+    if (missing(best)) {
+        return (x)
+    }
+
+    ## submodel
+    which <- object$which[, best]
+    x[, which]
+}
+
+
 ## extract model response
 ##
 ## Args:
@@ -682,33 +711,8 @@ model.response.lmSelect <- function (data, ...) {
         y <- model.response(mf)
     }
 
+    ## done
     y
-}
-
-
-## extract model matrix
-##
-## Args:
-##   object - (lmSelect)
-##   best   - (integer)
-##   ...    - ignored
-##
-## Rval:  (matrix)
-##
-model.matrix.lmSelect <- function (object, best, ...) {
-    ## full model
-    x <- object[["x"]]
-    if (is.null(x)) {
-        data <- model.frame(object)
-        x <- model.matrix.default(object, data = data, contrasts.arg = object$contrasts)
-    }
-
-    if (missing(best)) {
-        return (x)
-    }
-
-    ## subset model
-    x[, object$which[, best]]
 }
 
 
@@ -728,87 +732,14 @@ refit.lmSelect <- function (object, best = 1, ...) {
 }
 
 
-## extract ceofficients
-##
-## Args:
-##   object - (lmSelect)
-##   best   - (integer)
-##   ...    - ignored
-##
-## Rval:  (numeric[])
-##
-## Note: 'refit'
-##   This method refits the 'lmSelect' object and calls 'coef' on the
-##   obtained 'lm' object.  In some circumstances it might be more
-##   efficient to call 'refit' directly and execute 'coef' on the
-##   obtained 'lm' object.
-##
-coef.lmSelect <- function (object, best = 1, ...) {
-    coef(refit(object, best = best, model = FALSE))
-}
-
-
-## extract variance-covariance matrix
-##
-## Args:
-##   object - (lmSelect)
-##   best   - (integer)
-##   ...    - ignored
-##
-## Rval:  (matrix)
-##
-## Note: 'refit'
-##   See 'coef.lmSelect'.
-##
-vcov.lmSelect <- function (object, best = 1, ...) {
-    vcov(refit(object, best = best, model = FALSE))
-}
-
-
-## extract fitted values
-##
-## Args:
-##   object - (lmSelect)
-##   best   - (integer)
-##   ...    - ignored
-##
-## Rval:  (numeric[])
-##
-## Note: 'refit'
-##   See 'coef.lmSelect'.
-##
-fitted.lmSelect <- function (object, best = 1, ...) {
-  fitted(refit(object, best = best, model = FALSE))
-}
-
-
-## extract residuals
-##
-## Args:
-##   object - (lmSelect)
-##   best   - (integer)
-##   ...    - ignored
-##
-## Rval:  (numeric[])
-##
-## Note: 'refit'
-##   See 'coef.lmSelect'.
-##
-residuals.lmSelect <- function (object, best = 1, ...) {
-  residuals(refit(object, best = best, model = FALSE))
-}
-
-
 ## extract deviance
 ##
 ## Args:
-##   object        - (lmSelect)
-##   best          - (integer[])
-##   ...           - ignored
+##   object - (lmSelect)
+##   best   - (integer[])
+##   ...    - ignored
 ##
 ## Rval:  (numeric[])
-##
-## Returns the RSS for the specified subset(s).
 ##
 deviance.lmSelect <- function (object, best = 1, ...) {
     ## extract RSS
@@ -822,13 +753,11 @@ deviance.lmSelect <- function (object, best = 1, ...) {
 ##   object - (lmSelect)
 ##   best   - (integer[])
 ##   ...    - ignored
+##   drop   - (logical)
 ##
-## Rval: (logLik)
+## Rval: (numeric[])
 ##
-## Note:
-##   Can handle multiple objects.
-##
-logLik.lmSelect <- function (object, best = 1, ...) {
+logLik.lmSelect <- function (object, best = 1, ..., drop = TRUE) {
     ## weights
     N <- object$nobs
     if (is.null(w <- object$weights)) {
@@ -840,11 +769,16 @@ logLik.lmSelect <- function (object, best = 1, ...) {
     ## extract rss
     rss <- deviance(object, best = best)
 
+    ## extract df
+    df <- object$df[best]
+
+    ## compute log-likelihoods
+    ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(rss)))
+    ans <- structure(ll, df = object$df[best], nobs = N)
+    if (drop) class(ans) <- "logLik"
+
     ## done
-    structure(0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(rss))),
-              df       = object$df[best]                           ,
-              nobs     = N                                         ,
-              class    = "logLik"                                  )
+    ans
 }
 
 
@@ -854,23 +788,25 @@ logLik.lmSelect <- function (object, best = 1, ...) {
 ##   object - (lmSelect)
 ##   best   - (integer[])
 ##   ...    - ignored
-##   k      - (numeric)
+##   k      - (numeric) penalty
+##   drop   - (logical)
 ##
-## Rval: (numeric|data.frame)
+## Rval: (numeric[])
 ##
-AIC.lmSelect <- function (object, best = 1, ..., k = 2) {
+AIC.lmSelect <- function (object, best = 1, ..., k = 2, drop = TRUE) {
     ## extract log-likelihoods
     ll <- logLik(object, best = best)
+
     ## compute AICs
-    aic <- AIC(ll, k = k)
+    ans <- -2 * as.numeric(ll) + k * attr(ll, "df")
+
     ## data frame?
-    if (length(aic) > 1) {
-        aic <- data.frame(df  = attr(ll, "df"),
-                          AIC = aic           )
+    if (drop && (length(ans) > 1)) {
+        ans <- data.frame(df = attr(ll, "df"), AIC = ans)
     }
 
     ## done
-    aic
+    ans
 }
 
 
@@ -880,20 +816,121 @@ AIC.lmSelect <- function (object, best = 1, ..., k = 2) {
 ##   object - (lmSelect)
 ##   best   - (integer[])
 ##   ...    - ignored
+##   drop   - (logical)
 ##
-## Rval: (numeric|data.frame)
+## Rval: (numeric[])
 ##
-BIC.lmSelect <- function (object, best = 1, ...) {
+BIC.lmSelect <- function (object, best = 1, ..., drop = TRUE) {
     ## extract log-likelihoods
     ll <- logLik(object, best = best)
+
     ## compute BICs
-    bic <- BIC(ll)
+    k <- log(attr(ll, "nobs"))
+    ans <- -2 * as.numeric(ll) + k * attr(ll, "df")
+
     ## data frame?
-    if (length(bic) > 1) {
-        bic <- data.frame(df  = attr(ll, "df"),
-                          BIC = bic           )
+    if (drop && (length(ans) > 1)) {
+        ans <- data.frame(df = attr(ll, "df"), BIC = ans)
     }
 
     ## done
-    bic
+    ans
+}
+
+
+## extract ceofficients
+##
+## Args:
+##   object - (lmSelect)
+##   best   - (integer)
+##   ...    - ignored
+##
+## Rval:  (numeric[])
+##
+coef.lmSelect <- function (object, best = 1, ...) {
+    ## extract submodel
+    x <- model.matrix(object, best = best)
+    y <- model.response(object)
+
+    ## solve
+    ans <- qr.solve(x, y)
+
+    ## names
+    x.names <- variable.names(object, best = best)
+    names(ans) <- x.names
+
+    ## done
+    ans
+}
+
+
+## extract variance-covariance matrix
+##
+## Args:
+##   object - (lmSelect)
+##   best   - (integer)
+##   ...    - ignored
+##
+## Rval:  (numeric[,])
+##
+vcov.lmSelect <- function (object, best = 1, ...) {
+    ## extract submodel
+    x <- model.matrix(object, best = best)
+    y <- model.response(object)
+
+    ## compute 'vcov'
+    qr <- qr(cbind(x, y))
+    size <- object$df[best] - 1
+    r <- qr$qr[1:size, 1:size, drop = FALSE]
+    rdf <- object$nobs - size
+    rss <- object$rss[best]
+    sigma2 <- rss/rdf
+    ans <- chol2inv(r) * sigma2
+
+    ## names
+    x.names <- variable.names(object, best = best)
+    dimnames(ans) <- list(x.names, x.names)
+
+    ## done
+    ans
+}
+
+
+## extract fitted values
+##
+## Args:
+##   object - (lmSelect)
+##   best   - (integer)
+##   ...    - ignored
+##
+## Rval:  (numeric[])
+##
+fitted.lmSelect <- function (object, best = 1, ...) {
+    ## extract submodel
+    x <- model.matrix(object, best = best)
+    y <- model.response(object)
+
+    ## fit
+    qr <- qr(x)
+    qr.fitted(qr, y)
+}
+
+
+## extract residuals
+##
+## Args:
+##   object - (lmSelect)
+##   best   - (integer)
+##   ...    - ignored
+##
+## Rval:  (numeric[])
+##
+residuals.lmSelect <- function (object, best = 1, ...) {
+    ## extract submodel
+    x <- model.matrix(object, best = best)
+    y <- model.response(object)
+
+    ## fit
+    qr.x <- qr(x)
+    qr.resid(qr.x, y)
 }

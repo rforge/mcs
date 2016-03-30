@@ -28,8 +28,7 @@ tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
   \item{formula, data, subset, weights, na.action, model, contrasts,
     offset}{Standard formula interface.}
   \item{x, y}{The model matrix and response.}
-  \item{include, exclude}{Index vectors designating variables that are
-    forced in or out of the model, respectively.}
+  \item{include, exclude}{Force regressors in or out.}
   \item{nmin, nmax}{Minimum and maximum number of regressors.}
   \item{tolerance}{Vector of tolerances.}
   \item{pradius}{Preordering radius.}
@@ -51,10 +50,10 @@ tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
   The method computes the \code{nbest} best subset models for every
   subset size, where the "best" models are the models with the lowest
   residual sum of squares (RSS).  The scope of the search can be limited
-  to certain subset sizes by setting \code{size}.  A tolerance vector
-  (expanded if necessary) may be specified to speed up the algorithm,
-  where \code{tolerance[n]} is the tolerance applied to subset models of
-  size \code{n}.
+  to certain subset sizes by setting \code{nmin} and \code{nmax}.  A
+  tolerance vector (expanded if necessary) may be specified to speed up
+  the algorithm, where \code{tolerance[n]} is the tolerance applied to
+  subset models of size \code{n}.
 
   By way of \code{include} and \code{exclude}, variables may be forced
   into or out of the regression, respectively.
@@ -116,19 +115,19 @@ data("AirPollution", package = "lmSubsets")
 ## basic usage ##
 #################
 
-## canonical example: fit best subsets
-lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
+## canonical example: fit all subsets
+all.AirPoll <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## visualize RSS
-plot(lmSub.AP)
+plot(all.AirPoll)
 
 ## summarize
-summary(lmSub.AP)
+summary(all.AirPoll)
 
 ## forced inclusion/exclusion of variables
-lmSub.AP.2 <- lmSubsets(lmSub.AP, include = "noncauc",
-                        exclude = "whitecollar")
-summary(lmSub.AP.2)
+all_2.AirPoll <- lmSubsets(all.AirPoll, include = "noncauc",
+                                        exclude = "whitecollar")
+summary(all_2.AirPoll)
 }
 
 

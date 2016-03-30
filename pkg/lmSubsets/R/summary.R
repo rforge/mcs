@@ -119,38 +119,45 @@ summary.lmSelect <- function (object, penalty = "AIC", ...) {
 ##
 ## Rval: (summary.lmSubsets) invisible
 ##
-print.summary.lmSubsets <- function (x, ...)
-{
+print.summary.lmSubsets <- function (x, ...) {
     catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
     paste <- function (..., sep = "") base::paste(..., sep = sep)
-
 
     ## call
     catln()
     catln("Call:")
     catln(deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
 
-
-    ## arguments
+    ## summary
     catln()
-    cat("Arguments:")
-    val <- as.matrix(c(paste(x$summary$penalty, " (k = ", format(attr(x$summary$penalty, "k"), nsmall = 2), ")")),
-                     ncol = 1)
-    colnames(val) <- ""
-    rownames(val) <- paste("  ", c("Value"), ":")
-    print(val, quote = FALSE)
-
+    cat("Summary:")
+    output <- format(attr(x$summary$penalty, "k"), nsmall = 2)
+    output <- paste(x$summary$penalty, " (penalty = ", output, ")")
+    output <- as.matrix(output, ncol = 1)
+    colnames(output) <- ""
+    rownames(output) <- "  Value:"
+    print(output, quote = FALSE)
 
     ## fit
     catln()
-    catln("Model fit (value):")
+    catln("Model fit:")
     catln("  best x size")
-    val <- x$summary$val[, x$nmin:x$nmax, drop = FALSE]
-    fit <- ifelse(is.na(val), "", format(val, nsmall = 2))
-    rownames(fit) <- paste("  ", rownames(fit))
-    print(fit, quote = FALSE)
+    catln("    DEVIANCE")
+    catln("    Summary")
+    output <- x$rss[, x$nmin:x$nmax, drop = FALSE]
+    output <- rbind(output, x$summary$val[, x$nmin:x$nmax, drop = FALSE])
+    output <- output[order(c(1:x$nbest, 1:x$nbest)), ]
+    row.dev <- seq(1, by = 2, length.out = x$nbest)
+    row.sum <- seq(2, by = 2, length.out = x$nbest)
+    star <- apply(output[row.sum, , drop = FALSE], 1, which.min)
+    star <- cbind(row.sum, star)
+    output <- ifelse(is.na(output), "", format(output, nsmall = 2))
+    output[star] <- paste(output[star], "*", sep = "")
+    rownames(output)[row.dev] <- paste("  ", rownames(output)[row.dev])
+    rownames(output)[row.sum] <- rep("", x$nbest)
+    print(output, quote = FALSE)
 
-
+    ## pad
     catln()
 
     ## done
@@ -172,31 +179,36 @@ print.summary.lmSelect <- function (x, ...)
     catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
     paste <- function (..., sep = "") base::paste(..., sep = sep)
 
+    N <- length(x$summary$penalty)
 
     ## call
     catln()
     catln("Call:")
     catln("  ", deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
 
-
-    ## arguments
+    ## summary
     catln()
-    cat("Arguments:")
-    val <- as.matrix(c(paste(x$summary$penalty, paste("(k = ", format(attr(x$summary$penalty, "k"), nsmall = 2), ")"), sep = " ", collapse = ", ")),
-                     ncol = 1)
-    colnames(val) <- ""
-    rownames(val) <- paste("  ", c("Value"), ":")
-    print(val, quote = FALSE)
-
+    cat("Summary:")
+    output <- format(attr(x$summary$penalty, "k"), nsmall = 2)
+    output <- paste("(penalty = ", output, ")")
+    output <- paste(x$summary$penalty, output, sep = " ")
+    output <- as.matrix(output, ncol = 1)
+    colnames(output) <- ""
+    rownames(output) <- c("  Value:", rep("", N - 1))
+    print(output, quote = FALSE)
 
     ## fit
     catln()
     catln("Model fit:")
-    fit <- format(rbind(x$df, x$rss, x$summary$val), nsmall = 2)
-    rownames(fit) <- paste("  ", c("df", "Deviance", "Value", rep("", length(x$summary$penalty) - 1)))
-    print(fit, quote = FALSE)
+    output <- rbind(x$df, x$rss, x$val, x$summary$val)
+    star <- apply(output[-1, ], 1, which.min)
+    star <- cbind(2:nrow(output), star)
+    output <- format(output, nsmall = 2)
+    output[star] <- paste(output[star], "*", sep = "")
+    rownames(output) <- paste("  ", c("df", "Deviance", "VALUE", "Summary", rep("", N - 1)))
+    print(output, quote = FALSE)
 
-
+    ## pad
     catln()
 
     ## done
@@ -220,7 +232,7 @@ print.summary.lmSelect <- function (x, ...)
 ## Rval: (summary.lmSubsets) invisible
 ##
 plot.summary.lmSubsets <- function (x, ..., legend) {
-    localPlot <- function (object, main, sub = NULL, xlab, ylab,
+    localPlot <- function (object, main, sub, xlab, ylab,
                            type.sum = "o", lty.sum = c(1, 3),
                            pch.sum = c(16, 21), col.sum = "red",
                            bg.sum = "white", type = "o", lty = c(1, 3),
@@ -242,7 +254,7 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
 
         par(mar = c(5, 4, 4, 4) + 0.1)
 
-        plot.lmSubsets(object, main = main, sub = sub, xlab = xlab, ylab = ylab,
+        plot.lmSubsets(object, main = main, sub = sub, xlab = xlab, ylab = ylab[1],
                        type = type, lty = lty, pch = pch,
                        col = col, bg = bg, ..., legend = NULL)
 
@@ -266,10 +278,19 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
               pch = pch.sum[1], col = col.sum[1], bg = bg.sum[1], ...)
     }
 
-    if (missing(legend)) legend <- c("Deviance (RSS)", paste("Value (", x$summary$penalty, ")", sep = ""))
+    ## default legend
+    if (missing(legend)) {
+        legend <- attr(x$summary$penalty, "k")
+        legend <- format(legend, nsmall = 2)
+        legend <- paste("Summary (", x$summary$penalty, ", penalty = ",
+                        legend, ")", sep = "")
+        legend <- c("Deviance (RSS)", legend)
+    }
 
+    ## plot
     localPlot(x, ...)
 
+    ## done
     invisible(x)
 }
 
@@ -286,7 +307,7 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
 ## All arguments are passed to 'plot.default'.
 ##
 plot.summary.lmSelect <- function (x, ..., legend) {
-    localPlot <- function (object, main, sub = NULL, xlab, ylab, type.sum = "o",
+    localPlot <- function (object, main, sub, xlab, ylab, type.sum = "o",
                            lty.sum = 1, pch.sum = 21, col.sum, bg.sum = "white",
                            type = c("o", "o"), lty = c(3, 1), pch = c(21, 16),
                            col = c("black", "black"), bg = c("white", "white"),
@@ -324,11 +345,20 @@ plot.summary.lmSelect <- function (x, ..., legend) {
                 col = col.sum, bg = bg.sum, ..., add = TRUE)
     }
 
-    if (missing(legend)) legend <- c("Deviance (RSS)",
-                                     paste("Value (", x$penalty, ", k = ", format(attr(x$penalty, "k"), nsmall = 2), ")", sep = ""),
-                                     paste("Value (", x$summary$penalty, ", k = ", format(attr(x$summary$penalty, "k"), nsmall = 2), ")", sep = ""))
+    ## default legend
+    if (missing(legend)) {
+        legend.2 <- format(attr(x$penalty, "k"), nsmall = 2)
+        legend.2 <- paste("Value (", x$penalty, ", penalty = ",
+                          legend.2, ")", sep = "")
+        legend.3 <- format(attr(x$summary$penalty, "k"), nsmall = 2)
+        legend.3 <- paste("Summary (", x$summary$penalty, ", penalty = ",
+                          legend.3, ")", sep = "")
+        legend <- c("Deviance (RSS)", legend.2, legend.3)
+    }
 
+    ## plot
     localPlot(x, ...)
 
+    ## done
     invisible(x)
 }

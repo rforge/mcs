@@ -1,7 +1,7 @@
 Package: lmSubsets
 Version: 0.1-0
 Date: 2016-02-25
-Title: Variable Subset Selection in Linear Regression
+Title: Exact linear subset regression
 Authors@R: c(person(given = "Marc", family = "Hofmann",
                     role  = c("aut", "cre"),
                     email = "marc.hofmann@gmail.com"),
@@ -14,11 +14,11 @@ Authors@R: c(person(given = "Marc", family = "Hofmann",
              person(given = "Achim", family = "Zeileis",
                     role = "aut",
                     email = "Achim.Zeileis@R-project.org"))
-Description: Variable subset selection in linear regression models.
+Description: Efficient algorithms for computing exact
+  variable-subset regression models.
 Depends: R (>= 3.0.0)
 Imports: stats, graphics
 License: GPL-2 | GPL-3
 SystemRequirements: C++11
 URL: TODO: MCS homepage?
 Acknowledgements: TODO: Dietmar, Manfred, ...
-Projects: TODO: SNF, Geneva, Basel, ...

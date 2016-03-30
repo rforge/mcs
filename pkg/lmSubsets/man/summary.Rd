@@ -35,8 +35,9 @@
 
 
 \details{
-  The \code{summary} method for \code{lmSubsets} and \code{lmSelect}
-  objects computes the AIC given the desired \code{penalty}.
+  The \code{summary} methods for \code{lmSubsets} and \code{lmSelect}
+  objects evaluate the AIC given the desired \code{penalty} for all
+  computed submodels.
 }
 
 
@@ -54,16 +55,16 @@
 data("AirPollution", package = "lmSubsets")
 
 ## fit all subsets
-lmSub.AP <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
+all.AirPoll <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## summarize (AIC)
-summary(lmSub.AP, penalty = "AIC")
+summary(all.AirPoll, penalty = "AIC")
 
 ## fit best subsets (BIC)
-lmSel.AP <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
+best.AirPoll <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
 
 ## summarize
-summary(lmSel.AP, penalty = list("AIC", 3, 4, 5))
+summary(best.AirPoll, penalty = list("AIC", 3, "BIC", 5))
 }
 
 \keyword{regression}

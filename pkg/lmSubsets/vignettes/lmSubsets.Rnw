@@ -1,171 +1,238 @@
-%==========%
-% PREAMBLE %
-%==========%
-
+%
+%====================================================================%
+% PREAMBLE                                                           %
+%====================================================================%
+%
 \documentclass[nojss]{jss}
-
-
-%----------%
-% vignette %
-%----------%
-
-%\VignetteIndexEntry{lmSubsets: Efficient Computation of Best Subset Linear Regressions in R}
-%\VignetteKeywords{linear regression, model selection, variable selection, best subset regression, R}
-%\VignettePackage{lmSubsets}
-%\VignetteDepends{stats}
-
-
-%----------------%
-% Sweave options %
-%----------------%
-
-% pdflatex:  set 'eps=FALSE'
+%
+%
+%--------------------------------------------------------------------%
+% vignette                                                           %
+%--------------------------------------------------------------------%
+%
+%% \VignetteIndexEntry{lmSubsets: Efficient Computation of Best-Subset
+%%   Linear Regressions in R}
+%% \VignetteKeywords{linear regression, model selection, variable
+%%   selection, best-subset regression, R}
+%% \VignettePackage{lmSubsets}
+%% \VignetteDepends{stats}
+%
+%
+%--------------------------------------------------------------------%
+% Sweave options                                                     %
+%--------------------------------------------------------------------%
+%
+%% pdflatex:  set 'eps=FALSE'
 \SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
-
-% DON'T REMOVE: directive
-% need no \usepackage{Sweave}
-
-
-%----------%
-% packages %
-%----------%
-
+%
+%
+%--------------------------------------------------------------------%
+% packages                                                           %
+%--------------------------------------------------------------------%
+%
+\usepackage{pdfcomment}
+%
 \usepackage{amsmath,amssymb}
 \usepackage{pstricks,pst-tree}
-\usepackage{algorithm,algpseudocode}
-
-% pdflatex:  use package 'auto-pst-pdf'
 \usepackage{auto-pst-pdf}
-
-
-
-%----------%
-% commands %
-%----------%
-
+\usepackage{listings}
+\usepackage{alltt}
+%
+%
+%--------------------------------------------------------------------%
+% commands                                                           %
+%--------------------------------------------------------------------%
+%
 \newcommand{\Rset}{\mathbb{R}}
 \newcommand{\rss}{\text{RSS}}
 \DeclareMathOperator*{\argmin}{argmin}
 \newcommand{\card}[1]{\lvert{#1}\rvert}
-
+\newcommand{\SSS}{\code{S}3}
+\newcommand{\R}{\proglang{R}}
 \newcommand{\squote}[1]{`{#1}'}
 \newcommand{\dquote}[1]{``{#1}''}
-\newcommand{\fct}[1]{{\texttt{#1()}\index{#1@\texttt{#1()}}}}
-\newcommand{\class}[1]{\dquote{\texttt{#1}}}
-
-
-%--------------%
-% front matter %
-%--------------%
-
-\author{Marc Hofmann\\Universit{\'e} de Neuch{\^a}tel
-  \And Cristian Gatu\\Universit{\'e} de Neuch{\^a}tel
-  \AND Erricos J. Kontoghiorghes\\Birbeck College
-  \And Achim Zeileis\\Universit\"at Innsbruck}
-\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis}
-
-\title{\pkg{lmSubsets}: Efficient Computation of Best Subset Linear Regressions in \proglang{R}}
-\Plaintitle{lmSubsets: Efficient Computation of Best Subset Linear Regressions in R}
-
+\newcommand{\fct}[1]{{\code{#1()}\index{#1@\texttt{#1()}}}}
+\newcommand{\class}[1]{\dquote{\code{#1}}}
+%
+\newcommand{\TODO}[1]{\texttt{TODO: #1}}
+%
+%
+%--------------------------------------------------------------------%
+% front matter                                                       %
+%--------------------------------------------------------------------%
+%
+\author{%
+  Marc Hofmann\\\TODO{affiliation}
+  \And Cristian Gatu\\\TODO{affiliation}
+  \And Erricos J. Kontoghiorghes\\Birbeck College
+  \AND Achim Zeileis\\Universit\"at Innsbruck
+  \And Ana Colubi\\University of Oviedo}
+\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes,
+  Achim Zeileis, Ana Colubi}
+%
+\title{\pkg{lmSubsets}: Efficient computation of variable-subsets linear
+  regression in \R{}}
+\Plaintitle{lmSubsets: Efficient computation of variable-subsets linear
+  regression in R}
+%
 \Abstract{ 
-  todo
+  \TODO{write abstract}
 }
-
-\Keywords{linear regression, model selection, variable selection, best subset regression, \proglang{R}}
-\Plainkeywords{linear regression, model selection, variable selection, best subset regression, R}
-
- 
+%
+\Keywords{linear regression, model selection, variable selection, best
+  subset regression, \R{}}
+\Plainkeywords{linear regression, model selection, variable selection,
+  best subset regression, R}
+%
 \Address{
   Marc Hofmann\\
-  Wirtschaftswissenschaftliche Fakult\"at\\
-  Abteilung Quantitative Methoden\\
-  Computational Management Science\\
-  Universit\"at Basel\\
-  Peter Merian-Weg 6\\
-  4002 Basel, Switzerland
+  \TODO{address}
 }
-
-
-%==========%
-% DOCUMENT %
-%==========%
-
+%
+%
+%====================================================================%
+% DOCUMENT                                                           %
+%====================================================================%
+%
 \begin{document}
-
+%
 <<preliminaries, echo=FALSE, results=hide>>=
 options(width = 70, prompt = "R> ", continue = "+  ")
 library("lmSubsets")
 @
-
+%
+%
+%--------------------------------------------------------------------%
+% section:  Introduction                                             %
+%--------------------------------------------------------------------%
+%
 \section{Introduction}
 \label{sec:intro}
-
-The \pkg{lmSubsets} package for exact, best variable-subset regression
-implements the algorithms presented by
-\cite{Gatu+Kontoghiorghes:2006} and
-\cite{Hofmann+Gatu+Kontoghiorghes:2007}.  Computationally intensive core
-code is written in \proglang{C++}.  It is available as a package \citep{lmSubsets}
-for the \proglang{R} system for statistical computing \citep{R}
-from the Comprehensive \proglang{R} Archive
-Network at \url{http://CRAN.R-project.org/package=lmSubsets}.
-
-\verb+TODO:+ Somewhere we need to comment on alternative approaches in \proglang{R}:
-\begin{itemize}
-  \item Other algorithms for linear regression models that do exact search but avoid exhaustive fitting of all models:
-    \pkg{leaps} package \citep{leaps} based on \cite{Miller:2002}, and the \pkg{subselect} package
-    \citep{subselect} based on \cite{DuarteSilva:2001}.
-  \item Exhaustive search for generalized linear models: \pkg{bestglm} \citep{bestglm}.
-  \item Approximate solutions via genetic algorithms for generalized linear models and beyond:
-     \pkg{glmulti} \citep{Calcagno+DeMazancourt:2010}, \pkg{kofnGA} \citep{Wolters:2015},
-     \pkg{mogavs} \citep{Sinha+Malo+Kuosmanen:2015,mogavs}.
-  \item Regularized estimation of parametric models with automatic variable selection:
-    lasso or elastic net estimation for generalized linear models \citep{Friedman+Hastie+Tibshirani:2010},
-    model-based boosting \citep{Buehlmann+Hothorn:2007,Hothorn+Buehlmann+Kneib:2010}.
-\end{itemize}
-
-\verb+Just for us:+ Some ideas in the following tutorial (without author or proper
-reference) might be useful for inspiration.
-\url{https://rstudio-pubs-static.s3.amazonaws.com/2897_9220b21cfc0c43a396ff9abf122bb351.html}
-
-
-\section{Implementation}
-\label{sec:implementation}
-
-Consider the standard regression model
+%
+An important problem in statistical modeling is that of
+subset-selection regression or, equivalently, of finding the best
+regression equation~\citep{hastie:01}.  Given a set of possible
+variables to be included in the regression, the problem is to select a
+subset which optimizes some statistical criterion.  The latter
+originates in the estimation of the corresponding
+submodel~\citep{miller:02}.  Consider the standard regression model
+%
 \begin{equation}
-  \label{eqn:olm}
+  \label{eq:olm}
+  %
   y=X\beta+\epsilon,\qquad\epsilon\sim(0,\sigma^2I_M),
 \end{equation}
-where $y\in\Rset^M$, $X\in \Rset^{M\times N}$ is the exogenous data
-matrix of full column rank, $\beta\in\Rset^N$ is the coefficient
-vector and $\epsilon\in\Rset^N$ is the noise vector.  The columns of
-$X$ correspond to the exogenous variables $V=[v_1,\dots,v_N] $.  A
-submodel $S$ of \eqref{eqn:olm} comprises some of the variables in
-$V$.  The goal is to determine
+%
+where $y\in\Rset^M$ is the output variable vector, $X\in
+\Rset^{M\times N}$ is the exogenous data matrix of full column rank,
+$\beta\in\Rset^N$ is the coefficient vector and $\epsilon\in\Rset^N$
+is the noise vector.  The columns of $X$ correspond to the set of
+exogenous variables $V = \{v_1,\dots,v_N \} $.  A submodel $S$
+of~\eqref{eq:olm} comprises some of the variables in $V$. The
+best-subset selection problem is to determine
+%
 \begin{equation}
-  S^*=\argmin_S f(S),\quad\text{where $f$ is some criterion function.}
+  \label{eq:best-subsets}
+  %
+  S^*=\argmin_{S \subseteq V} f(S),\quad\text{where $f$ is some criterion function.}
 \end{equation}
-Possible criteria include Mallows' $C_{\text{p}}$ , adjusted $R^2$, or
-a criterion of the AIC family \citep{Miller:2002}.  The aforementioned
-criteria are monotonic functions of the residual sum of squares (RSS)
-for a constant number of parameters, and attain their optimal value
-when the RSS is minimal.  Thus, the search problem may be decomposed
-as follows: Find
-\begin{align}
-  S^*_n=\argmin_{S,\ \card{S}=n}\rss(S)\quad\text{for}\quad n=1,\dots,N.
-\end{align}
+%
+Standard selection criteria include AIC family~\citep{miller:02}.
+For constant number of parameters these criteria are monotonic
+functions of the residual sum of squares (RSS), and attain their
+optimal value when the RSS is minimal.  Thus~\eqref{eq:best-subsets}
+can be re-written as a two stage problem.  In a first stage find
+%
+\begin{equation}
+  \label{eq:all-subsets}
+  %
+  S^*_n=\argmin_{S \subseteq V,\ \card{S}=n}\rss(S)\quad\text{for}\quad n=1,\dots,N, 
+\end{equation}
+%
+and in the second stage select
+%
+\begin{equation}
+  \label{eq:all-subsets:selection}
+  %
+  S^*=\argmin_{S^*_n, n=1,\dots,N} f(S^*_n).
+\end{equation}
+%
+\par
+%
+Solving~\eqref{eq:all-subsets} means to compute all-subset models
+corresponding to each submodel size.  Since $ S^*_n$ ($ n=1,\dots,N $)
+do not depend on a model size penalty, the solution
+of~\eqref{eq:all-subsets} can rely on the \rss{} only.  In the second
+stage the best-submodel $S^*$ can be selected with respect to any
+standard criterion over the $N$ submodels $S^*_1,\dots,S^*_N$.
+Therefore, solving the problem~\eqref{eq:best-subsets} is equivalent
+in solving the problems~\eqref{eq:all-subsets}
+and~\eqref{eq:all-subsets:selection}.  Note that solving directly the
+best-subset problem~\eqref{eq:best-subsets} can allow a computational
+strategy to focus on finding the best submodel at lower computational
+cost.  On the other hand solving the problem~\eqref{eq:all-subsets}
+can require a higher computational effort.  Still, in this case the
+output will be a list of $N$ submodels on which a further
+selection/analysis can be performed.
+%
+\par
+%
+Algorithms for subset regression that do exact search but avoid
+exhaustive fitting of all models can be found on the \proglang{R}
+package~\pkg{leaps}~\citep{leaps} based on \cite{miller:02}.
+Exhaustive search has been considered also within the context of
+generalized linear models and summarized on the \pkg{bestglm}
+package~\citep{bestglm}.
+%
+Alternative approximate solutions based on simulated annealing were
+introduced in the \pkg{subselect} package~\citep{subselect:15} based
+on~\cite{duarte_silva:j_multivariate_anal:01}.  Furthermore
+approximate solutions via genetic algorithms for generalized linear
+models and beyond have been implemented in
+\pkg{glmulti}~\citep{calcagno:j_stat_softw:10} and \pkg{kofnGA}
+\citep{wolters:j_stat_softw:15}.  Regularized estimation of parametric
+models with automatic variable selection is performed by lasso or
+elastic net estimation for generalized linear
+models~\citep{friedman:j_stat_softw:10}.
+%
+\par
+%
+Here, the \pkg{lmSubsets} package for exact, best variable-subset
+regression is presented. It implements the algorithms presented by
+\cite{gatu:j_comput_graph_stat:06} and
+\cite{hofmann:comput_stat_data_an:07}.  The package embeds functions
+that solve both the best-subset problem~\eqref{eq:best-subsets} and
+the all-subsets problem~\eqref{eq:all-subsets}.  A branch-and-bound
+device is employed to prune non-optimal sub-spaces when computing the
+solution.  Exact and approximate strategies are deployed in order to
+improve the computational performance of the branch-and-bound
+algorithm.  The estimation numerical tool employed is the QR
+decomposition and its modification.  Computationally intensive core
+code is written in \proglang{C++}.  It is available as a
+package~\citep{lmSubsets} for the \proglang{R} system for statistical
+computing~\citep{R} from the Comprehensive \proglang{R} Archive
+Network at \url{http://CRAN.R-project.org/package=lmSubsets}.
+%
+%
+%--------------------------------------------------------------------%
+% section:  Computational strategies                                 %
+%--------------------------------------------------------------------%
+%
+\section{Computation strategies}
+\label{sec:submodel}
+%
 There are $2^N-1$ possible subset models, and their computation is
 only feasible for small values of $N$.  Regression trees are employed
-to traverse the search space in a systematic fashion.  Figure~\ref{fig:dca_tree}
-illustrates a regression tree for $N=5$ variables.
-A node in the regression tree is a pair $(S,k)$, where
+to traverse the search space in a systematic fashion.
+Figure~\ref{fig:dca_tree} illustrates a regression tree for $N=5$
+variables.  A node in the regression tree is a pair $(S,k)$, where
 $S=(s_1,\ldots,s_n)$ is a certain subset of $n$ variables and $k$ is
 an integer, symbolized by a $\bullet$.
-
-\begin{figure}[t!]
+%
+\begin{figure}[ht!]
   \def\node#1{\TR{\psframebox[framearc=0.5]{#1}}}
   \begin{center}
-    \pstree[levelsep=8ex,treesep=2ex,edge=\ncline]{\node{12345}}{%
+    \pstree[levelsep=8ex,treesep=2ex,edge=\ncline]{\node{$\bullet$12345}}{%
       \pstree{\node{$\bullet$2345}}{%
         \pstree{\node{$\bullet$345}}{%
           \pstree{\node{$\bullet$45}}{%
@@ -185,37 +252,53 @@ an integer, symbolized by a $\bullet$.
 \caption{All-subsets regression tree for $N=5$ variables.}
 \label{fig:dca_tree}
 \end{figure}
-
+%
+\par
+%
 Each node corresponds to a unique subset of variables, although not
 every possible subset gives rise to a node.  Thus, the number of nodes
-is $2^{N-1}$.  When the algorithm visits node $(S,k)$, it reports the
-RSS of the models corresponding to the leading variable subsets of
-size $k+1$, \ldots, $n$, i.e. the subleading models
+is $2^{N-1}$.  The root node corresponds to the full set of variables,
+that it $(V, 1)$. When the algorithm visits node $(S,k)$, it reports
+the {\rss} of the models corresponding to the leading variable subsets
+of size $k+1$, \ldots, $n$, i.e. the subleading models
 $(s_1,\ldots,s_{k+1})$, \ldots, $(s_1,\ldots,s_n)$.  It then generates
-and in turn visits the nodes $(S-\{s_j\},j-1)$ for $j=n-1,\ldots,k+1$
-\citep{Gatu+Kontoghiorghes:2006}.
-
-The reported RSS is stored in a subset table $r$ along with its
-corresponding subset of variables.  The entry $r_n$ corresponds to the
-RSS of the best subset model with $n$ variables found so far.  The
-algorithm employs a branch-and-bound strategy to reduce the number of
-generated nodes by cutting subtrees which do not contribute to the
+and in turn visits the nodes $(S-\{s_j\},j-1)$ for
+$j=n-1,\ldots,k+1$.  The reported {\rss} is stored in a subset
+table~$r$ along with its corresponding subset of variables.  The entry
+$r_n$ corresponds to the RSS of the best subset model with~$n$
+variables found so far~\citep{gatu:j_comput_graph_stat:06}.
+%
+\par
+%
+The algorithm employs a branch-and-bound strategy to reduce the number
+of generated nodes by cutting subtrees which do not contribute to the
 best solution.  A cutting test is employed to determine which parts of
 the tree are redundant.  That is, a new node $(S-\{s_j\},j-1)$ is
 generated only if $\rss(S)<r_j$ ($j=k+1,\ldots,n-1$).  The quantity
 $\rss(S)$ is said to be the \emph{bound} of the subtree rooted in
 $(S,k)$; that is, no subset model extracted from the subtree can have
-a lower RSS \citep{Gatu+Kontoghiorghes:2006}.
-
+a lower RSS \citep{gatu:j_comput_graph_stat:06}.
+%
+\par
+%
+The search can be restricted to find only the submodels of size within
+a specified range.  This yields in spanning only a part of the
+regression tree in Figure~\ref{fig:dca_tree}, and therefore it
+requires a reduced computational cost.
+%
+\par
+%
 In order to encourage the cutting of large subtrees, the regression
 tree is generated such that large subtrees have greater bounds.  The
 algorithm achieves this by preordering the variables.  Computing the
-bounds of the variables is expensive.  Thus, it is not advisable to
-preorder the variables in all the nodes.  A parameter --- the
-preordering radius $p$ ($0\le p\le N$) --- defines the extent to which
-variables are preordered
-\citep{Gatu+Kontoghiorghes:2006,Hofmann+Gatu+Kontoghiorghes:2007}.
-
+bounds of the variables implies a computational overhead.  Thus, it is
+not advisable to preorder the variables in all the nodes.  A parameter
+--- the preordering radius $p$ ($0\le p\le N$) --- defines the extent
+to which variables are preordered
+\citep{gatu:j_comput_graph_stat:06,hofmann:comput_stat_data_an:07}.
+%
+\par
+%
 The efficiency of the branch-and-bound strategy is improved by
 allowing the algorithm to prune non-redundant portions of the
 regression tree.  Thus, the cutting test is relaxed by employing a
@@ -226,40 +309,10 @@ algorithm is non-exhaustive if $\tau_n>0$ for any $n$, meaning that
 the computed solution is not guaranteed to be optimal.  The algorithm
 cuts subtrees more aggressively the greater the value of $\tau_n$; the
 relative error of the solution is bounded by the employed tolerance
-\citep{Gatu+Kontoghiorghes:2006,Hofmann+Gatu+Kontoghiorghes:2007}.
-
-The branch-and-bound algorithm with tolerance parameter is illustrated
-in Listing~\ref{alg:bba}.  The keywords \texttt{break} and
-\texttt{next} pertain the same meaning as in the \proglang{R}
-language; that is, \texttt{break} transfers execution to the statement
-following the inner-most loop, and \texttt{next} halts the current
-iteration and advances the looping index.
-
-\begin{algorithm}[!h]
-  \caption{The branch-and-bound algorithm.}
-  \label{alg:bba}
-  \begin{algorithmic}[1]
-    \Procedure{BBA}{$V$, $\tau$, $r$}
-    \State $N$ $\gets$ $\card{V}$
-    \State $r_{1:N}$ $\gets$ $+\infty$
-    \State $z$ $\gets$ $((V,0))$$\quad\#$ {\it node stack}
-    \While{\texttt{not} empty $z$}
-      \State \texttt{with} $z$ pop $(S,k)$
-      \State $n$ $\gets$ $\card{S}$, $\rho$ $\gets$ $\rss(S)$
-      \State preorder $(S,k)$
-      \State \texttt{with} $(S,k)$ update $r_{k+1:n}$
-      \For{$i=n-1,\ldots,k+1$}
-        \State \textbf{if} $(1+\tau_i)\cdot\rho>r_i$ \texttt{next}
-        \For{$j=k+1,\ldots,i$}
-          \State \texttt{with} $z$ push $(S-\{s_j\},j-1)$
-        \EndFor
-        \State \texttt{break}
-      \EndFor
-    \EndWhile
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
+\citep{gatu:j_comput_graph_stat:06,hofmann:comput_stat_data_an:07}.
+%
+\par
+%
 The algorithm reports the $N$ subset models with the lowest RSS, one
 for each subset size.  The user can then analyse the list of returned
 subsets to determine the \dquote{best} subset, e.g. by evaluating some
@@ -267,137 +320,410 @@ criterion function.  This approach is practical but not necessarily
 efficient.  The algorithm may be optimized for a particular criterion
 $f$ under the condition that the latter may be expressed as a function
 of the subset size $n$ and the RSS $\rho$, i.e. $f(n,\rho)$, and that
-$f$ is monotonic with respect to both $n$ and $\rho$.  The modified
-algorithm is presented in Listing~\ref{alg:mbba}.  It takes a single
+$f$ is monotonic with respect to both $n$ and $\rho$. It takes a single
 tolerance value and returns a single solution, that is the overall
 (i.e. over all subset sizes) best subset model according to criterion
 function $f$.
-
-\begin{algorithm}[!h]
-  \caption{The modified branch-and-bound algorithm.}
-  \label{alg:mbba}
-  \begin{algorithmic}[1]
-    \Procedure{mBBA}{$V$, $\tau$, $f$}
-    \State $r$ $\gets$ $+\infty$
-    \State $z$ $\gets$ $((V,0))$$\quad\#$ {\it node stack}
-    \While{\texttt{not} empty $z$}
-      \State \texttt{with} $z$ pop $(S,k)$
-      \State $n$ $\gets$ $\card{S}$, $\rho$ $\gets$ $\rss(S)$
-      \State preorder $(S,k)$
-      \State \texttt{with} $(S,k)$, $f$ update $r$
-      \For{$i=n-1,\ldots,k+1$}
-        \State \textbf{if} $(1+\tau)\cdot f(i,\rho)>r$ \texttt{next}
-        \For{$j=k+1,\ldots,i$}
-          \State \texttt{with} $z$ push $(S-\{s_j\},j-1)$
-        \EndFor
-        \State \texttt{break}
-      \EndFor
-    \EndWhile
-    \State \texttt{return} $r$
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-
-\subsection[C++]{\proglang{C++}}
-
-Focus has been put on the computational efficiency of the
-\proglang{C++} code.  The following points have been given special
-attention: (a)~no allocation of dynamic memory in main loop, (b)~no
-(unnecessary) matrix copy operations.
-
-
-\subsection[R interface]{\proglang{R} interface}
-
-% \proglang{S}3 class \class{lmSubsets} with associated methods
-
-% \fct{lmSubsets} is generic with the default method being the workhorse 
-% function and taking the regressor matrix \code{x} and response vector \code{y}
-% as main arguments. In addition, a \class{formula} and a \class{lm} method
-% are provided for convenience.
-
-% Many methods that work for \class{lm} objects also work for \class{lmSubsets}
-% objects. The idea is always that the linear model is refitted for the
-% specified \code{size} and then the information is extracted. If some method
-% is not available, \fct{refit} can always be called explicitly which returns
-% a \class{lm} object. For some
-% methods, \code{size} can also be a vector of sizes that should be assessed.
-% The default for \code{size} is typically the best BIC model, sometimes (as
-% in the \fct{summary} and \fct{plot} method) all sizes available in the 
-% \class{lmSubsets} object are assessed.  Currently, the methods to the generic functions include
-% \fct{print}, \fct{summary}, \fct{coef}, \fct{vcov}, \fct{logLik}, \fct{residuals}, 
-% \fct{fitted}, \fct{model.frame}, \fct{model.matrix}, \fct{AIC}, \fct{logLik}, \fct{deviance}.  
-
-
-\section{Illustrations}
-\label{sec:illustrations}
-
-load package and example data, for convenience already take logs for relative potentials
 %
-<<AirPollution>>=
-library("lmSubsets")
-data("AirPollution", package = "lmSubsets")
-for(i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
-@
 %
-then fitting best subsets can be done via
+%--------------------------------------------------------------------%
+% section:  Implementation in R                                      %
+%--------------------------------------------------------------------%
 %
-<<lmSubsets>>=
-xs <- lmSubsets(mortality ~ ., data = AirPollution)
-xs
-@
+\section[Implementation in R]{Implementation in \proglang{R}}
+\label{sec:R}
 %
-To obtain a more complete picture, look at visualization (see
-Figure~\ref{fig:summary}) or a tabular summary:
+The package provides two generator functions, \fct{lmSubsets} and
+\fct{lmSelect}, for solving the all-subsets and the best-subsets
+regression problems, respectively.  That is, \fct{lmSubsets}
+computes the best submodel in terms of deviance for each subset size,
+while \fct{lmSelect} computes the overall best submodels according
+to a statistical criterion of the AIC family.
 %
-<<summary, fig=TRUE, include=FALSE, height=5, width=6.7>>=
-plot(xs)
-summary(xs)
-@
+\par
+%
+The generator functions are closely modeled after the \code{lm}
+function and implement \R's standard \code{formula} interface: they
+can be called with any entity that can be coerced to a \code{formula}
+object.  After the \code{formula} instance has been resolved, the raw
+data and problem specific parameters are forwarded to the appropriate
+core function.  The workhorse functions \code{lmSubsets.fit()} and
+\code{lmSelect.fit()} implement the core computational logic without
+any \code{formula} related overhead.  An \SSS{} object of class
+\class{lmSubsets} or \class{lmSelect} is returned, for which several
+standard extractor methods have been defined.  Furthermore,
+\class{lmSubsets} objects can be coerced to \class{lmSelect} objects by
+means of the \code{lmSubsets.select()} function.  An overview of the
+various functions is given in Table~\ref{tab:generators}.
+%
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{|r|l|l|}
+    \hline
+    Problem                 & Function                  & Description                \\
+    \hline
+    all-subsets regression  & \fct{lmSubsets}           & standard formula interface \\
+                            & \code{lmSubsets.fit()}    & workhorse function         \\
+    \hline
+    best-subsets regression & \fct{lmSelect}            & standard formula interface \\
+                            & \code{lmSelect.fit()}     & workhorse function         \\
+                            & \code{lmSubsets.select()} & conversion function        \\
+    \hline
+  \end{tabular}
+  \caption{Generator functions.}
+  \label{tab:generators}
+\end{table}
+%
+%
+%--------------------------------------------------------------------%
+% section:  Specifying the problem                                   %
+%--------------------------------------------------------------------%
+%
+\subsection{Specifying the problem}
+\label{sec:specifying}
+%
+The user must first specify a linear model and provide a dataset from
+which the variables are taken.  To perform \emph{best}-subset
+regression, a \emph{penalty} per parameter must be indicated.
+%
+\par
+%
+The initial model is typically given in the form of a symbolic
+description.  A \code{formula} object specifies the dependent and
+independent variables, which are taken from a \code{data.frame}
+object.  For example, the call
+%
+\begin{alltt}
+lmSubsets(mortality ~ precipitation + temperature1 + temperature7 + age +
+            household + education + housing + population + noncauc +
+            whitecollar + income + hydrocarbon + nox + so2 + humidity,
+          data = AirPollution)
+\end{alltt}
+%
+specifies a response variable (\code{mortality}) and fifteen predictor
+variables; all variables are taken from the data frame
+\code{AirPollution}~\citep{miller:02}.  In this case, the call can be
+abbreviated to
+%
+\begin{alltt}
+lmSubsets(mortality ~ ., data = AirPollution){\normalfont,}
+\end{alltt}
+%
+where the dot (\code{.}) stands for ``all variables not otherwise
+mentioned in the formula''.  By default, an intercept term is included
+in the model; that is, the previous example is equivalent to
+%
+\begin{alltt}
+lmSubsets(mortality ~ . + 1, data = AirPollution){\normalfont.}
+\end{alltt}
+%
+To discard the intercept, rewrite the call as follows:
+%
+\begin{alltt}
+lmSubsets(mortality ~ . - 1, data = AirPollution){\normalfont.}
+\end{alltt}
+%
+\par
+%
+Candidate models can be rejected based on the presence or absence of
+certain independent variables.  To compute all subset models that
+contain a certain variable, the parameter \code{include} is employed.
+In the following example, only submodels containing the variable
+\code{noncauc} will be retained:
+%
+\begin{alltt}
+lmSubsets(mortality ~ ., include = "noncauc", data = AirPollution){\normalfont.}
+\end{alltt}
+%
+Conversely, the parameter \code{exclude} can be employed to discard
+submodels, as in the following example:
+%
+\begin{alltt}
+lmSubsets(mortality ~ ., exclude = "whitecollar", data = AirPollution){\normalfont.}
+\end{alltt}
+%
+The same effect can be achieved by rewriting the formula as follows:
+%
+\begin{alltt}
+\code{lmSubsets(mortality ~ . - whitecollar, data = AirPollution)}{\normalfont.}
+\end{alltt}
+%
+The \code{include} and \code{exclude} parameters my be used in
+combination, and both may specify more than one variable
+(e.g. \code{include = c("noncauc", "whitecollar")}).
+%
+\par
+%
+The criterion used for best-subset selection is evaluated following
+the expression
+%
+\begin{equation*}
+  -2\cdot\mathtt{logLik} + \mathtt{penalty}\cdot\mathtt{npar}\text{,}
+\end{equation*}
+%
+where \code{penalty} is the \emph{penalty per model-parameter},
+\code{logLik} the log-likelihood of the fitted model, and \code{npar}
+the number of model-parameters.  The \code{penalty} value indicates
+how strongly model parameters are penalized.  A higher \code{penalty}
+will favor the selection of subset models with fewer regressors.  When
+$\mathtt{penalty}=2$, the criterion corresponds to Akaike's
+information criterion (AIC)~\citep{akaike:ieee_t_automat_contr:74};
+when $\mathtt{penalty}=log(\mathtt{nobs})$, to Schwarz's Bayesian
+information criterion (BIC)~\citep{schwarz:ann_stat:78}, where
+\texttt{nobs} is the number of observations.  For example,
+%
+\begin{alltt}
+lmSelect(mortality ~ ., data = AirPollution, penalty = 2)
+\end{alltt}
+%
+will select the best submodels according to the usual AIC; or, in a
+more idiomatic style:
+%
+\begin{alltt}
+lmSelect(mortality ~ ., data = AirPollution, penalty = "AIC"){\normalfont.}
+\end{alltt}
+%
+By default, the \fct{lmSelect} function employs the BIC.
+%
+%
+%--------------------------------------------------------------------%
+% section:  Core functions                                           %
+%--------------------------------------------------------------------%
+%
+\subsection{Core functions}
+\label{sec:core}
+%
+The generator functions process the formula interface to extract the
+model data, and pass the data --- along with any problem specific
+arguments --- to the core functions.  The core functions act as
+wrappers for the \proglang{C++} library which implements the problem
+logic.  The full signature of the core functions is given by:
+%
+\begin{verbatim}
+lmSubsets.fit(x, y, weights = NULL, offset = NULL,
+              include = NULL, exclude = NULL, nmin = NULL,
+              nmax = NULL, tolerance = 0, pradius = NULL,
+              nbest = 1, ..., .algo = "hpbba")
 
-
-\begin{figure}[t!]
-\centering
-\includegraphics{lmSubsets-summary}
-\caption{BIC and RSS.
-\label{fig:summary}}
-\end{figure}
-
-\verb+FIXME:+ currently does not work.
-extract information (by default for best BIC model)
-@
-<<deviance, eval=FALSE>>=
-deviance(xs)
-logLik(xs)
-AIC(xs)
-AIC(xs, k = log(nrow(AirPollution)))
-@
+lmSelect.fit(x, y, weights = NULL, offset = NULL,
+             include = NULL, exclude = NULL, penalty = "BIC",
+             tolerance = 0, pradius = NULL, nbest = 1, ...,
+             .algo = "hpbba")
+\end{verbatim}
 %
-extract information for all subsets fitted
+The parameters are summarized in Table~\ref{tab:params}.
 %
-<<deviance-all>>=
-deviance(xs, size = 1:16)
-AIC(xs, size = 1:16)
-AIC(xs, size = 1:16, k = log(nrow(AirPollution)))
-@
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{|r|l|l|}
+    \hline
+    Parameter        & Description                                               & Representation                            \\
+    \hline
+    \code{x}         & data matrix                                            & \code{numeric[nobs,nvar]}                    \\
+    \code{y}         & response variable                                      & \code{numeric[nobs]}                         \\
+    \code{weights}   & model weights                                          & \code{numeric[nobs]}                         \\
+    \code{offset}    & model offset                                           & \code{numeric[nvar]}                         \\
+    \code{include}   & regressors to force in                                 & \code{logical[nvar]}                         \\
+    \code{exclude}   & regressors to force out                                & \code{logical[nvar]}                         \\
+    \code{nmin}      & min. number of regressors \small(\fct{lmSubsets} only) & \code{integer[1]}                            \\
+    \code{nmax}      & max. number of regressors \small(\fct{lmSubsets} only) & \code{integer[1]}                            \\
+    \code{tolerance} & BBA tolerance parameters                               & \code{numeric[nvar]} \small(\fct{lmSubsets}) \\
+                     &                                                        & \code{numeric[1]} \small(\fct{lmSelect})     \\
+    \code{pradius}   & preordering radius                                     & \code{integer[1]}                            \\
+    \code{nbest}     & number of best subsets                                 & \code{integer[1]}                            \\
+    \code{.algo}     & algorithm to execute                                   & \code{character[1]}                          \\
+    \hline
+  \end{tabular}
+  \caption{Core parameters.}
+  \label{tab:params}
+\end{table}
 %
-\verb+FIXME:+ currently does not work.
-refit model (best BIC by default)
+The model data is given in the form of a numeric matrix \code{x} and
+of a numeric vector \code{y}.  The \code{weights} and \code{offset}
+parameters correspond to the homonomic parameters of the \code{lm}
+function.
 %
-<<refit, eval=FALSE>>=
-lm5 <- refit(xs)
-summary(lm5)
-@
-
-(Note that the $p$~values are not valid due to model selection.)
-
-
+\par
+%
+The \code{include} and \code{exclude} parameters allow the caller to
+specify variables that are to be included in or excluded from all
+candidate models.  They are logical vectors, each entry corresponding
+to one variable, and are automatically expanded if given in the form
+of an integer vector (i.e. set of variable indices) or character
+vector (i.e. set of variable names).
+%
+\par
+%
+For a large number of variables (see Section~\ref{sec:benchmark}),
+execution times become intractable.  In order to speed up the
+execution, either the search space can be reduced, or one may settle
+for a non-exhaustive solution.  The caller can specify values for the
+\code{nmin} and \code{nmax} parameters, in which case submodels with
+less than \code{nmin} or more than \code{nmax} variables are
+discarded, effectively stripping entire portions from the search
+space.
+%
+\par
+%
+The second approach implies that the expectations with respect to the
+solution quality are lowered, i.e. that non-optimal solutions are
+\emph{tolerated}.  This is indicated by passing an argument to the
+\code{tolerance} parameter, which will be used by the BBA cutting
+test.  A tolerance value typically lies between $0$ and $1$.  The
+solution produced by the algorithm satisfies the following relationship:
+%
+\begin{equation*}
+  f(S)\leq(1+\mathtt{tolerance})\cdot f(S^*)\mathrm{,}
+\end{equation*}
+%
+where $S$ is the returned solution, $S^*$ the optimal (theoretical)
+solution, and $f$ the value of a submodel (i.e. deviance, AIC).  The
+\fct{lmSubsets} routine accepts a vector of tolerances, with one
+entry for each subset size.
+%
+\par
+%
+The \code{nbest} parameter controls how many submodels are returned.
+In the case of \fct{lmSubsets}, \code{nbest} subsets are returned
+for each subset size; in the case of \fct{lmSelect}, a total of
+\code{nbest} submodels is returned.
+%
+\par
+%
+The \code{pradius} parameter serves to specify the desired preordering
+radius.  The algorithm employs a default value of
+$\lfloor\mathtt{nvar}/3\rfloor$, and the need to set this parameter
+directly should rarely arise.  The \code{.algo} parameter serves to
+specify the computational algorithm to be employed: this parameter is
+used for testing purposes only and should never be set directly.
+%
+%
+%--------------------------------------------------------------------%
+% section:  Extracting submodels                                     %
+%--------------------------------------------------------------------%
+%
+\subsection{Extracting submodels}
+\label{sec:extracting}
+%
+The generator functions produce objects of class \class{lmSubsets} and
+\class{lmSelect}, respectively, which implement the solution to a
+particular instance of a variable selection problem.  They encapsulate
+the computed subset models, as well as problem-specific data that
+characterize the problem instance that was solved.  The object
+components are summarized in Table~\ref{tab:components}.
+%
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{|r|l|l|}
+    \hline
+    Component        & Description                                & Representation                                                \\
+    \hline           
+    \code{nobs}      & number of observations                     & \code{integer[1]}                                             \\
+    \code{nvar}      & number of regressors                       & \code{integer[1]}                                             \\
+    \code{weights}   & weights used                               & \code{numeric[nobs]}                                          \\
+    \code{offset}    & offset used                                & \code{numeric[nobs]}                                          \\
+    \code{intercept} & intercept flag                             & \code{logical[1]}                                             \\
+    \code{include}   & regressors forced in                       & \code{logical[nvar]}                                          \\
+    \code{exclude}   & regressors forced out                      & \code{logical[nvar]}                                          \\
+    \code{penalty}   & penalty used \small(\class{lmSelect} only) & \code{numeric[nvar]}                                          \\
+    \code{tolerance} & tolerances used                            & \code{numeric[nvar]}                                          \\
+    \code{nbest}     & number of best subsets                     & \code{integer[1]}                                             \\
+    \code{df}        & degrees of freedom                         & \code{integer[nbest,nvar]} \small(for \class{lmSubsets})      \\
+                     &                                            & \code{integer[nbest]} \small(for \class{lmSelect})            \\
+    \code{rss}       & residual sum of squares                    & \code{numeric[nbest,nvar]} \small(for \class{lmSubsets})      \\
+                     &                                            & \code{numeric[nbest]} \small(for \class{lmSelect})            \\
+    \code{which}     & selected regressors                        & \code{logical[nvar,nbest,nvar]} \small(for \class{lmSubsets}) \\
+                     &                                            & \code{logical[nvar,nbest]} \small(for \class{lmSelect})       \\
+    \hline
+  \end{tabular}
+  \caption{Components of \class{lmSubsets} and \class{lmSelect} objects.}
+  \label{tab:components}
+\end{table}
+%
+\par
+%
+The solution of an all-subsets regression problem is returned as an
+object of class \class{lmSubsets}, which logically represents a
+$\mathtt{nbest}\times\mathtt{nvar}$ table of subset models.
+Information pertaining to the subset models can be found in the
+components \code{df}, \code{rss}, and \code{which}.  Similarly, the
+solution of a best-subsets regression problem is returned as an object
+of class \class{lmSelect} representing a sequence of \code{nbest}
+subset models stored in decreasing order of quality.
+%
+\par
+%
+Methods are provided to visualize, summarize and extract information.
+The methods are listed in Table~\ref{tab:methods}.
+%
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{|r|l|}
+    \hline
+    Method                  & Description                     \\
+    \hline
+    \code{print()}          & print object                    \\
+    \code{plot()}           & plot object                     \\
+    \code{summary()}        & summary statistics              \\
+    \hline
+    \code{variable.names()} & extract variables names         \\
+    \code{formula()}        & extract formula object          \\
+    \code{model.frame()}    & extract (full) model frame      \\
+    \code{model.matrix()}   & extract model matrix            \\
+    \code{refit()}          & fit subset model                \\
+    \code{coef()}           & extract regression coefficients \\
+    \code{vcov()}           & extract covariance matrix       \\
+    \code{fitted()}         & extract fitted values           \\
+    \code{residuals()}      & extract residual values         \\
+    \code{deviance()}       & extract deviance (RSS)          \\
+    \code{logLik()}         & extract log-likelihood          \\
+    \code{AIC()}            & extract AIC values              \\
+    \code{BIC()}            & extract BIC values              \\
+    \hline
+  \end{tabular}
+  \caption{\SSS{} methods for \class{lmSubsets} and \class{lmSelect}
+    objects.}
+  \label{tab:methods}
+\end{table}
+%
+%
+%--------------------------------------------------------------------%
+% section:  Case study                                               %
+%--------------------------------------------------------------------%
+%
+\section{Case study}
+\label{sec:usecase}
+%
+\TODO{by Ana}
+%
+%
+%--------------------------------------------------------------------%
+% section:  Benchmark                                                %
+%--------------------------------------------------------------------%
+%
+\section{Benchmark}
+\label{sec:benchmark}
+%
+\TODO{by X}
+%
+%
+%--------------------------------------------------------------------%
+% section:  Acknowledgements                                         %
+%--------------------------------------------------------------------%
+%
 \section*{Acknowledgments}
-
-This work was in part supported by the
-\emph{F\"orderverein des wirtschaftswissenschaftlichen Zentrums der Universit\"at Basel},
+%
+This work was in part supported by the \emph{F\"orderverein des
+  wirtschaftswissenschaftlichen Zentrums der Universit\"at Basel},
 through research project B-123.
-    
+%
+%
+%====================================================================%
+% BIBLIOGRAPHY                                                       %
+%====================================================================%
+%
 \bibliography{lmSubsets}
-
+%
+%
 \end{document}
+%
