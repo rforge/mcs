@@ -10,7 +10,7 @@
 % vignette                                                           %
 %--------------------------------------------------------------------%
 %
-% \VignetteIndexEntry{lmSubsets: Efficient Computation of Best-Subset Linear Regressions in R}
+% \VignetteIndexEntry{lmSubsets: Efficient Computation of Variable-Subsets Linear Regression in R}
 % \VignetteKeywords{linear regression, model selection, variable selection, best-subset regression, R}
 % \VignettePackage{lmSubsets}
 % \VignetteDepends{stats,graphics}
@@ -63,24 +63,19 @@
   Marc Hofmann\\\TODO{affiliation}
   \And Cristian Gatu\\\TODO{affiliation}
   \And Erricos J. Kontoghiorghes\\Birbeck College
-  \AND Achim Zeileis\\Universit\"at Innsbruck
-  \And Ana Colubi\\University of Oviedo}
-\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes,
-  Achim Zeileis, Ana Colubi}
-%
-\title{\pkg{lmSubsets}: Efficient computation of variable-subsets linear
-  regression in \R{}}
-\Plaintitle{lmSubsets: Efficient computation of variable-subsets linear
-  regression in R}
+  \AND Ana Colubi\\University of Oviedo
+  \And Achim Zeileis\\Universit\"at Innsbruck}
+\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Ana Colubi, Achim Zeileis}
+
+\title{\pkg{lmSubsets}: Efficient Computation of Variable-Subsets Linear Regression in \proglang{R}}
+\Plaintitle{lmSubsets: Efficient Computation of Variable-Subsets Linear Regression in R}
 %
 \Abstract{ 
   \TODO{write abstract}
 }
 %
-\Keywords{linear regression, model selection, variable selection, best
-  subset regression, \R{}}
-\Plainkeywords{linear regression, model selection, variable selection,
-  best subset regression, R}
+\Keywords{linear regression, model selection, variable selection, best subset regression, \proglang{R}}
+\Plainkeywords{linear regression, model selection, variable selection, best subset regression, R}
 %
 \Address{
   Marc Hofmann\\
@@ -135,7 +130,7 @@ best-subset selection problem is to determine
   S^*=\argmin_{S \subseteq V} f(S),\quad\text{where $f$ is some criterion function.}
 \end{equation}
 %
-Standard selection criteria include AIC family~\citep{miller:02}.
+Standard selection criteria include the AIC family~\citep{miller:02}.
 For constant number of parameters these criteria are monotonic
 functions of the residual sum of squares (RSS), and attain their
 optimal value when the RSS is minimal.  Thus~\eqref{eq:best-subsets}
@@ -158,7 +153,7 @@ and in the second stage select
 \par
 %
 Solving~\eqref{eq:all-subsets} means to compute all-subset models
-corresponding to each submodel size.  Since $ S^*_n$ ($ n=1,\dots,N $)
+corresponding to each submodel size.  Since the $ S^*_n$ ($ n=1,\dots,N $)
 do not depend on a model size penalty, the solution
 of~\eqref{eq:all-subsets} can rely on the \rss{} only.  In the second
 stage the best-submodel $S^*$ can be selected with respect to any
@@ -356,16 +351,16 @@ various functions is given in Table~\ref{tab:generators}.
 %
 \begin{table}[htbp]
   \centering
-  \begin{tabular}{|r|l|l|}
+  \begin{tabular}{lll}
     \hline
     Problem                 & Function                  & Description                \\
     \hline
-    all-subsets regression  & \fct{lmSubsets}           & standard formula interface \\
-                            & \code{lmSubsets.fit()}    & workhorse function         \\
+    All-subsets regression  & \fct{lmSubsets}           & Standard formula interface \\
+                            & \code{lmSubsets.fit()}    & Workhorse function         \\
     \hline
-    best-subsets regression & \fct{lmSelect}            & standard formula interface \\
-                            & \code{lmSelect.fit()}     & workhorse function         \\
-                            & \code{lmSubsets.select()} & conversion function        \\
+    Best-subsets regression & \fct{lmSelect}            & Standard formula interface \\
+                            & \code{lmSelect.fit()}     & Workhorse function         \\
+                            & \code{lmSubsets.select()} & Conversion function        \\
     \hline
   \end{tabular}
   \caption{Generator functions.}
@@ -513,23 +508,23 @@ The parameters are summarized in Table~\ref{tab:params}.
 %
 \begin{table}[htbp]
   \centering
-  \begin{tabular}{|r|l|l|}
+  \begin{tabular}{lll}
     \hline
     Parameter        & Description                                               & Representation                            \\
     \hline
-    \code{x}         & data matrix                                            & \code{numeric[nobs,nvar]}                    \\
-    \code{y}         & response variable                                      & \code{numeric[nobs]}                         \\
-    \code{weights}   & model weights                                          & \code{numeric[nobs]}                         \\
-    \code{offset}    & model offset                                           & \code{numeric[nvar]}                         \\
-    \code{include}   & regressors to force in                                 & \code{logical[nvar]}                         \\
-    \code{exclude}   & regressors to force out                                & \code{logical[nvar]}                         \\
-    \code{nmin}      & min. number of regressors \small(\fct{lmSubsets} only) & \code{integer[1]}                            \\
-    \code{nmax}      & max. number of regressors \small(\fct{lmSubsets} only) & \code{integer[1]}                            \\
+    \code{x}         & Data matrix                                            & \code{numeric[nobs,nvar]}                    \\
+    \code{y}         & Response variable                                      & \code{numeric[nobs]}                         \\
+    \code{weights}   & Model weights                                          & \code{numeric[nobs]}                         \\
+    \code{offset}    & Model offset                                           & \code{numeric[nvar]}                         \\
+    \code{include}   & Regressors to force in                                 & \code{logical[nvar]}                         \\
+    \code{exclude}   & Regressors to force out                                & \code{logical[nvar]}                         \\
+    \code{nmin}      & Min.\ number of regressors \small(\fct{lmSubsets} only) & \code{integer[1]}                            \\
+    \code{nmax}      & Max.\ number of regressors \small(\fct{lmSubsets} only) & \code{integer[1]}                            \\
     \code{tolerance} & BBA tolerance parameters                               & \code{numeric[nvar]} \small(\fct{lmSubsets}) \\
                      &                                                        & \code{numeric[1]} \small(\fct{lmSelect})     \\
-    \code{pradius}   & preordering radius                                     & \code{integer[1]}                            \\
-    \code{nbest}     & number of best subsets                                 & \code{integer[1]}                            \\
-    \code{.algo}     & algorithm to execute                                   & \code{character[1]}                          \\
+    \code{pradius}   & Preordering radius                                     & \code{integer[1]}                            \\
+    \code{nbest}     & Number of best subsets                                 & \code{integer[1]}                            \\
+    \code{.algo}     & Algorithm to execute                                   & \code{character[1]}                          \\
     \hline
   \end{tabular}
   \caption{Core parameters.}
@@ -612,25 +607,25 @@ components are summarized in Table~\ref{tab:components}.
 %
 \begin{table}[htbp]
   \centering
-  \begin{tabular}{|r|l|l|}
+  \begin{tabular}{lll}
     \hline
     Component        & Description                                & Representation                                                \\
     \hline           
-    \code{nobs}      & number of observations                     & \code{integer[1]}                                             \\
-    \code{nvar}      & number of regressors                       & \code{integer[1]}                                             \\
-    \code{weights}   & weights used                               & \code{numeric[nobs]}                                          \\
-    \code{offset}    & offset used                                & \code{numeric[nobs]}                                          \\
-    \code{intercept} & intercept flag                             & \code{logical[1]}                                             \\
-    \code{include}   & regressors forced in                       & \code{logical[nvar]}                                          \\
-    \code{exclude}   & regressors forced out                      & \code{logical[nvar]}                                          \\
-    \code{penalty}   & penalty used \small(\class{lmSelect} only) & \code{numeric[nvar]}                                          \\
-    \code{tolerance} & tolerances used                            & \code{numeric[nvar]}                                          \\
-    \code{nbest}     & number of best subsets                     & \code{integer[1]}                                             \\
-    \code{df}        & degrees of freedom                         & \code{integer[nbest,nvar]} \small(for \class{lmSubsets})      \\
+    \code{nobs}      & Number of observations                     & \code{integer[1]}                                             \\
+    \code{nvar}      & Number of regressors                       & \code{integer[1]}                                             \\
+    \code{weights}   & Weights used                               & \code{numeric[nobs]}                                          \\
+    \code{offset}    & Offset used                                & \code{numeric[nobs]}                                          \\
+    \code{intercept} & Intercept flag                             & \code{logical[1]}                                             \\
+    \code{include}   & Regressors forced in                       & \code{logical[nvar]}                                          \\
+    \code{exclude}   & Regressors forced out                      & \code{logical[nvar]}                                          \\
+    \code{penalty}   & Penalty used \small(\class{lmSelect} only) & \code{numeric[nvar]}                                          \\
+    \code{tolerance} & Tolerances used                            & \code{numeric[nvar]}                                          \\
+    \code{nbest}     & Number of best subsets                     & \code{integer[1]}                                             \\
+    \code{df}        & Degrees of freedom                         & \code{integer[nbest,nvar]} \small(for \class{lmSubsets})      \\
                      &                                            & \code{integer[nbest]} \small(for \class{lmSelect})            \\
-    \code{rss}       & residual sum of squares                    & \code{numeric[nbest,nvar]} \small(for \class{lmSubsets})      \\
+    \code{rss}       & Residual sum of squares                    & \code{numeric[nbest,nvar]} \small(for \class{lmSubsets})      \\
                      &                                            & \code{numeric[nbest]} \small(for \class{lmSelect})            \\
-    \code{which}     & selected regressors                        & \code{logical[nvar,nbest,nvar]} \small(for \class{lmSubsets}) \\
+    \code{which}     & Selected regressors                        & \code{logical[nvar,nbest,nvar]} \small(for \class{lmSubsets}) \\
                      &                                            & \code{logical[nvar,nbest]} \small(for \class{lmSelect})       \\
     \hline
   \end{tabular}
@@ -656,27 +651,27 @@ The methods are listed in Table~\ref{tab:methods}.
 %
 \begin{table}[htbp]
   \centering
-  \begin{tabular}{|r|l|}
+  \begin{tabular}{ll}
     \hline
     Method                  & Description                     \\
     \hline
-    \code{print()}          & print object                    \\
-    \code{plot()}           & plot object                     \\
-    \code{summary()}        & summary statistics              \\
+    \code{print()}          & Print object                    \\
+    \code{plot()}           & Plot object                     \\
+    \code{summary()}        & Summary statistics              \\
     \hline
-    \code{variable.names()} & extract variables names         \\
-    \code{formula()}        & extract formula object          \\
-    \code{model.frame()}    & extract (full) model frame      \\
-    \code{model.matrix()}   & extract model matrix            \\
-    \code{refit()}          & fit subset model                \\
-    \code{coef()}           & extract regression coefficients \\
-    \code{vcov()}           & extract covariance matrix       \\
-    \code{fitted()}         & extract fitted values           \\
-    \code{residuals()}      & extract residual values         \\
-    \code{deviance()}       & extract deviance (RSS)          \\
-    \code{logLik()}         & extract log-likelihood          \\
-    \code{AIC()}            & extract AIC values              \\
-    \code{BIC()}            & extract BIC values              \\
+    \code{variable.names()} & Extract variables names         \\
+    \code{formula()}        & Extract formula object          \\
+    \code{model.frame()}    & Extract (full) model frame      \\
+    \code{model.matrix()}   & Extract model matrix            \\
+    \code{refit()}          & Fit subset model                \\
+    \code{coef()}           & Extract regression coefficients \\
+    \code{vcov()}           & Extract covariance matrix       \\
+    \code{fitted()}         & Extract fitted values           \\
+    \code{residuals()}      & Extract residual values         \\
+    \code{deviance()}       & Extract deviance (RSS)          \\
+    \code{logLik()}         & Extract log-likelihood          \\
+    \code{AIC()}            & Extract AIC values              \\
+    \code{BIC()}            & Extract BIC values              \\
     \hline
   \end{tabular}
   \caption{\SSS{} methods for \class{lmSubsets} and \class{lmSelect}
