@@ -27,11 +27,11 @@
 % packages                                                           %
 %--------------------------------------------------------------------%
 
+\usepackage{thumbpdf,lmodern}
 \usepackage{pdfcomment}
 \usepackage{amsmath,amssymb}
 \usepackage{pstricks,pst-tree}
 \usepackage{auto-pst-pdf}
-\usepackage{listings}
 
 
 %--------------------------------------------------------------------%
@@ -42,11 +42,11 @@
 \newcommand{\rss}{\text{RSS}}
 \DeclareMathOperator*{\argmin}{argmin}
 \newcommand{\card}[1]{\lvert{#1}\rvert}
-\newcommand{\SSS}{\code{S}3}
+\newcommand{\SSS}{\proglang{S}3}
 \newcommand{\R}{\proglang{R}}
 \newcommand{\squote}[1]{`{#1}'}
 \newcommand{\dquote}[1]{``{#1}''}
-\newcommand{\fct}[1]{{\code{#1()}\index{#1@\texttt{#1()}}}}
+\newcommand{\fct}[1]{\code{#1()}}
 \newcommand{\class}[1]{\dquote{\code{#1}}}
 %
 \newcommand{\TODO}[1]{\texttt{TODO: #1}}
@@ -313,14 +313,14 @@ computes the best submodel in terms of deviance for each subset size,
 while \fct{lmSelect} computes the overall best submodels according
 to a statistical criterion of the AIC family.
 
-The generator functions are closely modeled after the \code{lm}
+The generator functions are closely modeled after the \fct{lm}
 function and implement \R's standard \code{formula} interface: they
 can be called with any entity that can be coerced to a \code{formula}
 object.  After the \code{formula} instance has been resolved, the raw
-data and problem specific parameters are forwarded to the appropriate
+data and problem-specific parameters are forwarded to the appropriate
 core function.  The workhorse functions \code{lmSubsets.fit()} and
 \code{lmSelect.fit()} implement the core computational logic without
-any \code{formula} related overhead.  An \SSS{} object of class
+any \code{formula}-related overhead.  An \SSS{} object of class
 \class{lmSubsets} or \class{lmSelect} is returned, for which several
 standard extractor methods have been defined.  Furthermore,
 \class{lmSubsets} objects can be coerced to \class{lmSelect} objects by
@@ -377,8 +377,8 @@ abbreviated to
   lmSubsets(mortality ~ ., data = AirPollution)
 \end{Code}
 %
-where the dot (\code{.}) stands for ``all variables not otherwise
-mentioned in the formula''.  By default, an intercept term is included
+where the dot (\code{.}) stands for ``all variables not mentioned in the
+left-hand side of the formula''.  By default, an intercept term is included
 in the model; that is, the previous example is equivalent to
 %
 \begin{Code}
@@ -414,7 +414,7 @@ The same effect can be achieved by rewriting the formula as follows:
   lmSubsets(mortality ~ . - whitecollar, data = AirPollution)
 \end{Code}
 %
-The \code{include} and \code{exclude} parameters my be used in
+The \code{include} and \code{exclude} parameters may be used in
 combination, and both may specify more than one variable
 (e.g., \code{include = c("noncauc", "whitecollar")}).
 
@@ -431,9 +431,9 @@ the number of model-parameters.  The \code{penalty} value indicates
 how strongly model parameters are penalized.  A higher \code{penalty}
 will favor the selection of subset models with fewer regressors.  When
 $\mathtt{penalty}=2$, the criterion corresponds to Akaike's
-information criterion (AIC)~\citep{akaike:ieee_t_automat_contr:74};
-when $\mathtt{penalty}=log(\mathtt{nobs})$, to Schwarz's Bayesian
-information criterion (BIC)~\citep{schwarz:ann_stat:78}, where
+information criterion \citep[AIC,][]{akaike:ieee_t_automat_contr:74};
+when $\mathtt{penalty}=\log(\mathtt{nobs})$, to Schwarz's Bayesian
+information criterion \citep[BIC,][]{schwarz:ann_stat:78}, where
 \texttt{nobs} is the number of observations.  For example,
 %
 \begin{Code}
@@ -508,10 +508,10 @@ function.
 
 The \code{include} and \code{exclude} parameters allow the caller to
 specify variables that are to be included in or excluded from all
-candidate models.  They are logical vectors, each entry corresponding
-to one variable, and are automatically expanded if given in the form
+candidate models.  They are logical vectors -- with each entry corresponding
+to one variable -- and are automatically expanded if given in the form
 of an integer vector (i.e., set of variable indices) or character
-vector (i.e., set of variable names).
+vector (i.e., set of variable names as shown above).
 
 For a large number of variables (see Section~\ref{sec:benchmark}),
 execution times become intractable.  In order to speed up the
@@ -602,8 +602,20 @@ solution of a best-subsets regression problem is returned as an object
 of class \class{lmSelect} representing a sequence of \code{nbest}
 subset models stored in decreasing order of quality.
 
-Methods are provided to visualize, summarize and extract information.
-The methods are listed in Table~\ref{tab:methods}.
+A wide range of standard methods to visualize, summarize, and extract information
+is provided (see Table~\ref{tab:methods}). The \fct{print}, \fct{plot}, and
+\fct{summary} methods all report information about all the models found
+in the search -- especially for \class{lmSubsets} objects this can help
+to select suitable models from all subsets. The remaining extractor functions
+(except for \fct{refit}) all return the kind of information as they would
+for a fitted \class{lm} object, e.g., the estimated coefficients and
+corresponding variance-covariance matrix etc. For \class{lmSubsets}
+objects the \code{size} of the desired subset needs to be provided
+and then by default the best model (\code{best = 1}) for that subset
+size is employed. Moreover, \code{best} can be set to higher values to
+obtain the information for the second best and third best model for a
+given size, etc. For \class{lmSelect} objects only \code{best} but not
+\code{size} can be modified.
 
 \begin{table}[t!]
   \centering
