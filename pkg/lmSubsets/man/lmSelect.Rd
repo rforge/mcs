@@ -2,8 +2,10 @@
 
 
 \alias{lmSelect}
-\alias{lmSelect.fit}
-\alias{lmSubsets.select}
+\alias{lmSelect.default}
+\alias{lmSelect.lmSubsets}
+\alias{lmSelect_fit}
+\alias{lmSubsets_select}
 
 \alias{print.lmSelect}
 \alias{plot.lmSelect}
@@ -15,14 +17,18 @@
 \description{Best-subsets regression for ordinary linear models.}
 
 \usage{
-lmSelect(formula, data, subset, weights, na.action,
+lmSelect(formula, \ldots)
+
+\method{lmSelect}{default}(formula, data, subset, weights, na.action,
 model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
-lmSelect.fit(x, y, weights = NULL, offset = NULL,
+\method{lmSelect}{lmSubsets}(formula, \ldots)
+
+lmSelect_fit(x, y, weights = NULL, offset = NULL,
 include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
 pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
 
-lmSubsets.select(object, penalty = "BIC", ...)
+lmSubsets_select(object, penalty = "BIC", ...)
 }
 
 
@@ -42,7 +48,7 @@ lmSubsets.select(object, penalty = "BIC", ...)
 
 
 \details{
-  The function \code{lmSelect} computes best-variable-subsets regression
+  The generic \code{lmSelect} computes best-variable-subsets regression
   for ordinary linear models:  The \code{nbest} best subset models are
   computed according to an information criterion of the AIC family.
 

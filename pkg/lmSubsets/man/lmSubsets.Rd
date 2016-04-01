@@ -2,7 +2,8 @@
 
 
 \alias{lmSubsets}
-\alias{lmSubsets.fit}
+\alias{lmSubsets.default}
+\alias{lmSubsets_fit}
 
 \alias{print.lmSubsets}
 \alias{plot.lmSubsets}
@@ -15,10 +16,12 @@
 
 
 \usage{
-lmSubsets(formula, data, subset, weights, na.action,
+lmSubsets(formula, \ldots)
+
+\method{lmSubsets}{default}(formula, data, subset, weights, na.action,
 model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
-lmSubsets.fit(x, y, weights = NULL, offset = NULL,
+lmSubsets_fit(x, y, weights = NULL, offset = NULL,
 include = NULL, exclude = NULL, nmin = NULL, nmax = NULL,
 tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
 }
@@ -39,7 +42,7 @@ tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
 
 
 \details{
-  The function \code{lmSubsets} computes all-variable-subsets regression
+  The generic \code{lmSubsets} computes all-variable-subsets regression
   for ordinary linear models.  It provides various methods to
   conveniently specify the regressor and response variables.  The
   standard \code{formula} interface (see \code{\link[stats]{lm}}) can be

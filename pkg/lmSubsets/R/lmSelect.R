@@ -19,7 +19,7 @@
 ## Rval:  (lmSelect)
 ##   See 'lmSelect.default'.
 ##
-lmSubsets.select <- function (object, penalty = "BIC", ...) {
+lmSubsets_select <- function (object, penalty = "BIC", ...) {
     ## tolerance
     tolerance <- object$tolerance[object$nmin:object$nmax]
     if (!all(tolerance[1] == tolerance)) {
@@ -132,7 +132,7 @@ lmSubsets.select <- function (object, penalty = "BIC", ...) {
 ##   'hpbba':  Heuristic, preordering BBA
 ##   'xbba*':  experimental PBBA
 ##
-lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
+lmSelect_fit <- function (x, y, weights = NULL, offset = NULL,
                           include = NULL, exclude = NULL, penalty = "BIC",
                           tolerance = 0, pradius = NULL, nbest = 1, ...,
                           .algo = "hpbba")
@@ -339,15 +339,28 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
 
 
 
-##########################
-##  GENERATOR FUNCTION  ##
-##########################
+#########################
+##  GENERATOR METHODS  ##
+#########################
+
+
+## coercion method
+##
+## Args:
+##   formula - (lmSubsets)
+##   ...     - forwarded to 'lmSelect_select'
+##
+## Rval:  (lmSelect) see 'lmSelect_fit'
+##
+lmSelect.lmSubsets <- function (formula, ...) {
+    lmSubsets_select(formula, ...)
+}
 
 
 ## standard formula interface
 ##
 ## Args:
-##   object    - (formula) an object that can be coerced to class 'formula'
+##   formula   - (formula) an object that can be coerced to class 'formula'
 ##   data      - (data.frame)
 ##   subset    - (vector) subset of observations
 ##   weights   - (numeric[])
@@ -357,18 +370,13 @@ lmSelect.fit <- function (x, y, weights = NULL, offset = NULL,
 ##   y         - (logical)
 ##   contrasts - (list)
 ##   offset    - (numeric[])
-##   ...       - forwarded to 'lmSelect.fit'
+##   ...       - forwarded to 'lmSelect_fit'
 ##
-## Rval:  (lmSelect) see 'lmSelect.fit'
+## Rval:  (lmSelect) see 'lmSelect_fit'
 ##
-lmSelect <- function (formula, data, subset, weights, na.action,
-                      model = TRUE, x = FALSE, y = FALSE,
-                      contrasts = NULL, offset, ...) {
-    ## coerce 'lmSubsets' object
-    if (inherits(formula, "lmSubsets")) {
-        return (lmSubsets.select(formula, ...))
-    }
-
+lmSelect.default <- function (formula, data, subset, weights, na.action,
+                              model = TRUE, x = FALSE, y = FALSE,
+                              contrasts = NULL, offset, ...) {
     ## construct 'lmSelect' object
     ret.m <- model;  model <- NULL
     ret.x <- x;  x <- NULL
@@ -408,7 +416,7 @@ lmSelect <- function (formula, data, subset, weights, na.action,
     }
 
     ## fit subsets
-    rval <- lmSelect.fit(x, y, w, offset = offset, ...)
+    rval <- lmSelect_fit(x, y, w, offset = offset, ...)
 
     ## return value
     class(rval) <- "lmSelect"

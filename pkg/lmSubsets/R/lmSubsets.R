@@ -53,7 +53,7 @@
 ##   'hpbba':  Heuristic, preordering BBA
 ##   'xbba.':  experimental PBBA
 ##
-lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
+lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
                            include = NULL, exclude = NULL, nmin = NULL,
                            nmax = NULL, tolerance = 0, pradius = NULL,
                            nbest = 1, ..., .algo = "hpbba") {
@@ -242,9 +242,9 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
 
 
 
-##########################
-##  GENERATOR FUNCTION  ##
-##########################
+#########################
+##  GENERATOR METHODS  ##
+#########################
 
 
 ## standard formula interface
@@ -260,13 +260,13 @@ lmSubsets.fit <- function (x, y, weights = NULL, offset = NULL,
 ##   y         - (logical)
 ##   contrasts - (list)
 ##   offset    - (numeric[])
-##   ...       - forwarded to 'lmSubsets.fit'
+##   ...       - forwarded to 'lmSubsets_fit'
 ##
-## Rval:  (lmSubsets) see 'lmSubsets.fit'
+## Rval:  (lmSubsets) see 'lmSubsets_fit'
 ##
-lmSubsets <- function (formula, data, subset, weights, na.action,
-                       model = TRUE, x = FALSE, y = FALSE,
-                       contrasts = NULL, offset, ...) {
+lmSubsets.default <- function (formula, data, subset, weights, na.action,
+                               model = TRUE, x = FALSE, y = FALSE,
+                               contrasts = NULL, offset, ...) {
     ret.m <- model;  model <- NULL
     ret.x <- x;  x <- NULL
     ret.y <- y;  y <- NULL
@@ -305,7 +305,7 @@ lmSubsets <- function (formula, data, subset, weights, na.action,
     }
 
     ## fit subsets
-    rval <- lmSubsets.fit(x, y, weights = w, offset = offset, ...)
+    rval <- lmSubsets_fit(x, y, weights = w, offset = offset, ...)
 
     ## return value
     class(rval) <- "lmSubsets"

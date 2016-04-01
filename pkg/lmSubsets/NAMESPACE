@@ -11,8 +11,13 @@ import("stats", "graphics")
 ## export new generics
 ##
 export("model.response",
+       "lmSubsets",
+       "lmSelect",
        "refit")
 
+
+## export misc. methods
+##
 S3method("model.response", "default")
 
 
@@ -20,10 +25,13 @@ S3method("model.response", "default")
 ## 'lmSubsets' #
 ################
 
-## generator functions
+## workhorse functions
 ##
-export("lmSubsets",
-       "lmSubsets.fit")
+export("lmSubsets_fit")
+
+## generator methods
+##
+S3method("lmSubsets", "default")
 
 ## extractor methods
 ##
@@ -55,10 +63,15 @@ S3method("plot"   , "summary.lmSubsets")
 ## 'lmSelect' #
 ###############
 
-## generator functions
-export("lmSelect",
-       "lmSelect.fit",
-       "lmSubsets.select")
+## workhorse functions
+##
+export("lmSelect_fit",
+       "lmSubsets_select")
+
+## generator methods
+##
+S3method("lmSelect", "default")
+S3method("lmSelect", "lmSubsets")
 
 ## extractor methods
 ##
