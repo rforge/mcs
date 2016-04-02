@@ -17,7 +17,7 @@ namespace detail {
 
   template<typename TReal>
   Givens<TReal>::Givens() :
-    r_{0}, s_{0}, c_{0}
+    r_{0}, c_{0}, s_{0}
   {
   }
 
