@@ -129,13 +129,13 @@ lmSubsets_select <- function (object, penalty = "BIC", ...) {
 ##   'bba'  :  Branch and Bound Algorithm
 ##   'pbba' :  BBA with variable preordering
 ##   'hbba' :  Heuristic BBA
-##   'hpbba':  Heuristic, preordering BBA
+##   'phbba':  HBBA with variable preordering
 ##   'xbba*':  experimental PBBA
 ##
 lmSelect_fit <- function (x, y, weights = NULL, offset = NULL,
                           include = NULL, exclude = NULL, penalty = "BIC",
                           tolerance = 0, pradius = NULL, nbest = 1, ...,
-                          .algo = "hpbba")
+                          .algo = "phbba")
 {
     ## model weights and offset
     if (is.null(w <- weights)) w <- rep(1, NROW(x))

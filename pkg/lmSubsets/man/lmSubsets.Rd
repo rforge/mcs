@@ -23,7 +23,7 @@ model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 lmSubsets_fit(x, y, weights = NULL, offset = NULL,
 include = NULL, exclude = NULL, nmin = NULL, nmax = NULL,
-tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
+tolerance = 0, pradius = NULL, nbest = 1, \ldots, .algo = "phbba")
 }
 
 

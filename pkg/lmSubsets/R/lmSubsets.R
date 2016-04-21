@@ -50,13 +50,13 @@
 ##   'bba'  :  Branch and Bound Algorithm
 ##   'pbba' :  BBA with variable preordering
 ##   'hbba' :  Heuristic BBA
-##   'hpbba':  Heuristic, preordering BBA
+##   'phbba':  HBBA with variable preordering
 ##   'xbba.':  experimental PBBA
 ##
 lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
                            include = NULL, exclude = NULL, nmin = NULL,
                            nmax = NULL, tolerance = 0, pradius = NULL,
-                           nbest = 1, ..., .algo = "hpbba") {
+                           nbest = 1, ..., .algo = "phbba") {
     ## model weights and offset
     if (is.null(w <- weights)) w <- rep(1, NROW(x))
     if (is.null(o <- offset)) o <- rep(0, NROW(x))

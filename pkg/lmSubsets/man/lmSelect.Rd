@@ -26,7 +26,7 @@ model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 lmSelect_fit(x, y, weights = NULL, offset = NULL,
 include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
-pradius = NULL, nbest = 1, \ldots, .algo = "hpbba")
+pradius = NULL, nbest = 1, \ldots, .algo = "phbba")
 
 lmSubsets_select(object, penalty = "BIC", ...)
 }

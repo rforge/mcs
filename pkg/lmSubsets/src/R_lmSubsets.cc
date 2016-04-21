@@ -6,7 +6,7 @@
 #include "mcs/subset/bba.hh"
 #include "mcs/subset/pbba.hh"
 #include "mcs/subset/hbba.hh"
-#include "mcs/subset/hpbba.hh"
+#include "mcs/subset/phbba.hh"
 #include "mcs/subset/xbba.hh"
 #include "mcs/subset/criteria.hh"
 
@@ -87,9 +87,9 @@ R_lmSubsets(const char* const* const algo, const int* const nobs,
       hbba(*nobs, *size, *mark, *nbest, v, xy,
            *nobs, wIndex, wRss, wSubset, tau, *nodes);
     }
-  else if (std::strcmp(*algo, "hpbba") == 0)
+  else if (std::strcmp(*algo, "phbba") == 0)
     {
-      hpbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
+      phbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
 	    *nobs, wIndex, wRss, wSubset, tau, *nodes);
     }
   else if (std::strncmp(*algo, "xbba", 4) == 0)
@@ -211,9 +211,9 @@ R_lmSelect(const char* const* const algo, const int* const nobs,
       hbba(*nobs, *size, *mark, *nbest, v, xy,
            *nobs, wIndex, wRss, wVal, wSubset, aic, *tau, *nodes);
     }
-  else if (std::strcmp(*algo, "hpbba") == 0)
+  else if (std::strcmp(*algo, "phbba") == 0)
     {
-      hpbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
+      phbba(*nobs, *size, *mark, *nbest, *pmin, v, xy,
 	    *nobs, wIndex, wRss, wVal, wSubset, aic, *tau, *nodes);
     }
   else if (std::strncmp(*algo, "xbba", 4) == 0)

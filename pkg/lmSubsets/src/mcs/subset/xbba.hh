@@ -11,7 +11,7 @@
 #include "mcs/subset/detail/dca_table.hh"
 #include "mcs/subset/detail/dca_state.hh"
 
-#include "mcs/subset/detail/hpbba.hh"
+#include "mcs/subset/detail/phbba.hh"
 
 #include <cstring>
 
@@ -49,11 +49,11 @@ namespace subset {
     if (std::strcmp(algo, "xbba1") == 0) {
       Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, crit, preo, tau);
+      nodes = phbba(state, table, crit, preo, tau);
     } else if (std::strcmp(algo, "xbba2") == 0) {
       Preorder::Single2<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, crit, preo, tau);
+      nodes = phbba(state, table, crit, preo, tau);
     } else {
       info = -1;
     }
@@ -87,11 +87,11 @@ namespace subset {
     if (std::strcmp(algo, "xbba1") == 0) {
       Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, crit, preo, tau);
+      nodes = phbba(state, table, crit, preo, tau);
     } else if (std::strcmp(algo, "xbba2") == 0) {
       Preorder::Single2<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, crit, preo, tau);
+      nodes = phbba(state, table, crit, preo, tau);
     } else {
       info = -1;
     }
@@ -120,11 +120,11 @@ namespace subset {
     if (std::strcmp(algo, "xbba1") == 0) {
       Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, preo, tau);
+      nodes = phbba(state, table, preo, tau);
     } else if (std::strcmp(algo, "xbba2") == 0) {
       Preorder::Single2<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, preo, tau);
+      nodes = phbba(state, table, preo, tau);
     } else {
       info = -1;
     }
@@ -152,11 +152,11 @@ namespace subset {
     if (std::strcmp(algo, "xbba1") == 0) {
       Preorder::Single1<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, preo, tau);
+      nodes = phbba(state, table, preo, tau);
     } else if (std::strcmp(algo, "xbba2") == 0) {
       Preorder::Single2<TReal> preo(size, pmin, pmax);
 
-      nodes = hpbba(state, table, preo, tau);
+      nodes = phbba(state, table, preo, tau);
     } else {
       info = -1;
     }
