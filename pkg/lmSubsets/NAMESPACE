@@ -6,7 +6,7 @@ useDynLib("lmSubsets")
 ## import packages
 ##
 import("stats", "graphics")
-
+importFrom("grDevices", "gray.colors")
 
 ## export new generics
 ##
@@ -51,6 +51,7 @@ S3method("coef"          , "lmSubsets")
 S3method("vcov"          , "lmSubsets")
 S3method("fitted"        , "lmSubsets")
 S3method("residuals"     , "lmSubsets")
+S3method("image"         , "lmSubsets")
 
 ## summary methods
 ##
