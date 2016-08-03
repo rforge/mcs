@@ -1,18 +1,13 @@
 \name{lmSelect}
-
-
 \alias{lmSelect}
 \alias{lmSelect.default}
 \alias{lmSelect.lmSubsets}
 \alias{lmSelect_fit}
 \alias{lmSubsets_select}
-
 \alias{print.lmSelect}
 \alias{plot.lmSelect}
 
-
 \title{Best-Subsets Regression}
-
 
 \description{Best-subsets regression for ordinary linear models.}
 
@@ -20,17 +15,16 @@
 lmSelect(formula, \ldots)
 
 \method{lmSelect}{default}(formula, data, subset, weights, na.action,
-model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
+  model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 \method{lmSelect}{lmSubsets}(formula, \ldots)
 
 lmSelect_fit(x, y, weights = NULL, offset = NULL,
-include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
-pradius = NULL, nbest = 1, \ldots, .algo = "phbba")
+  include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
+  pradius = NULL, nbest = 1, \ldots, .algo = "phbba")
 
 lmSubsets_select(object, penalty = "BIC", ...)
 }
-
 
 \arguments{
   \item{object}{An object of class \code{lmSubsets}.}
@@ -46,7 +40,6 @@ lmSubsets_select(object, penalty = "BIC", ...)
   \item{.algo}{Internal use.}
 }
 
-
 \details{
   The generic \code{lmSelect} computes best-variable-subsets regression
   for ordinary linear models:  The \code{nbest} best subset models are
@@ -54,7 +47,6 @@ lmSubsets_select(object, penalty = "BIC", ...)
 
   See \code{\link{lmSubsets}} for further information.
 }
-
 
 \value{
   An object of class \code{"lmSelect"}, i.e. a list with the following
@@ -77,23 +69,18 @@ lmSubsets_select(object, penalty = "BIC", ...)
   \item{which}{Selected variables.}
 }
 
-
 \references{
-  Hofmann, M. and Gatu, C. and Kontoghiorghes, E. J. (2007).  Efficient
-  Algorithms for Computing the Best Subset Regression Models for
-  Large-Scale Problems. \emph{Computational Statistics \& Data Analysis},
-  \bold{52}, 16--29.
+Hofmann M, Gatu C, Kontoghiorghes EJ (2007).
+  Efficient Algorithms for Computing the Best Subset Regression Models for Large-Scale Problems.
+  \emph{Computational Statistics \& Data Analysis}, \bold{52}, 16--29.
 
-  Gatu, C. and Kontoghiorghes, E. J.  (2006).  Branch-and-Bound
-  Algorithms for Computing the Best Subset Regression Models.
-  \emph{Journal of Computational and Graphical Statistics},
-  \bold{15}, 139--156.
+Gatu C, Kontoghiorghes EJ (2006).
+  Branch-and-Bound Algorithms for Computing the Best Subset Regression Models.
+  \emph{Journal of Computational and Graphical Statistics}, \bold{15}, 139--156.
 }
-
 
 \seealso{\code{\link{lmSubsets}}, \code{\link{summary}},
   \link{methods}.}
-
 
 \examples{
 ## load data (with logs for relative potentials)
