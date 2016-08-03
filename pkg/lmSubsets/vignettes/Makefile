@@ -3,6 +3,7 @@ all:
 	bibtex lmSubsets.aux
 	pdflatex --shell-escape lmSubsets
 	pdflatex --shell-escape lmSubsets
+	pdflatex --shell-escape lmSubsets
 
 clean:
 	rm -f lmSubsets.tex
@@ -13,3 +14,5 @@ clean:
 	rm -f lmSubsets-*.log
 	rm -f lmSubsets.out
 	rm -f lmSubsets-*.pdf
+	rm -f lmSubsets.upa
+	rm -f lmSubsets.upb

@@ -171,7 +171,7 @@ generalized linear models and summarized on the \pkg{bestglm}
 package~\citep{bestglm}.
 %
 Alternative approximate solutions based on simulated annealing were
-introduced in the \pkg{subselect} package~\citep{subselect:15} based
+introduced in the \pkg{subselect} package~\citep{subselect} based
 on~\cite{duarte_silva:j_multivariate_anal:01}.  Furthermore
 approximate solutions via genetic algorithms for generalized linear
 models and beyond have been implemented in
