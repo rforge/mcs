@@ -692,14 +692,14 @@ temperature NWP forecasts should enter the MOS regression.
 
 More specifically, we model 00UTC temperature observations (in degree Celsius)
 based on the corresponding 24-hour GEFS reforecast
-\cite{Hamill+Bates+Whitaker:2013} ensemble means for SYNOP station Innsbruck
+\citep{Hamill+Bates+Whitaker:2013} ensemble means for SYNOP station Innsbruck
 Airport (11120; 47.260, 11.357) from 2011-01-01 to 2015-12-31. The
 data frame \code{IbkTemperature} contains 1824 daily observations/forecasts
 for the observed response, 36 NWP outputs, and five deterministic time
 trend/season patterns that are available as potential regressors.
 The NWP variables include several temperature quantities (in degree Kelvin,
 e.g., 2-meter, minimum, maximum, soil) as well as several quantities
-capturing precipitation, wind, radiation and net flux. See \code{?IbkTemperature}
+capturing precipitation, wind, and fluxes among others. See \code{?IbkTemperature}
 for more details. The data from the NOAA (United States National Oceanic
 and Atmospheric Administration) are obtained from
 \url{http://www.esrl.noaa.gov/psd/forecasts/reforecast2/} (reforecasts) and
