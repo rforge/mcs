@@ -3,7 +3,7 @@
 %====================================================================%
 
 \documentclass[nojss]{jss}
-
+\shortcites{Hamill+Bates+Whitaker:2013}
 
 %--------------------------------------------------------------------%
 % vignette                                                           %
@@ -12,7 +12,7 @@
 % \VignetteIndexEntry{lmSubsets: Efficient Computation of Variable-Subsets Linear Regression in R}
 % \VignetteKeywords{linear regression, model selection, variable selection, best-subset regression, R}
 % \VignettePackage{lmSubsets}
-% \VignetteDepends{stats,graphics}
+% \VignetteDepends{stats,graphics,memisc}
 
 
 %--------------------------------------------------------------------%
@@ -22,12 +22,12 @@
 %% pdflatex:  set 'eps=FALSE'
 \SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
 
-
 %--------------------------------------------------------------------%
 % packages                                                           %
 %--------------------------------------------------------------------%
 
 \usepackage{thumbpdf,lmodern}
+\usepackage{booktabs,dcolumn}
 \usepackage{pdfcomment}
 \usepackage{amsmath,amssymb}
 \usepackage{pstricks,pst-tree}
@@ -59,10 +59,9 @@
 \author{%
   Marc Hofmann\\\TODO{affiliation}
   \And Cristian Gatu\\\TODO{affiliation}
-  \And Erricos J. Kontoghiorghes\\Birbeck College
-  \AND Ana Colubi\\University of Oviedo
+  \AND Erricos J. Kontoghiorghes\\Birbeck College
   \And Achim Zeileis\\Universit\"at Innsbruck}
-\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Ana Colubi, Achim Zeileis}
+\Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Achim Zeileis}
 
 \title{\pkg{lmSubsets}: Efficient Computation of Variable-Subsets Linear Regression in \proglang{R}}
 \Plaintitle{lmSubsets: Efficient Computation of Variable-Subsets Linear Regression in R}
@@ -100,33 +99,38 @@ data("AirPollution")
 \label{sec:intro}
 
 An important problem in statistical modeling is that of
-subset-selection regression or, equivalently, of finding the best
+subset selection regression or, equivalently, of finding the best
 regression equation~\citep{hastie:01}.  Given a set of possible
 variables to be included in the regression, the problem is to select a
 subset which optimizes some statistical criterion.  The latter
 originates in the estimation of the corresponding
-submodel~\citep{miller:02}.  Consider the standard regression model
+submodel~\citep{miller:02}.
+
+\TODO{Some comments and references to applications might be useful here.}
+
+Consider the standard linear regression model
 %
 \begin{equation}
   \label{eq:olm}
   %
-  y=X\beta+\epsilon,\qquad\epsilon\sim(0,\sigma^2I_M),
+  y=X\beta+\epsilon, %\qquad\epsilon\sim(0,\sigma^2I_M),
 \end{equation}
 %
 where $y\in\Rset^M$ is the output variable vector, $X\in
-\Rset^{M\times N}$ is the exogenous data matrix of full column rank,
+\Rset^{M\times N}$ is the regressor matrix of full column rank,
 $\beta\in\Rset^N$ is the coefficient vector and $\epsilon\in\Rset^N$
 is the noise vector.  The columns of $X$ correspond to the set of
-exogenous variables $V = \{v_1,\dots,v_N \} $.  A submodel $S$
+regressor variables $V = \{v_1,\dots,v_N \} $.  A submodel $S$
 of~\eqref{eq:olm} comprises some of the variables in $V$. The
 best-subset selection problem is to determine
 %
 \begin{equation}
   \label{eq:best-subsets}
   %
-  S^*=\argmin_{S \subseteq V} f(S),\quad\text{where $f$ is some criterion function.}
+  S^*=\argmin_{S \subseteq V} f(S),
 \end{equation}
 %
+where $f$ is some criterion function.
 Standard selection criteria include the AIC family~\citep{miller:02}.
 For constant number of parameters these criteria are monotonic
 functions of the residual sum of squares (RSS), and attain their
@@ -151,17 +155,22 @@ Solving~\eqref{eq:all-subsets} means to compute all-subset models
 corresponding to each submodel size.  Since the $ S^*_n$ ($ n=1,\dots,N $)
 do not depend on a model size penalty, the solution
 of~\eqref{eq:all-subsets} can rely on the \rss{} only.  In the second
-stage the best-submodel $S^*$ can be selected with respect to any
+stage the best submodel $S^*$ can be selected with respect to any
 standard criterion over the $N$ submodels $S^*_1,\dots,S^*_N$.
-Therefore, solving the problem~\eqref{eq:best-subsets} is equivalent
-in solving the problems~\eqref{eq:all-subsets}
+Therefore, solving the problem~\eqref{eq:best-subsets} can be accomplished
+by solving the problems~\eqref{eq:all-subsets}
 and~\eqref{eq:all-subsets:selection}.  Note that solving directly the
 best-subset problem~\eqref{eq:best-subsets} can allow a computational
 strategy to focus on finding the best submodel at lower computational
-cost.  On the other hand solving the problem~\eqref{eq:all-subsets}
-can require a higher computational effort.  Still, in this case the
-output will be a list of $N$ submodels on which a further
-selection/analysis can be performed.
+cost than problem~\eqref{eq:all-subsets}. On the other hand, solving
+\eqref{eq:all-subsets} has the advantage that all $N$ submodels are
+available and the computationally cheap problem \eqref{eq:all-subsets:selection}
+can be performed for different criterion functions (e.g., AIC and BIC).
+
+\TODO{The subsequent paragraph should connect better to the previous
+paragraph. It would be good to have some general discussion about
+pros and cons of exact vs.\ approximate algorithms. And then we
+can discuss the implementation of the different algorithms in R.}
 
 Algorithms for subset regression that do exact search but avoid
 exhaustive fitting of all models can be found on the \proglang{R}
@@ -190,13 +199,16 @@ the all-subsets problem~\eqref{eq:all-subsets}.  A branch-and-bound
 device is employed to prune non-optimal sub-spaces when computing the
 solution.  Exact and approximate strategies are deployed in order to
 improve the computational performance of the branch-and-bound
-algorithm.  The estimation numerical tool employed is the QR
+algorithm.  The numerical tool employed for estimation is the QR
 decomposition and its modification.  Computationally intensive core
 code is written in \proglang{C++}.  It is available as a
 package~\citep{lmSubsets} for the \proglang{R} system for statistical
 computing~\citep{R} from the Comprehensive \proglang{R} Archive
 Network at \url{https://CRAN.R-project.org/package=lmSubsets}.
 
+\TODO{The remainder of this manuscript is organized \dots}
+
+\TODO{Introduce BBA abbreviation somewhere.}
 
 %--------------------------------------------------------------------%
 % section:  Computational strategies                                 %
@@ -204,6 +216,12 @@ Network at \url{https://CRAN.R-project.org/package=lmSubsets}.
 
 \section{Computation strategies}
 \label{sec:submodel}
+
+Before discussing the implementation in \pkg{lmSubsets}, the underlying
+methods and algorithms are briefly reviewed. Emphasis is given to the
+general idea and strategy whereas for all theory and algorithmic details
+we refer to \cite{gatu:j_comput_graph_stat:06} and \cite{hofmann:comput_stat_data_an:07},
+respectively.
 
 In the linear regression model from Equation~\ref{eq:olm}
 there are $2^N-1$ possible subset models and an exhaustive computation of
@@ -215,7 +233,7 @@ variables.  A node in the regression tree is a pair $(S,k)$, where
 $S=(s_1,\ldots,s_n)$ is a certain subset of $n$ variables and $k$ is
 an integer, symbolized by a $\bullet$.
 
-\begin{figure}[ht!]
+\begin{figure}[t!]
   \def\node#1{\TR{\psframebox[framearc=0.5]{#1}}}
   \begin{center}
     \pstree[levelsep=8ex,treesep=2ex,edge=\ncline]{\node{$\bullet$12345}}{%
@@ -271,7 +289,7 @@ tree is generated such that large subtrees have greater bounds.  The
 algorithm achieves this by preordering the variables.  Computing the
 bounds of the variables implies a computational overhead.  Thus, it is
 not advisable to preorder the variables in all the nodes.  A parameter
---- the preordering radius $p$ ($0\le p\le N$) --- defines the extent
+-- the preordering radius $p$ ($0\le p\le N$) -- defines the extent
 to which variables are preordered
 \citep{gatu:j_comput_graph_stat:06,hofmann:comput_stat_data_an:07}.
 
@@ -307,14 +325,17 @@ function $f$.
 \section[Implementation in R]{Implementation in \proglang{R}}
 \label{sec:R}
 
-Two \SSS{} generics are defined.  The \fct{lmSubsets} and
-\fct{lmSelect} generator methods compute all-subsets and best-subset
-regression, respectively.
+The \proglang{R} package \pkg{lmSubsets} provides infrastructure
+for solving both the all-subsets regression \eqref{eq:all-subsets} and the
+best-subset selection \eqref{eq:best-subsets} problem in least-squares
+regression models. The corresponding high-level \SSS{} generics are
+\fct{lmSubsets} and \fct{lmSelect}, respectively.
 
-The generator methods are closely modeled after the \fct{lm} function
+The interfaces of both methods are closely modeled after the \fct{lm} function
 and implement \R{}'s standard \code{formula} interface: they can be
-called with any entity that can be coerced to a \code{formula} object.
-After the \code{formula} instance has been resolved, the raw data as
+called with any entity that can be coerced to a \code{formula} object
+\citep{Chambers+Hastie:1992}.
+After the \code{formula} description has been processed, the raw data as
 well as problem-specific parameters are forwarded to the appropriate
 core functions.  The workhorse functions \fct{lmSubsets\_fit} and
 \fct{lmSelect\_fit} implement the core computational logic without any
@@ -347,7 +368,7 @@ various functions is given in Table~\ref{tab:generators}.
 % section:  Specifying the problem                                   %
 %--------------------------------------------------------------------%
 
-\subsection{Specifying the problem}
+\subsection{Specifying the regression and subset selection problem}
 \label{sec:specifying}
 
 The user first specifies a linear model and provides a dataset from
@@ -356,8 +377,8 @@ which numerical values for the variables are taken.  When
 parameter must be indicated as well.
 
 The initial model is typically given in the form of a symbolic
-description.  A \code{formula} object --- or any other object that can
-be coerced to a \code{formula} --- specifies the dependent and
+description.  A \code{formula} object -- or any other object that can
+be coerced to a \code{formula} -- specifies the dependent and
 independent variables, which are taken from a \code{data.frame}
 object.  For example, the call
 %
@@ -369,7 +390,7 @@ object.  For example, the call
 \end{Code}
 %
 specifies a response variable (\code{mortality}) and fifteen predictor
-variables; all variables are taken from the \code{AirPollution}
+variables with all variables being taken from the \code{AirPollution}
 dataset~\citep{miller:02}.  In this case, the call can be abbreviated
 to
 %
@@ -377,7 +398,7 @@ to
   lmSubsets(mortality ~ ., data = AirPollution)
 \end{Code}
 %
-where the dot (\code{.}) stands for ``all variables not mentioned in
+where the dot (\code{.}), as usual, stands for ``all variables not mentioned in
 the left-hand side of the formula''.  By default, an intercept term is
 included in the model; that is, the call in the previous example is
 equivalent to
@@ -428,26 +449,22 @@ the expression
 %
 where \code{penalty} is the \emph{penalty per model-parameter},
 \code{logLik} the log-likelihood of the fitted model, and \code{npar}
-the number of model-parameters.  The \code{penalty} value indicates
-how strongly model parameters are penalized.  A higher \code{penalty}
-will favor the selection of subset models with fewer regressors.  When
+the number of model-parameters (including the error variance).  The \code{penalty} value indicates
+how strongly model parameters are penalized with higher values
+favoring more parsimonious solutions.  When
 $\mathtt{penalty}=2$, the criterion corresponds to Akaike's
 information criterion \citep[AIC,][]{akaike:ieee_t_automat_contr:74};
 when $\mathtt{penalty}=\log(\mathtt{nobs})$, to Schwarz's Bayesian
 information criterion \citep[BIC,][]{schwarz:ann_stat:78},
-\texttt{nobs} being the number of observations.  For example,
+\texttt{nobs} being the number of observations.  For example, either
+one of
 %
 \begin{Code}
   lmSelect(mortality ~ ., data = AirPollution, penalty = 2)
-\end{Code}
-%
-will select the best submodels according to the usual AIC; or, in a
-more idiomatic style:
-%
-\begin{Code}
   lmSelect(mortality ~ ., data = AirPollution, penalty = "AIC")
 \end{Code}
 %
+will select the best submodels according to the usual AIC.
 By default, the \fct{lmSelect} function employs the BIC.
 
 
@@ -458,11 +475,12 @@ By default, the \fct{lmSelect} function employs the BIC.
 \subsection{Core functions}
 \label{sec:core}
 
-The generator methods process the formula interface to extract the
-model data, and pass the data --- along with any problem specific
-arguments --- to the dedicated core functions.  The core functions act
-as wrappers for the \proglang{C++} library which implements the
-problem logic.  The full signature of the core functions is given by:
+The high-level interfaces first process the formula specification,
+set up the model data, and pass these to dedicated core functions
+-- along with further optional problem-specific arguments.
+The core functions act as wrappers for the \proglang{C++} library
+which implements the problem logic.  The full list of arguments (see
+also Table~\ref{tab:params}) is given by:
 %
 \begin{verbatim}
   lmSubsets_fit(x, y, weights = NULL, offset = NULL,
@@ -476,8 +494,6 @@ problem logic.  The full signature of the core functions is given by:
     .algo = "phbba")
 \end{verbatim}
 %
-The parameters are summarized in Table~\ref{tab:params}.
-
 The model data is given by means of a numeric matrix \code{x} and
 vector \code{y}.  The \code{weights} and \code{offset} parameters
 correspond to the homonomic parameters of the \code{lm} function.
@@ -507,17 +523,17 @@ correspond to the homonomic parameters of the \code{lm} function.
   \label{tab:params}
 \end{table}
 
-The \code{include} and \code{exclude} parameters allow the caller to
+The \code{include} and \code{exclude} parameters allow the user to
 specify variables that are to be included in or excluded from all
-candidate models.  They are logical vectors -- with each entry
-corresponding to one variable -- and are automatically expanded if
+candidate models.  They can be either logical vectors -- with each entry
+corresponding to one variable -- or are automatically expanded to such if
 given in the form of an integer vector (i.e., set of variable indices)
 or character vector (i.e., set of variable names).
 
-For a large number of variables (see Section~\ref{sec:benchmark}),
+For a large numbers of variables (see Section~\ref{sec:benchmark}),
 execution times may become intractable.  In order to speed up the
 execution, either the search space can be reduced, or one may settle
-for a non-exhaustive solution.  In the first appraoch, the caller can
+for a non-exhaustive solution.  In the first appraoch, the user can
 specify values for the \code{nmin} and \code{nmax} parameters, in
 which case submodels with less than \code{nmin} or more than
 \code{nmax} variables are discarded, effectively removing entire
@@ -525,8 +541,8 @@ branches of the regression tree from the search space.
 
 In the second approach, expectations with respect to the solution
 quality are lowered, i.e., non-optimal solutions are \emph{tolerated}.
-This is indicated by passing a numeric value --- typically between $0$
-and $1$ --- to the \code{tolerance} parameter, which will be used by
+This is indicated by passing a numeric value -- typically between $0$
+and $1$ -- to the \code{tolerance} parameter, which will be used by
 the BBA cutting test to prune the search tree.  The solution produced
 by the algorithm satisfies the following relationship:
 %
@@ -539,11 +555,11 @@ solution, and $f$ the value of a submodel (i.e., deviance, AIC).  The
 \fct{lmSubsets\_fit} function accepts a vector of tolerances, with one
 entry for each subset size.
 
-The \code{nbest} parameter controls how many submodels are retained.
-In the case of \fct{lmSubsets\_fit}, a two-dimensional result set is
+The \code{nbest} parameter controls how many submodels (per subset size)
+are retained. In the case of \fct{lmSubsets\_fit}, a two-dimensional result set is
 constructed with \code{nbest} submodels for each subset size, while in
 the case of \fct{lmSelect\_fit}, a one-dimensional sequence of
-\code{nbest} submodels is handed back to the caller.
+\code{nbest} submodels is handed back to the user.
 
 The \code{pradius} parameter serves to specify the desired preordering
 radius.  The algorithm employs a default value of
@@ -562,13 +578,13 @@ should never be set directly.
 \subsection{Extracting submodels}
 \label{sec:extracting}
 
-The caller is handed back a result object that encapsulates the
+The user is handed back a result object that encapsulates the
 solution to an all-subsets (class \class{lmSubsets}) or best-subsets
 (class \class{lmSelect}) selection problem.  An object of class
 \class{lmSubsets} represents a two-dimensional
 $\mathtt{nbest}\times\mathtt{nvar}$ set of submodels; an object of
 class \class{lmSelect}, a linear sequence of \code{nbest} submodels.
-Problem specific information is stored alongside the selected
+Problem-specific information is stored alongside the selected
 submodels.  Table~\ref{tab:components} summarizes the components of
 the result object.
 
@@ -603,7 +619,7 @@ the result object.
 A wide range of standard methods to visualize, summarize, and extract
 information is provided (see Table~\ref{tab:methods}).  The
 \fct{print}, \fct{plot}, and \fct{summary} methods present a compact
-overview --- either textual or graphical --- of information gathered
+overview -- either textual or graphical -- of information gathered
 on the selected submodels, which the user can find useful to identify
 ``good'' models.  The remaining extractor functions behave in the
 usual way, and can be used to extract variable names, coefficients,
@@ -613,13 +629,13 @@ In order to identify the submodel for which information is to be
 extracted, \class{lmSubsets} methods provide two parameters, namely
 \code{size} and \code{best}, which specify the number of regressors in
 and the ranking of the desired model, respectively.  The \code{size}
-argument is mandatory, while by default \code{best=1}.  For
+argument is mandatory, while by default \code{best = 1}.  For
 \class{lmSelect} methods, the \code{size} parameter has no meaning and
 is not defined.  Furthermore, methods that return scalar values ---
-i.e., \fct{deviance}, \fct{logLik}, \fct{AIC}, \fct{BIC} --- can
+i.e., \fct{deviance}, \fct{logLik}, \fct{AIC}, \fct{BIC} -- can
 process more than one submodel at a time, by passing a numeric vector
-as an argument to either \code{size} (e.g., \code{size=5:10}) or
-\code{best} (e.g., \code{best=1:3}).
+as an argument to either \code{size} (e.g., \code{size = 5:10}) or
+\code{best} (e.g., \code{best = 1:3}).
 
 \begin{table}[t!]
   \centering
@@ -628,7 +644,8 @@ as an argument to either \code{size} (e.g., \code{size=5:10}) or
     Method               & Description                     \\
     \hline
     \fct{print}          & Print object                    \\
-    \fct{plot}           & Plot object                     \\
+    \fct{plot}           & Plot RSS (and information criteria) \\
+    \fct{image}          & Heatmap of selected regressors  \small(\class{lmSubsets} only) \\
     \fct{summary}        & Summary statistics              \\
     \hline
     \fct{variable.names} & Extract variables names         \\
@@ -636,7 +653,7 @@ as an argument to either \code{size} (e.g., \code{size=5:10}) or
     \fct{model.frame}    & Extract (full) model frame      \\
     \fct{model.matrix}   & Extract model matrix            \\
     \fct{model.response} & Extract model response          \\
-    \fct{refit}          & Fit subset model                \\
+    \fct{refit}          & Fit subset \class{lm} model     \\
     \fct{coef}           & Extract regression coefficients \\
     \fct{vcov}           & Extract covariance matrix       \\
     \fct{fitted}         & Extract fitted values           \\
@@ -657,10 +674,220 @@ as an argument to either \code{size} (e.g., \code{size=5:10}) or
 % section:  Case study                                               %
 %--------------------------------------------------------------------%
 
-\section{Case study}
+\section{Case study: Variable selection for weather forecasting}
 \label{sec:usecase}
 
-\TODO{by Ana}
+Over the last decades the field of weather forecasting made steady and
+substantial improvements especially through improvements in numerical
+weather prediction (NWP) models \citep{Bauer+Thorpe+Brunet:2015}.
+Starting from \cite{Glahn+Lowry:1972} the outputs from these
+physically-based large-scale (typically global) NWP models is
+statistically post-processed to correct small-scale biases and obtain
+predictions for specific locations. Below we use such model output
+statistics (MOS) to predict temperature at a specific station
+(Innsbruck Airport, Austria) based on a wide range of NWP quantities
+from the nearest NWP grid point. Variable subset selection is relevant
+here because it is not obvious which quantities beyond the
+temperature NWP forecasts should enter the MOS regression.
+
+More specifically, we model 00UTC temperature observations (in degree Celsius)
+based on the corresponding 24-hour GEFS reforecast
+\cite{Hamill+Bates+Whitaker:2013} ensemble means for SYNOP station Innsbruck
+Airport (11120; 47.260, 11.357) from 2011-01-01 to 2015-12-31. The
+data frame \code{IbkTemperature} contains 1824 daily observations/forecasts
+for the observed response, 36 NWP outputs, and five deterministic time
+trend/season patterns that are available as potential regressors.
+The NWP variables include several temperature quantities (in degree Kelvin,
+e.g., 2-meter, minimum, maximum, soil) as well as several quantities
+capturing precipitation, wind, radiation and net flux. See \code{?IbkTemperature}
+for more details. The data from the NOAA (United States National Oceanic
+and Atmospheric Administration) are obtained from
+\url{http://www.esrl.noaa.gov/psd/forecasts/reforecast2/} (reforecasts) and
+\url{http://www.ogimet.com/synops.phtml.en} (observations), respectively.
+
+To start the analysis the data from the \pkg{lmSubsets} package can be
+loaded and for simplicity a couple of days with some missing values are
+omitted.
+<<data>>=
+data("IbkTemperature", package = "lmSubsets")
+IbkTemperature <- na.omit(IbkTemperature)
+@
+First, a simple climatological model for the temperature (\code{temp})
+with a linear trend (\code{time}) and a harmonic seasonal pattern
+(\code{sin}/\code{cos} for the annual and \code{sin2}/\code{cos2}
+for the bi-annual frequencies).
+<<m0>>=
+m0 <- lm(temp ~ time + sin + cos + sin2 + cos2, data = IbkTemperature)
+@
+This model does not make use of any NWP outputs and is used as a basic
+reference model against which the subsequent MOS models can be compared.
+Second, the model is updated to a simple MOS by including the most
+obvious direct model output -- 2-meter temperature (\code{t2m}) --
+in addition to the season/trend regressors.
+<<m1>>=
+m1 <- update(m0, . ~ . + t2m)
+@
+A graphical comparison of the raw data and the fitted values from
+both models is provided in Figure~\ref{fig:temp}. The corresponding
+estimated coefficients (and standard errors) are shown in
+Table~\ref{tab:mtable} (produced with \pkg{memisc}, \citealp{memisc}).
+This shows that, not surprisingly, inclusion of the 2-meter temperature
+leads to substantial (and highly significant) improvements. The season/trend
+coefficients are dampened but remain significant which means that not
+all seasonal temperature pattern at Innsbruck Airport are resolved
+in the coarse NWP grid.
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=0.75\textwidth}
+<<fig-temp, fig=TRUE, echo=FALSE, height=5.5, width=7>>=
+par(mar = c(4, 4, 1, 1))
+plot(temp ~ time, data = IbkTemperature, type = "l", col = "darkgray",
+  ylim = c(-15, 35), xlab = "Time", ylab = "Temperature (Celsius)")
+lines(fitted(m1) ~ time, data = IbkTemperature, col = "darkred")
+lines(fitted(m0) ~ time, data = IbkTemperature, col = "black", lwd = 2)
+legend("topright", c("Observations", "Climatology (m0)", "MOS (m1)"),
+  lwd = 2, col = c("darkgray", "black", "darkred"), bty = "n")
+@
+\caption{\label{fig:temp} Observed temperature at Innsbruck Airport (gray) and
+  fitted values from the climatological model (\code{m0}, black) and the
+  simple MOS (\code{m1}, red).}
+\end{figure}
+
+Subsequently, we now try to improve the MOS by not only including
+the direct model output for 2-meter temperature but also further NWP
+model outputs. As a starting point we force the regressors from
+\code{m1} into the model and use all-subsets regression to select
+the relevant regressors from the remaining 35 NWP variables.
+<<ms2>>=
+ms2 <- lmSubsets(temp ~ ., data = IbkTemperature,
+  include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
+m2 <- refit(lmSelect(ms2, penalty = "BIC"))
+@
+After obtaining the all-subsets regression \code{ms2} with \fct{lmSubsets}
+the best BIC solution is extracted with \fct{lmSelect} and turned
+into a \class{lm} model with \fct{refit}. The more costly all-subsets
+regression is solved here to gain more insights into the selected
+variables not only for the best-BIC solution but also other models. 
+
+To assess whether our initial MOS strategy in \code{m1} (and forced
+into \code{m2}) is really the most suitable we also carry out another
+all-subsets regression without restricting the search space.
+<<ms3>>=
+ms3 <- lmSubsets(temp ~ ., data = IbkTemperature)
+m3 <- refit(lmSelect(ms3, penalty = "BIC"))
+@
+Obtaining \code{ms3} is computationally somewhat more costly than
+\code{ms2} but still very fast taking only a couple of seconds on
+standard PCs.
+
+\begin{table}[t!]
+\centering
+<<mtable, echo=FALSE, results=tex>>=
+library("memisc")
+names(m2$coefficients) <- gsub("^x", "", names(m2$coefficients))
+names(m3$coefficients) <- gsub("^x", "", names(m3$coefficients))
+tab <- mtable(m0, m1, m2, m3, summary.stats = c("AIC", "BIC", "Deviance", "sigma", "R-squared"))
+toLatex(tab)
+@
+\caption{\label{tab:mtable} Estimated regression coefficients (and standard errors)
+along with further summary statistics for the climatological model \code{m0} and
+the three MOS models (\code{m1}--\code{m3}).}
+\end{table}
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=\textwidth}
+<<fig-rss, fig=TRUE, echo=FALSE, height=5.5, width=12>>=
+par(mfrow = c(1, 2))
+plot(summary(ms2))
+plot(summary(ms3))
+@
+\caption{\label{fig:rss} Best RSS and associated BIC for all subset sizes considered
+  in \code{ms2} (left) and \code{ms3} (right).}
+\end{figure}
+
+To assess the subset selections, Figure~\ref{fig:rss} shows a graphical summary
+of best RSS and associated BIC for all subset sizes considered in \code{ms2}
+and \code{ms3}, respectively. The plots can be easily produced by \code{plot(summary(...))}
+and start with subset size 8 for \code{ms2} because seven variables are forced
+into the model while in \code{ms3} only the intercept is always included. For
+both models the RSS and BIC curves look rather similar and the best-BIC models
+both have 13 regressors.
+
+The corresponding selected variables can be seen in Table~\ref{tab:mtable}
+produced by \code{mtable(m1, m2, m3, m4)}. This shows that both \code{m2}
+and \code{m3} are rather similar with respect to the selected variables and
+corresponding coefficients. However, interestingly the direct model output
+\code{t2m} is not selected for \code{m3} and instead the soil temperature (\code{st})
+as well as the maximal 2-meter temperature (\code{tmax2m}) and 
+temperature on the so-called 2 PVU surface (\code{t2pvu}) are used which
+are selected in addition to \code{t2m} in \code{m2}. Additionally, various
+other meteorological quantities are selected that improve the forecasting model
+further, e.g., soil moisture \code{vsmc}) among others.
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=\textwidth}
+<<fig-image2, fig=TRUE, echo=FALSE, height=5, width=12>>=
+par(mar = c(3.2, 4, 4, 1))
+image(ms2, size = 8:20)
+@
+\caption{\label{fig:image2} Subset selection for \code{ms2}.}
+\end{figure}
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=\textwidth}
+<<fig-image3, fig=TRUE, echo=FALSE, height=7, width=12>>=
+par(mar = c(3.4, 4, 4, 1))
+image(ms3, size = 2:20)
+@
+\caption{\label{fig:image3} Subset selection for \code{ms3}.}
+\end{figure}
+
+To gain further insight into the best-subset selection for various sizes
+the \fct{image} method is useful. Figure~\ref{fig:image2} and Figure~\ref{fig:image3}
+show the results for \code{ms2} and \code{ms3}, respectively, for subset
+sizes up to 20 variables. The dark cells in the heatmap show the variables
+that are selected while the best-BIC solution is highlighted with a red
+rectangle and by underlining the variable names in the x-axis labels. While
+there are many similarities between the patterns shown, it is striking that
+\code{t2m} is not considered for any of the subsets in \code{ms3} while we
+forced it into \code{ms2}. The decision to always include the deterministic
+season/trend regressors, however, is confirmed as some of these regressors are
+already selected for low subset sizes and all of them are selected from size
+14 onwards.
+
+Nevertheless, the differences between \code{m2} and \code{m3} in terms
+of model fit are fairly small compared to the reference models \code{m0}
+and \code{m1}. Comparing the BIC and the root mean squared error (RMSE)
+gives
+<<bic-rss>>=
+BIC(m0, m1, m2, m3)
+sqrt(sapply(list(m0, m1, m2, m3), deviance)/nrow(IbkTemperature))
+@
+showing that \code{m2} and \code{m3} improve the model substantially
+over \code{m0} and \code{m1}. By construction the BIC of \code{m3}
+is lower than that of \code{m2} but not by much.
+
+In summary, this shows that best-subset selection can easily identify
+relevant variables beyond the direct model output for MOS regressions,
+yielding substantial improvements in forecasting quality. In a full
+meteorological application this should, of course, be further tested
+using cross-validation or other out-of-sample assessments. But as this
+is beyond the scope of this paper we confine ourselves to the in-sample
+assessment presented here.
+
+To conclude, it is also worth pointing out that recently there has
+been increasing interest in MOS models beyond least-squares linear regression.
+Incorporating heteroscedasticity is important ensemble MOS models
+as well as censoring or truncation for quantities like precipitation
+or wind (see the \pkg{crch} package of \citealp{Messner+Mayr+Zeileis:2016}
+for some examples). All-subsets regression for those models would be
+much more burdensome and is not available in \pkg{lmSubsets}. An alternative
+solution in those situations is for example boosting as proposed by
+\cite{Messner+Mayr+Zeileis:2016a}.
 
 
 %--------------------------------------------------------------------%
@@ -670,7 +897,43 @@ as an argument to either \code{size} (e.g., \code{size=5:10}) or
 \section{Benchmark}
 \label{sec:benchmark}
 
-\TODO{by X}
+\TODO{by X. Below are some rough ideas\dots
+Before going into detail about this one should check what other
+authors in this field have used for setting up their regressions.
+Following their templates might make the design easier and more
+convincing for the reviewers.}
+
+Data-generating process:
+\begin{itemize}
+  \item Allow increasing $M$ and/or $N$.
+  \item A certain fixed fraction of variables could be relevant
+    (say 20\%).
+  \item All regressors could have the same distribution, e.g.,
+    standard normal or uniform on $[-1, 1]$.
+  \item The relevant variables could also all have the same
+    coefficient or follow a linearly decreasing pattern for
+    example. All irrelevant variables have coefficient zero.
+  \item Then one could consider two values of $M$ (say, 200 and 1000)
+    and a sequence of $N$s (say, 20, 40, \dots).
+\end{itemize}
+
+Competitors:
+\begin{itemize}
+  \item lmSubsets and lmSelect, either exactly or with certain
+    relaxations.
+  \item Other exact solutions (at least: leaps).
+  \item Approximate solutions (at least: subselect and/or glmulti).
+  \item Penalized solutions (at least: glmnet).
+\end{itemize}
+
+Outcome measurements:
+\begin{itemize}
+  \item Computation time of the R functions (especially for exact
+    solutions).
+  \item Proportion of correctly selected regressors.
+  \item RSS, AIC, BIC.
+\end{itemize}
+
 
 
 %--------------------------------------------------------------------%
@@ -681,7 +944,8 @@ as an argument to either \code{size} (e.g., \code{size=5:10}) or
 
 This work was in part supported by the \emph{F\"orderverein des
   wirtschaftswissenschaftlichen Zentrums der Universit\"at Basel},
-through research project B-123.
+through research project B-123. The authors are grateful to Jakob Messner
+for sharing the GEFS forecast data in \code{IbkTemperature}.
 
 %====================================================================%
 % BIBLIOGRAPHY                                                       %
