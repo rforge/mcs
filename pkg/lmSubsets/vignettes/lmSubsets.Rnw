@@ -20,7 +20,7 @@
 %--------------------------------------------------------------------%
 
 %% pdflatex:  set 'eps=FALSE'
-\SweaveOpts{engine = R, eps = FALSE, keep.source = TRUE}
+\SweaveOpts{engine=R,eps=FALSE,keep.source=TRUE}
 
 
 %--------------------------------------------------------------------%
@@ -28,6 +28,7 @@
 %--------------------------------------------------------------------%
 
 \usepackage{thumbpdf,lmodern}
+\usepackage{booktabs,dcolumn}
 \usepackage{pdfcomment}
 \usepackage{amsmath,amssymb}
 \usepackage{pstricks,pst-tree}
@@ -769,11 +770,233 @@ submodel at a time if passed a numeric vector as an argument to either
 
 
 %--------------------------------------------------------------------%
-% section:  Case study                                               %
+% section:  Case study I                                             %
+%--------------------------------------------------------------------%
+
+\section{Case study: Variable selection for weather forecasting}
+\label{sec:usecase:1}
+
+Over the last decades the field of weather forecasting made steady and
+substantial improvements especially through improvements in numerical
+weather prediction (NWP) models \citep{bauer:nature:15}.  Starting
+from \cite{glahn:j_appl_meteorol:72} the outputs from these
+physically-based large-scale (typically global) NWP models is
+statistically post-processed to correct small-scale biases and obtain
+predictions for specific locations. Below we use such model output
+statistics (MOS) to predict temperature at a specific station
+(Innsbruck Airport, Austria) based on a wide range of NWP quantities
+from the nearest NWP grid point. Variable subset selection is relevant
+here because it is not obvious which quantities beyond the temperature
+NWP forecasts should enter the MOS regression.
+
+More specifically, we model 00UTC temperature observations (in degree
+Celsius) based on the corresponding 24-hour GEFS reforecast
+\citep{hamill:b_am_meteorol_soc:13} ensemble means for SYNOP station
+Innsbruck Airport (11120; 47.260, 11.357) from 2011-01-01 to
+2015-12-31. The data frame \code{IbkTemperature} contains 1824 daily
+observations/forecasts for the observed response, 36 NWP outputs, and
+five deterministic time trend/season patterns that are available as
+potential regressors.  The NWP variables include several temperature
+quantities (in degree Kelvin, e.g., 2-meter, minimum, maximum, soil)
+as well as several quantities capturing precipitation, wind, and
+fluxes among others. See \code{?IbkTemperature} for more details. The
+data from the NOAA (United States National Oceanic and Atmospheric
+Administration) are obtained from
+\url{http://www.esrl.noaa.gov/psd/forecasts/reforecast2/}
+(reforecasts) and \url{http://www.ogimet.com/synops.phtml.en}
+(observations), respectively.
+
+To start the analysis the data from the \pkg{lmSubsets} package can be
+loaded and for simplicity a couple of days with some missing values are
+omitted.
+<<data>>=
+data("IbkTemperature", package = "lmSubsets")
+IbkTemperature <- na.omit(IbkTemperature)
+@
+First, a simple climatological model for the temperature (\code{temp})
+with a linear trend (\code{time}) and a harmonic seasonal pattern
+(\code{sin}/\code{cos} for the annual and \code{sin2}/\code{cos2}
+for the bi-annual frequencies).
+<<m0>>=
+m0 <- lm(temp ~ time + sin + cos + sin2 + cos2, data = IbkTemperature)
+@
+This model does not make use of any NWP outputs and is used as a basic
+reference model against which the subsequent MOS models can be compared.
+Second, the model is updated to a simple MOS by including the most
+obvious direct model output -- 2-meter temperature (\code{t2m}) --
+in addition to the season/trend regressors.
+<<m1>>=
+m1 <- update(m0, . ~ . + t2m)
+@ A graphical comparison of the raw data and the fitted values from
+both models is provided in Figure~\ref{fig:temp}. The corresponding
+estimated coefficients (and standard errors) are shown in
+Table~\ref{tab:mtable} (produced with \pkg{memisc},
+\citealp{memisc:16}).  This shows that, not surprisingly, inclusion of
+the 2-meter temperature leads to substantial (and highly significant)
+improvements. The season/trend coefficients are dampened but remain
+significant which means that not all seasonal temperature pattern at
+Innsbruck Airport are resolved in the coarse NWP grid.
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=0.75\textwidth}
+<<fig-temp, fig=TRUE, echo=FALSE, height=5.5, width=7>>=
+par(mar = c(4, 4, 1, 1))
+plot(temp ~ time, data = IbkTemperature, type = "l", col = "darkgray",
+  ylim = c(-15, 35), xlab = "Time", ylab = "Temperature (Celsius)")
+lines(fitted(m1) ~ time, data = IbkTemperature, col = "darkred")
+lines(fitted(m0) ~ time, data = IbkTemperature, col = "black", lwd = 2)
+legend("topright", c("Observations", "Climatology (m0)", "MOS (m1)"),
+  lwd = 2, col = c("darkgray", "black", "darkred"), bty = "n")
+@
+\caption{\label{fig:temp} Observed temperature at Innsbruck Airport (gray) and
+  fitted values from the climatological model (\code{m0}, black) and the
+  simple MOS (\code{m1}, red).}
+\end{figure}
+
+Subsequently, we now try to improve the MOS by not only including
+the direct model output for 2-meter temperature but also further NWP
+model outputs. As a starting point we force the regressors from
+\code{m1} into the model and use all-subsets regression to select
+the relevant regressors from the remaining 35 NWP variables.
+<<ms2>>=
+ms2 <- lmSubsets(temp ~ ., data = IbkTemperature,
+  include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
+m2 <- refit(lmSelect(ms2, penalty = "BIC"))
+@
+After obtaining the all-subsets regression \code{ms2} with \fct{lmSubsets}
+the best BIC solution is extracted with \fct{lmSelect} and turned
+into a \class{lm} model with \fct{refit}. The more costly all-subsets
+regression is solved here to gain more insights into the selected
+variables not only for the best-BIC solution but also other models. 
+
+To assess whether our initial MOS strategy in \code{m1} (and forced
+into \code{m2}) is really the most suitable we also carry out another
+all-subsets regression without restricting the search space.
+<<ms3>>=
+ms3 <- lmSubsets(temp ~ ., data = IbkTemperature)
+m3 <- refit(lmSelect(ms3, penalty = "BIC"))
+@
+Obtaining \code{ms3} is computationally somewhat more costly than
+\code{ms2} but still very fast taking only a couple of seconds on
+standard PCs.
+
+\begin{table}[t!]
+\centering
+<<mtable, echo=FALSE, results=tex>>=
+library("memisc")
+names(m2$coefficients) <- gsub("^x", "", names(m2$coefficients))
+names(m3$coefficients) <- gsub("^x", "", names(m3$coefficients))
+tab <- mtable(m0, m1, m2, m3, summary.stats = c("AIC", "BIC", "Deviance", "sigma", "R-squared"))
+toLatex(tab)
+@
+\caption{\label{tab:mtable} Estimated regression coefficients (and standard errors)
+along with further summary statistics for the climatological model \code{m0} and
+the three MOS models (\code{m1}--\code{m3}).}
+\end{table}
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=\textwidth}
+<<fig-rss, fig=TRUE, echo=FALSE, height=5.5, width=12>>=
+par(mfrow = c(1, 2))
+plot(summary(ms2))
+plot(summary(ms3))
+@
+\caption{\label{fig:rss} Best RSS and associated BIC for all subset sizes considered
+  in \code{ms2} (left) and \code{ms3} (right).}
+\end{figure}
+
+To assess the subset selections, Figure~\ref{fig:rss} shows a graphical summary
+of best RSS and associated BIC for all subset sizes considered in \code{ms2}
+and \code{ms3}, respectively. The plots can be easily produced by \code{plot(summary(...))}
+and start with subset size 8 for \code{ms2} because seven variables are forced
+into the model while in \code{ms3} only the intercept is always included. For
+both models the RSS and BIC curves look rather similar and the best-BIC models
+both have 13 regressors.
+
+The corresponding selected variables can be seen in Table~\ref{tab:mtable}
+produced by \code{mtable(m1, m2, m3, m4)}. This shows that both \code{m2}
+and \code{m3} are rather similar with respect to the selected variables and
+corresponding coefficients. However, interestingly the direct model output
+\code{t2m} is not selected for \code{m3} and instead the soil temperature (\code{st})
+as well as the maximal 2-meter temperature (\code{tmax2m}) and 
+temperature on the so-called 2 PVU surface (\code{t2pvu}) are used which
+are selected in addition to \code{t2m} in \code{m2}. Additionally, various
+other meteorological quantities are selected that improve the forecasting model
+further, e.g., soil moisture \code{vsmc}) among others.
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=\textwidth}
+<<fig-image2, fig=TRUE, echo=FALSE, height=5, width=12>>=
+par(mar = c(3.2, 4, 4, 1))
+image(ms2, size = 8:20)
+@
+\caption{\label{fig:image2} Subset selection for \code{ms2}.}
+\end{figure}
+
+\begin{figure}[t!]
+\centering
+\setkeys{Gin}{width=\textwidth}
+<<fig-image3, fig=TRUE, echo=FALSE, height=7, width=12>>=
+par(mar = c(3.4, 4, 4, 1))
+image(ms3, size = 2:20)
+@
+\caption{\label{fig:image3} Subset selection for \code{ms3}.}
+\end{figure}
+
+To gain further insight into the best-subset selection for various
+sizes the \fct{image} method is useful. Figure~\ref{fig:image2} and
+Figure~\ref{fig:image3} show the results for \code{ms2} and
+\code{ms3}, respectively, for subset sizes up to 20 variables. The
+dark cells in the heatmap show the variables that are selected while
+the best-BIC solution is highlighted with a red rectangle and by
+underlining the variable names in the x-axis labels. While there are
+many similarities between the patterns shown, it is striking that
+\code{t2m} is not considered for any of the subsets in \code{ms3}
+while we forced it into \code{ms2}. The decision to always include the
+deterministic season/trend regressors, however, is confirmed as some
+of these regressors are already selected for low subset sizes and all
+of them are selected from size 14 onwards.
+
+Nevertheless, the differences between \code{m2} and \code{m3} in terms
+of model fit are fairly small compared to the reference models \code{m0}
+and \code{m1}. Comparing the BIC and the root mean squared error (RMSE)
+gives
+<<bic-rss>>=
+BIC(m0, m1, m2, m3)
+sqrt(sapply(list(m0, m1, m2, m3), deviance)/nrow(IbkTemperature))
+@
+showing that \code{m2} and \code{m3} improve the model substantially
+over \code{m0} and \code{m1}. By construction the BIC of \code{m3}
+is lower than that of \code{m2} but not by much.
+
+In summary, this shows that best-subset selection can easily identify
+relevant variables beyond the direct model output for MOS regressions,
+yielding substantial improvements in forecasting quality. In a full
+meteorological application this should, of course, be further tested
+using cross-validation or other out-of-sample assessments. But as this
+is beyond the scope of this paper we confine ourselves to the in-sample
+assessment presented here.
+
+To conclude, it is also worth pointing out that recently there has
+been increasing interest in MOS models beyond least-squares linear
+regression.  Incorporating heteroscedasticity is important ensemble
+MOS models as well as censoring or truncation for quantities like
+precipitation or wind (see the \pkg{crch} package of
+\citealp{messner:r_j:16} for some examples). All-subsets regression
+for those models would be much more burdensome and is not available in
+\pkg{lmSubsets}. An alternative solution in those situations is for
+example boosting as proposed by \cite{messner:16}.
+
+
+%--------------------------------------------------------------------%
+% section:  Case study II                                            %
 %--------------------------------------------------------------------%
 
 \section{Case study}
-\label{sec:usecase}
+\label{sec:usecase:2}
 
 \TODO{by Ana}
 
@@ -785,7 +1008,41 @@ submodel at a time if passed a numeric vector as an argument to either
 \section{Benchmark}
 \label{sec:benchmark}
 
-\TODO{by X}
+\TODO{Achim: Below are some rough ideas\dots Before going into detail
+  about this one should check what other authors in this field have
+  used for setting up their regressions.  Following their templates
+  might make the design easier and more convincing for the reviewers.}
+
+Data-generating process:
+\begin{itemize}
+  \item Allow increasing $M$ and/or $N$.
+  \item A certain fixed fraction of variables could be relevant
+    (say 20\%).
+  \item All regressors could have the same distribution, e.g.,
+    standard normal or uniform on $[-1, 1]$.
+  \item The relevant variables could also all have the same
+    coefficient or follow a linearly decreasing pattern for
+    example. All irrelevant variables have coefficient zero.
+  \item Then one could consider two values of $M$ (say, 200 and 1000)
+    and a sequence of $N$s (say, 20, 40, \dots).
+\end{itemize}
+
+Competitors:
+\begin{itemize}
+  \item lmSubsets and lmSelect, either exactly or with certain
+    relaxations.
+  \item Other exact solutions (at least: leaps).
+  \item Approximate solutions (at least: subselect and/or glmulti).
+  \item Penalized solutions (at least: glmnet).
+\end{itemize}
+
+Outcome measurements:
+\begin{itemize}
+  \item Computation time of the R functions (especially for exact
+    solutions).
+  \item Proportion of correctly selected regressors.
+  \item RSS, AIC, BIC.
+\end{itemize}
 
 
 %--------------------------------------------------------------------%
@@ -797,6 +1054,10 @@ submodel at a time if passed a numeric vector as an argument to either
 This work was in part supported by the \emph{F\"orderverein des
   wirtschaftswissenschaftlichen Zentrums der Universit\"at Basel},
 through research project B-123.
+
+The authors are grateful to Jakob Messner for sharing the GEFS
+forecast data in \code{IbkTemperature}.
+
 
 %====================================================================%
 % BIBLIOGRAPHY                                                       %
