@@ -12,7 +12,7 @@
 % \VignetteIndexEntry{lmSubsets: Efficient Computation of Variable-Subsets Linear Regression in R}
 % \VignetteKeywords{linear regression, model selection, variable selection, best-subset regression, R}
 % \VignettePackage{lmSubsets}
-% \VignetteDepends{stats,graphics}
+% \VignetteDepends{stats,graphics,memisc}
 
 
 %--------------------------------------------------------------------%
@@ -101,6 +101,8 @@ data("AirPollution")
 
 \section{Introduction}
 \label{sec:intro}
+
+\TODO{Some comments and references to applications might be useful here.}
 
 An important problem in statistical modeling is that of
 subset-selection regression or, equivalently, of finding the best
@@ -216,7 +218,7 @@ generalized linear models and summarized in the \pkg{bestglm}
 package~\citep{bestglm}.
 %
 Alternative approximate solutions based on simulated annealing were
-introduced in the \pkg{subselect} package~\citep{subselect:15} based
+introduced in the \pkg{subselect} package~\citep{subselect} based
 on~\cite{duarte_silva:j_multivariate_anal:01}.  Furthermore,
 approximate solutions via genetic algorithms for generalized linear
 models and beyond have been implemented in
@@ -830,9 +832,9 @@ m1 <- update(m0, . ~ . + t2m)
 @ A graphical comparison of the raw data and the fitted values from
 both models is provided in Figure~\ref{fig:temp}. The corresponding
 estimated coefficients (and standard errors) are shown in
-Table~\ref{tab:mtable} (produced with \pkg{memisc},
-\citealp{memisc:16}).  This shows that, not surprisingly, inclusion of
-the 2-meter temperature leads to substantial (and highly significant)
+Table~\ref{tab:mtable} (produced with \pkg{memisc}, \citealp{memisc}).
+This shows that, not surprisingly, inclusion of the 2-meter
+temperature leads to substantial (and highly significant)
 improvements. The season/trend coefficients are dampened but remain
 significant which means that not all seasonal temperature pattern at
 Innsbruck Airport are resolved in the coarse NWP grid.
