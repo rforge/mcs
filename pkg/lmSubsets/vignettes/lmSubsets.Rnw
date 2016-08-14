@@ -792,9 +792,9 @@ here because it is not obvious which quantities beyond the temperature
 NWP forecasts should enter the MOS regression.
 
 More specifically, we model 00UTC temperature observations (in degree
-Celsius) based on the corresponding 24-hour GEFS reforecast
-\citep{hamill:b_am_meteorol_soc:13} ensemble means for SYNOP station
-Innsbruck Airport (11120; 47.260, 11.357) from 2011-01-01 to
+Celsius) based on the corresponding 24-hour reforecast ensemble means
+from the Global Ensemble Forecast System \citep[GEFS,][]{hamill:b_am_meteorol_soc:13}
+for meteorological station Innsbruck Airport (11120; 47.260, 11.357) from 2011-01-01 to
 2015-12-31. The data frame \code{IbkTemperature} contains 1824 daily
 observations/forecasts for the observed response, 36 NWP outputs, and
 five deterministic time trend/season patterns that are available as

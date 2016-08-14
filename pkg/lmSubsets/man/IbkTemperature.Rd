@@ -4,8 +4,9 @@
 \title{Temperature Observations and Numerical Weather Predictions for Innsbruck}
 
 \description{
-00UTC temperature observations and corresponding 24 hours GEFS reforecast
-(Hamill et al. 2013) ensemble means for SYNOP station Innsbruck
+00UTC temperature observations and corresponding 24-hour
+reforecast ensemble means from the Global Ensemble Forecast System
+(GEFS, Hamill et al. 2013) for SYNOP station Innsbruck
 Airport (11120; 47.260, 11.357) from 2011-01-01 to 2015-12-31.
 }
 
@@ -13,8 +14,9 @@ Airport (11120; 47.260, 11.357) from 2011-01-01 to 2015-12-31.
 
 \format{
 A data frame containing 1824 daily observations/forecasts for 42 variables.
-The first column (\code{temp}) contains temperature observations in degree Celsius,
-columns 2--37 are 24-hour lead time GEFS reforecast ensemble means for different variables (see below).
+The first column (\code{temp}) contains temperature observations at
+00UTC (coordinated universal time) in degree Celsius, columns 2--37 are
+24-hour lead time GEFS reforecast ensemble means for different variables (see below).
 Columns 38--42 are deterministic time trend/season patterns.
 \describe{
   \item{temp}{Observed temperature at Innsbruck Airport.} 
