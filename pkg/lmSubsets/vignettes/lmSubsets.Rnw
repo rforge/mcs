@@ -207,8 +207,8 @@ procedure:
 Note that solving~\eqref{eq:best_subset} directly can allow a
 computational strategy to optimize for a specific selection criterion,
 thus lowering the compuational cost.  On the other hand, solving
-\eqref{eq:all-subsets} has the advantage that all $N$ submodels are
-available and the computationally cheap problem \eqref{eq:all-subsets:selection}
+\eqref{eq:all_subsets} has the advantage that all $N$ submodels are
+available and the computationally cheap second stage
 can be performed for different criterion functions (e.g., AIC and BIC)
 or using more elaborate statistical inference.
 
@@ -438,8 +438,8 @@ generated nodes.
 \label{sec:R}
 
 The \proglang{R} package \pkg{lmSubsets} provides infrastructure
-for solving both the all-subsets regression \eqref{eq:all-subsets} and the
-best-subset selection \eqref{eq:best-subsets} problem in least-squares
+for solving both the all-subsets regression \eqref{eq:all_subsets} and the
+best-subset selection \eqref{eq:best_subset} problem in least-squares
 regression models. The corresponding high-level \SSS{} generics are
 \fct{lmSubsets} and \fct{lmSelect}, respectively.
 
