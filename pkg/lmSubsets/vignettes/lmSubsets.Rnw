@@ -838,7 +838,8 @@ obvious direct model output -- 2-meter temperature (\code{t2m}) --
 in addition to the season/trend regressors.
 <<m1>>=
 m1 <- update(m0, . ~ . + t2m)
-@ A graphical comparison of the raw data and the fitted values from
+@
+A graphical comparison of the raw data and the fitted values from
 both models is provided in Figure~\ref{fig:temp}. The corresponding
 estimated coefficients (and standard errors) are shown in
 Table~\ref{tab:mtable} (produced with \pkg{memisc}, \citealp{memisc}).
