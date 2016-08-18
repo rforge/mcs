@@ -455,7 +455,7 @@ plot.lmSubsets <- function (x, ..., legend) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer)
+##   size   - (integer|character)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
@@ -470,6 +470,13 @@ variable.names.lmSubsets <- function (object, size, best = 1, ...) {
         return (x.names)
     }
 
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
+    }
+
     ## submodel
     which <- object$which[, best, size]
     x.names[which]
@@ -480,7 +487,7 @@ variable.names.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 ## Args:
 ##   x    - (lmSubsets)
-##   size - (integer)
+##   size - (integer|character)
 ##   best - (integer)
 ##   ...  - ignored
 ##
@@ -491,6 +498,13 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
         f <- formula(x$terms)
 
         return (f)
+    }
+
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
     e <- new.env();
@@ -512,7 +526,7 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer)
+##   size   - (integer|chacacter)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
@@ -520,6 +534,13 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 ##
 model.frame.lmSubsets <- function(formula, size, best = 1, ...) {
     mf <- formula[["model"]]
+
+    ## shortcut to 'lmSelect'
+    if (!missing(size) && is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
+    }
 
     if (!missing(size) || is.null(mf)) {
         cl <- formula$call
@@ -548,7 +569,7 @@ model.frame.lmSubsets <- function(formula, size, best = 1, ...) {
 ##
 ## Args:
 ##   object        - (lmSubsets)
-##   size          - (integer)
+##   size          - (integer|character)
 ##   best          - (integer)
 ##   ...           - ignored
 ##
@@ -566,6 +587,13 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         return (x)
+    }
+
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
     ## submodel
@@ -598,7 +626,7 @@ model.response.lmSubsets <- function (data, ...) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer)
+##   size   - (integer|character)
 ##   best   - (integer)
 ##   ...    - forwarded to 'lm'
 ##
@@ -607,6 +635,13 @@ model.response.lmSubsets <- function (data, ...) {
 refit.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing (size)) {
         stop ("missing argument: 'size'")
+    }
+
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
     f <- formula(object, size = size, best = best)
@@ -619,7 +654,7 @@ refit.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer[])
+##   size   - (integer[]|character)
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   drop   - (logical)
@@ -628,7 +663,13 @@ refit.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     ## 'size' processing
-    if (missing(size)) size <- object$nmin:object$nmax
+    if (missing(size)) {
+        size <- object$nmin:object$nmax
+    } else if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
+    }
 
     ## extract RSS
     ans <- object$rss[best, size, drop = FALSE]
@@ -648,7 +689,7 @@ deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer[])
+##   size   - (integer[]|character)
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   drop   - (logical)
@@ -657,7 +698,13 @@ deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 ##
 logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     ## 'size' processing
-    if (missing(size)) size <- object$nmin:object$nmax
+    if (missing(size)) {
+        size <- object$nmin:object$nmax
+    } else if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
+    }
 
     ## weights
     N <- object$nobs
@@ -690,7 +737,7 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer[])
+##   size   - (integer[]|character)
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   k      - (numeric) penalty
@@ -719,7 +766,7 @@ AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer[])
+##   size   - (integer[]|character)
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   drop   - (logical)
@@ -748,7 +795,7 @@ BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 ##
 ## Args:
 ##   object        - (lmSubsets)
-##   size          - (integer)
+##   size          - (integer|character)
 ##   best          - (integer)
 ##   ...           - ignored
 ##
@@ -758,6 +805,13 @@ coef.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
+    }
+
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
     ## extract submodel
@@ -780,7 +834,7 @@ coef.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 ## Args:
 ##   object        - (lmSubsets)
-##   size          - (integer)
+##   size          - (integer|character)
 ##   best          - (integer)
 ##   ...           - ignored
 ##
@@ -790,6 +844,13 @@ vcov.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
+    }
+
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
     ## extract submodel
@@ -817,7 +878,7 @@ vcov.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer)
+##   size   - (integer|character)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
@@ -827,6 +888,13 @@ fitted.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
+    }
+
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
     ## extract submodel
@@ -843,7 +911,7 @@ fitted.lmSubsets <- function (object, size, best = 1, ...) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer)
+##   size   - (integer|character)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
@@ -853,6 +921,13 @@ residuals.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
+    }
+
+    ## shortcut to 'lmSelect'
+    if (is.character(size)) {
+        if (!missing(best))  warning ("unused argument: 'best'")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
     ## extract submodel

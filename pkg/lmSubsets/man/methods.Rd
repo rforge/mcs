@@ -97,6 +97,10 @@
   If a method is not available, \code{refit} can be called explicitly to
   obtain the \code{lm} object.
 
+  For convenience, the submodel size may be specified implicitly by
+  passing a character value as the 'size' argument.  Currently, only
+  \code{"AIC"} and \code{"BIC"} are recognized.
+
   The method \code{refit} returns an \code{lm} object fitted to the
   desired size and rank.
 }
