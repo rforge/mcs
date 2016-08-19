@@ -526,13 +526,13 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 ##
 ## Args:
 ##   object - (lmSubsets)
-##   size   - (integer|chacacter)
+##   size   - (integer|character)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
 ## Rval:  (model.frame)
 ##
-model.frame.lmSubsets <- function(formula, size, best = 1, ...) {
+model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
     mf <- formula[["model"]]
 
     ## shortcut to 'lmSelect'
@@ -747,7 +747,12 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 ##
 AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
     ## extract log-likelihoods
-    ll <- logLik(object, size = size, best = best, drop = drop)
+    ll <- match.call(expand.dots = FALSE)
+    m <- c("object", "size", "best", "drop")
+    m <- match(m, names(ll), 0L)
+    ll <- ll[c(1L, m)]
+    ll[[1L]] <- quote(stats::logLik)
+    ll <- eval(ll)
 
     ## compute AICs
     ans <- -2 * as.numeric(ll) + k * attr(ll, "df")
@@ -775,7 +780,12 @@ AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
 ##
 BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     ## extract log-likelihoods
-    ll <- logLik(object, size = size, best = best, drop = drop)
+    ll <- match.call(expand.dots = FALSE)
+    m <- c("object", "size", "best", "drop")
+    m <- match(m, names(ll), 0L)
+    ll <- ll[c(1L, m)]
+    ll[[1L]] <- quote(stats::logLik)
+    ll <- eval(ll)
 
     ## compute BICs
     k <- log(attr(ll, "nobs"))
