@@ -138,8 +138,8 @@ lmSelect_fit <- function (x, y, weights = NULL, offset = NULL,
                           .algo = "phbba")
 {
     ## model weights and offset
-    if (is.null(w <- weights)) w <- rep(1, NROW(x))
-    if (is.null(o <- offset)) o <- rep(0, NROW(x))
+    if (is.null(w <- weights))  w <- rep(1, NROW(x))
+    if (is.null(o <- offset))  o <- rep(0, NROW(x))
     wok <- w != 0;  w <- w[wok];  o <- o[wok]
     x <- sqrt(w) * x[wok, , drop = FALSE]
     y <- sqrt(w) * y[wok,   drop = FALSE] - o
@@ -405,13 +405,13 @@ lmSelect.default <- function (formula, data, subset, weights, na.action,
 
     ## weights
     w <- as.vector(model.weights(mf))
-    if(!is.null(w) && !is.numeric(w)) {
+    if (!is.null(w) && !is.numeric(w)) {
         stop("'weights' must be a numeric vector")
     }
 
     ## offset
     offset <- as.vector(model.offset(mf))
-    if(!is.null(offset) && (length(offset) != NROW(y))) {
+    if (!is.null(offset) && (length(offset) != NROW(y))) {
         stop("length of 'offset' must equal number of observations")
     }
 
@@ -427,9 +427,9 @@ lmSelect.default <- function (formula, data, subset, weights, na.action,
     rval$xlevels <- .getXlevels(mt, mf)
     rval$terms <- mt
 
-    if (ret.m) rval$model <- mf
-    if (ret.x) rval$x <- x
-    if (ret.y) rval$y <- y
+    if (ret.m)  rval$model <- mf
+    if (ret.x)  rval$x <- x
+    if (ret.y)  rval$y <- y
 
     ## done
     rval
@@ -528,10 +528,10 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
     localPlot <- function (object, main, sub, xlab, ylab, type = "o",
                            lty = c(3, 1), pch = c(21, 16), col = "black",
                            bg = "white", ...) {
-        if (missing(main)) main <- "Best subsets"
-        if (missing(sub))  sub  <- paste("nbest =", object$nbest, sep = " ")
-        if (missing(xlab)) xlab <- "Best subset"
-        if (missing(ylab)) ylab <- c("Deviance", "Value")
+        if (missing(main))  main <- "Best subsets"
+        if (missing(sub))   sub  <- paste("nbest =", object$nbest, sep = " ")
+        if (missing(xlab))  xlab <- "Best subset"
+        if (missing(ylab))  ylab <- c("Deviance", "Value")
 
         type <- rep(type, length = 2)
         lty  <- rep(lty , length = 2)
@@ -784,7 +784,7 @@ logLik.lmSelect <- function (object, best = 1, ..., drop = TRUE) {
     ## compute log-likelihoods
     ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(rss)))
     ans <- structure(ll, df = object$df[best], nobs = N)
-    if (drop) class(ans) <- "logLik"
+    if (drop)  class(ans) <- "logLik"
 
     ## done
     ans

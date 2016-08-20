@@ -58,8 +58,8 @@ lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
                            nmax = NULL, tolerance = 0, pradius = NULL,
                            nbest = 1, ..., .algo = "phbba") {
     ## model weights and offset
-    if (is.null(w <- weights)) w <- rep(1, NROW(x))
-    if (is.null(o <- offset)) o <- rep(0, NROW(x))
+    if (is.null(w <- weights))  w <- rep(1, NROW(x))
+    if (is.null(o <- offset))  o <- rep(0, NROW(x))
     wok <- w != 0;  w <- w[wok];  o <- o[wok]
     x <- sqrt(w) * x[wok, , drop = FALSE]
     y <- sqrt(w) * y[wok,   drop = FALSE] - o
@@ -294,7 +294,7 @@ lmSubsets.default <- function (formula, data, subset, weights, na.action,
 
     ## weights
     w <- as.vector(model.weights(mf))
-    if(!is.null(w) && !is.numeric(w)) {
+    if (!is.null(w) && !is.numeric(w)) {
         stop ("'weights' must be a numeric vector")
     }
 
@@ -316,9 +316,9 @@ lmSubsets.default <- function (formula, data, subset, weights, na.action,
     rval$xlevels <- .getXlevels(mt, mf)
     rval$terms <- mt
 
-    if (ret.m) rval$model <- mf
-    if (ret.x) rval$x <- x
-    if (ret.y) rval$y <- y
+    if (ret.m)  rval$model <- mf
+    if (ret.x)  rval$x <- x
+    if (ret.y)  rval$y <- y
 
     ## done
     rval
@@ -407,16 +407,16 @@ plot.lmSubsets <- function (x, ..., legend) {
     localPlot <- function (object, main, sub, xlab, ylab, type = "o",
                            lty = c(1, 3), pch = c(16, 21), col = "black",
                            bg = "white", ...) {
-        if (missing(main)) main <- "All subsets"
-        if (missing(sub))  sub  <- paste("nbest =", object$nbest, sep = " ")
-        if (missing(xlab)) xlab <- "Number of regressors"
-        if (missing(ylab)) ylab <- "Deviance"
+        if (missing(main))  main <- "All subsets"
+        if (missing(sub))   sub  <- paste("nbest =", object$nbest, sep = " ")
+        if (missing(xlab))  xlab <- "Number of regressors"
+        if (missing(ylab))  ylab <- "Deviance"
 
         type <- rep(type, length = 2)
-        lty  <- rep(lty, length = 2)
-        pch  <- rep(pch, length = 2)
-        col  <- rep(col, length = 2)
-        bg   <- rep(bg, length = 2)
+        lty  <- rep(lty , length = 2)
+        pch  <- rep(pch , length = 2)
+        col  <- rep(col , length = 2)
+        bg   <- rep(bg  , length = 2)
 
         x <- matrix(rep(object$nmin:object$nmax, each = object$nbest),
                     nrow = object$nbest)
@@ -435,7 +435,7 @@ plot.lmSubsets <- function (x, ..., legend) {
     }
 
     ## default legend
-    if (missing(legend)) legend <- "Deviance (RSS)"
+    if (missing(legend))  legend <- "Deviance (RSS)"
 
     ## plot
     localPlot(x, ...)
@@ -472,7 +472,7 @@ variable.names.lmSubsets <- function (object, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -502,7 +502,7 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -537,7 +537,7 @@ model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (!missing(size) && is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -591,7 +591,7 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -639,7 +639,7 @@ refit.lmSubsets <- function (object, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -666,7 +666,7 @@ deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -701,7 +701,7 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -716,17 +716,17 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 
     ## extract rss
     rss <- deviance(object, size = size, best = best, drop = FALSE)
-    if (drop) rss <- as.numeric(rss)
+    if (drop)  rss <- as.numeric(rss)
 
     ## extract df
     df <- object$df[best, size, drop = FALSE]
     df <- t(df)
-    if (drop) df <- as.numeric(df)
+    if (drop)  df <- as.numeric(df)
 
     ## compute log-likelihoods
     ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(rss)))
     ans <- structure(ll, df = df, nobs = N)
-    if (drop) class(ans) <- "logLik"
+    if (drop)  class(ans) <- "logLik"
 
     ## done
     ans
@@ -747,12 +747,7 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 ##
 AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
     ## extract log-likelihoods
-    ll <- match.call(expand.dots = FALSE)
-    m <- c("object", "size", "best", "drop")
-    m <- match(m, names(ll), 0L)
-    ll <- ll[c(1L, m)]
-    ll[[1L]] <- quote(stats::logLik)
-    ll <- eval(ll)
+    ll <- logLik(object, size = size, best = best, drop = drop)
 
     ## compute AICs
     ans <- -2 * as.numeric(ll) + k * attr(ll, "df")
@@ -780,12 +775,7 @@ AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
 ##
 BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     ## extract log-likelihoods
-    ll <- match.call(expand.dots = FALSE)
-    m <- c("object", "size", "best", "drop")
-    m <- match(m, names(ll), 0L)
-    ll <- ll[c(1L, m)]
-    ll[[1L]] <- quote(stats::logLik)
-    ll <- eval(ll)
+    ll <- logLik(object, size = size, best = best, drop = drop)
 
     ## compute BICs
     k <- log(attr(ll, "nobs"))
@@ -819,7 +809,7 @@ coef.lmSubsets <- function (object, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -858,7 +848,7 @@ vcov.lmSubsets <- function (object, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -902,7 +892,7 @@ fitted.lmSubsets <- function (object, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -935,7 +925,7 @@ residuals.lmSubsets <- function (object, size, best = 1, ...) {
 
     ## shortcut to 'lmSelect'
     if (is.character(size)) {
-        if (!missing(best))  warning ("unused argument: 'best'")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
