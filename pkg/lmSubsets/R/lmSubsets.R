@@ -468,11 +468,8 @@ variable.names.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         return (x.names)
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -494,23 +491,23 @@ variable.names.lmSubsets <- function (object, size, best = 1, ...) {
 ## Rval:  (formula)
 ##
 formula.lmSubsets <- function (x, size, best = 1, ...) {
+    ## 'size' processing
     if (missing(size)) {
         f <- formula(x$terms)
 
         return (f)
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
+    ## environment
     e <- new.env();
     e$x <- model.matrix(x, size = size, best = best)
     e$y <- model.response(x)
 
+    ## intercept handling
     if (x$intercept) {
         e$x <- e$x[, -1]
         f <- formula("y ~ x + 1", env = e)
@@ -518,6 +515,7 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
         f <- formula("y ~ x + 0", env = e)
     }
     
+    ## done
     f
 }
 
@@ -533,15 +531,17 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 ## Rval:  (model.frame)
 ##
 model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
+    ## full model
     mf <- formula[["model"]]
 
-    ## shortcut to 'lmSelect'
+    ## 'size' processing
     if (!missing(size) && is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
+    ## (re-)build model frame
     if (!missing(size) || is.null(mf)) {
         cl <- formula$call
         m <- c("formula", "data", "subset",
@@ -561,6 +561,7 @@ model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
         mf <- eval(cl, env)
     }
 
+    ## done
     mf
 }
 
@@ -587,11 +588,8 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         return (x)
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -611,6 +609,7 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
 ## Rval:  (formula)
 ##
 model.response.lmSubsets <- function (data, ...) {
+    ## extract response
     y <- data[["y"]]
     if (is.null(y)) {
         mf <- model.frame(data)
@@ -633,19 +632,19 @@ model.response.lmSubsets <- function (data, ...) {
 ## Rval:  (lm)
 ##
 refit.lmSubsets <- function (object, size, best = 1, ...) {
+    ## 'size' processing
     if (missing (size)) {
         stop ("missing argument: 'size'")
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
+    ## build formula
     f <- formula(object, size = size, best = best)
 
+    ## build 'lm'
     lm(f, ...)
 }
 
@@ -666,7 +665,7 @@ deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -701,7 +700,7 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -746,6 +745,15 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 ## Rval: (numeric[,])
 ##
 AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
+    ## 'size' processing
+    if (missing(size)) {
+        size <- object$nmin:object$nmax
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
+    }
+
     ## extract log-likelihoods
     ll <- logLik(object, size = size, best = best, drop = drop)
 
@@ -774,6 +782,15 @@ AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
 ## Rval: (numeric[,])
 ##
 BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
+    ## 'size' processing
+    if (missing(size)) {
+        size <- object$nmin:object$nmax
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+
+        size <- lmSelect(object, penalty = size)$df[1] - 1
+    }
+
     ## extract log-likelihoods
     ll <- logLik(object, size = size, best = best, drop = drop)
 
@@ -805,11 +822,8 @@ coef.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -844,11 +858,8 @@ vcov.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -888,11 +899,8 @@ fitted.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -921,11 +929,8 @@ residuals.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    }
-
-    ## shortcut to 'lmSelect'
-    if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1")
+    } else if (is.character(size)) {
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -935,6 +940,6 @@ residuals.lmSubsets <- function (object, size, best = 1, ...) {
     y <- model.response(object)
 
     ## fit
-    qr.x <- qr(x)
-    qr.resid(qr.x, y)
+    qr <- qr(x)
+    qr.resid(qr, y)
 }

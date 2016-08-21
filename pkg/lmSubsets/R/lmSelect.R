@@ -618,16 +618,19 @@ variable.names.lmSelect <- function (object, best = 1, ..., drop = TRUE) {
 ## Rval:  (formula)
 ##
 formula.lmSelect <- function (x, best, ...) {
+    ## 'best' processing
     if (missing(best)) {
         f <- formula(x$terms)
 
         return (f)
     }
 
+    ## environment
     e <- new.env();
     e$x <- model.matrix(x, best = best)
     e$y <- model.response(x)
 
+    ## intercept handling
     if (x$intercept) {
         e$x <- e$x[, -1]
         f <- formula("y ~ x + 1", env = e)
@@ -635,6 +638,7 @@ formula.lmSelect <- function (x, best, ...) {
         f <- formula("y ~ x + 0", env = e)
     }
     
+    ## done
     f
 }
 
@@ -649,10 +653,11 @@ formula.lmSelect <- function (x, best, ...) {
 ## Rval:  (character[])
 ##   variable names
 ##
-model.frame.lmSelect <- function(formula, best, ...)
-{
+model.frame.lmSelect <- function(formula, best, ...) {
+    ## full model
     mf <- formula[["model"]]
 
+    ## (re-)build model frame
     if (!missing(best) || is.null(mf)) {
         cl <- formula$call
         m <- c("formula", "data", "subset",
@@ -672,6 +677,7 @@ model.frame.lmSelect <- function(formula, best, ...)
         mf <- eval(cl, env)
     }
 
+    ## done
     mf
 }
 
@@ -714,6 +720,7 @@ model.matrix.lmSelect <- function (object, best, ...) {
 ## Rval:  (formula)
 ##
 model.response.lmSelect <- function (data, ...) {
+    ## extract response
     y <- data[["y"]]
     if (is.null(y)) {
         mf <- model.frame(data)
@@ -735,8 +742,10 @@ model.response.lmSelect <- function (data, ...) {
 ## Rval:  (lm)
 ##
 refit.lmSelect <- function (object, best = 1, ...) {
+    ## build formula
     f <- formula(object, best = best)
 
+    ## build 'lm'
     lm(f, ...)
 }
 
@@ -940,6 +949,6 @@ residuals.lmSelect <- function (object, best = 1, ...) {
     y <- model.response(object)
 
     ## fit
-    qr.x <- qr(x)
-    qr.resid(qr.x, y)
+    qr <- qr(x)
+    qr.resid(qr, y)
 }
