@@ -19,7 +19,6 @@
 ## Rval: (summary.lmSubsets)
 ##
 summary.lmSubsets <- function (object, penalty = "BIC", ...) {
-
     ## aic
     N <- object$nobs
     if (is.null(w <- object$weights)) {
@@ -237,9 +236,9 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
                            pch.sum = c(16, 21), col.sum = "red",
                            bg.sum = "white", type = "o", lty = c(1, 3),
                            pch = c(16, 21), col = "black", bg = "white", ...) {
-        if (missing(main)) main <- "All subsets (summary)"
-        if (missing(xlab)) xlab <- "Number of regressors"
-        if (missing(ylab)) ylab <- c("Deviance", "Value")
+        if (missing(main))  main <- "All subsets (summary)"
+        if (missing(xlab))  xlab <- "Number of regressors"
+        if (missing(ylab))  ylab <- c("Deviance", "Value")
 
         type.sum <- rep(type.sum, length = 2)
         lty.sum  <- rep(lty.sum , length = 2)
@@ -299,7 +298,7 @@ plot.summary.lmSubsets <- function (x, ..., legend) {
 ##
 ## Args:
 ##   x      - (mcsSubset)
-##   ...    - ignored
+##   ...    - forwarded to plotting functions
 ##   legend - (character[])
 ##
 ## Rval: (summary.lmSelect) invisible
@@ -314,9 +313,9 @@ plot.summary.lmSelect <- function (x, ..., legend) {
                            ...) {
         n <- length(object$summary$penalty)
 
-        if (missing(main)) main <- "All subsets (summary)"
-        if (missing(xlab)) xlab <- "Number of regressors"
-        if (missing(ylab)) ylab <- c("Deviance", "Value")
+        if (missing(main))  main <- "All subsets (summary)"
+        if (missing(xlab))  xlab <- "Number of regressors"
+        if (missing(ylab))  ylab <- c("Deviance", "Value")
 
         if (missing(col.sum)) {
             col.sum <- c("red", "green3", "cyan", "blue", "magenta")

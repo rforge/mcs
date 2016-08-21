@@ -543,9 +543,9 @@ plot.lmSelect <- function (x, ..., xlim = NULL, ylim1 = NULL, ylim2 = NULL,
         y1 <- object$rss
         y2 <- object$val
 
-        if (is.null(xlim)) xlim <- range(x)
-        if (is.null(ylim1)) ylim1 <- range(y1[is.finite(y1)])
-        if (is.null(ylim2)) ylim2 <- range(y2[is.finite(y2)])
+        if (is.null(xlim))   xlim  <- range(x)
+        if (is.null(ylim1))  ylim1 <- range(y1[is.finite(y1)])
+        if (is.null(ylim2))  ylim2 <- range(y2[is.finite(y2)])
 
         par(mar = c(5, 4, 4, 4) + 0.1)
 
