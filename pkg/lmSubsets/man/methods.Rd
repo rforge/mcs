@@ -98,8 +98,9 @@
   obtain the \code{lm} object.
 
   For convenience, the submodel size may be specified implicitly by
-  passing a character value as the 'size' argument.  Currently, only
-  \code{"AIC"} and \code{"BIC"} are recognized.
+  passing the name of an information criterion as the \code{size}
+  argument.  Currently, only \code{"AIC"} and \code{"BIC"} are
+  recognized.
 
   The method \code{refit} returns an \code{lm} object fitted to the
   desired size and rank.
@@ -133,8 +134,8 @@ logLik(best.AirPoll)
 AIC(best.AirPoll)
 BIC(best.AirPoll, best = 1:5)
 
-## refit model
-lm5 <- refit(all.AirPoll, size = 5)
+## refit model (using implicit size specification)
+lm5 <- refit(all.AirPoll, size = "BIC")
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
 }
