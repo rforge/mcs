@@ -105,25 +105,24 @@ data("AirPollution")
 
 \TODO{Some comments and references to applications might be useful here.}
 
-An important problem in statistical modeling is that of
-subset selection regression or, equivalently, of finding the best
-regression equation~\citep{hastie:01}.  Given a set of possible
-variables to be included in the regression, the problem is to select a
-subset that optimizes some statistical criterion.  The latter
-originates in the estimation of the corresponding
-submodel~\citep{miller:02}.  Consider the standard regression model
+An important problem in statistical modeling is that of subset
+selection regression or, equivalently, of finding the best regression
+equation~\citep{hastie:01}.  Given a set of possible variables to be
+included in the regression, the problem consists in selecting a subset
+that optimizes some statistical criterion.  The latter originates in
+the estimation of the corresponding submodel~\citep{miller:02}.
+Consider the standard regression model
 %
 \begin{equation}
   \label{eq:olm}
   %
-  y=X\beta+\epsilon,%\quad\epsilon\sim(0,\sigma^2I_M),
+  y=X\beta+\epsilon\text{,}
 \end{equation}
 %
 where $y\in\Rset^M$ is the output variable, $X\in\Rset^{M\times N}$ is
-the regressor matrix of full column rank, $\beta\in\Rset^N$ is
-the coefficient vector, and $\epsilon\in\Rset^M$ is the noise vector.
-% with mean $0$ and variance-covariance matrix $\sigma^2I_M$.
-The ordinary least squares (OLS) estimator of $\beta$ is the solution of
+the regressor matrix of full column rank, $\beta\in\Rset^N$ is the
+coefficient vector, and $\epsilon\in\Rset^M$ is the noise vector.  The
+ordinary least squares (OLS) estimator of $\beta$ is the solution of
 %
 \begin{equation}
   \hat{\beta}_{\text{OLS}}=\argmin_{\beta}\rss(\beta)\text{,}
@@ -151,9 +150,9 @@ consists in solving
   S^*=\argmin_{S\subseteq V}f(S)\text{.}
 \end{equation}
 %
-Here, the value $f(S)=F(n,\rho)$ is seen as a function of the number
-of selected variables $n=\card{S}$ and of $\rho=\rss(S)$, the RSS of
-the OLS estimator of the submodel $S$.  Furthermore, it is assumed
+Here, the value $f(S)=F(n,\rho)$ is seen as a function of $n=\card{S}$
+and $\rho=\rss(S)$, the number of selected variables and the RSS of
+the OLS estimator of $S$, respectively.  Furthermore, it is assumed
 that $f(S)$ is monotonic with respect to $\rss(S)$ for fixed $n$, that
 is
 %
@@ -174,8 +173,8 @@ family given by the formula
 \end{equation}
 %
 where the scalar $k$ represents a \emph{penalty per parameter}
-($k>0$).  The standard AIC and BIC criterion are obtained for $k=2$
-and $k=\log M$, respectively~\citep{miller:02}.  It follows
+($k>0$).  The standard AIC and BIC criteria are obtained for $k=2$ and
+$k=\log M$, respectively~\citep{miller:02}.  It follows
 that~\eqref{eq:best_subset} is equivalent to
 %
 \begin{equation*}
@@ -206,50 +205,68 @@ procedure:
 %
 Note that solving~\eqref{eq:best_subset} directly can allow a
 computational strategy to optimize for a specific selection criterion,
-thus lowering the compuational cost.  On the other hand, solving
-\eqref{eq:all_subsets} has the advantage that all $N$ submodels are
-available and the computationally cheap second stage
-can be performed for different criterion functions (e.g., AIC and BIC)
-or using more elaborate statistical inference.
+thus lowering the compuational cost.  On the other hand, by explicitly
+solving the more costly all-subsets regression
+problem~\eqref{eq:all_subsets} once and for all, the list of all $N$
+submodels is made readily available for further exploration:
+evaluating multiple criterion functions (e.g., AIC and BIC), or
+performing a more elaborate statistical inference, then comes at a
+negligible cost.  Thus, it can be advisable to adopt a two-stage
+approach in the case of a broader and more thorough statistical
+investigation.
 
-\TODO{The subsequent paragraph should connect better to the previous
-paragraph. It would be good to have some general discussion about
-pros and cons of exact vs.\ approximate algorithms. And then we
-can discuss the implementation of the different algorithms in R.}
+Brute-force (or exhaustive) search procedures that enumerate all
+possible subsets to solve~\eqref{eq:best_subset}
+and~\eqref{eq:all_subsets} become intractable even for a modest number
+of variables.  Exact algorithms must employ techniques to reduce the
+size of the search space -- i.e., the number of enumerated subsets --
+in order to tackle larger problems.  Heuristic algorithms trade
+optimality for speed: they are designed for solving a problem more
+quickly, but make no guarantees on the quality of the solution
+produced; genetic algorithms and simulated annealing count among the
+well-known heuristic strategies.  Approximation algorithms, on the
+other hand, return a solution that provably lies within well specified
+bounds of the optimum.
 
-Algorithms for subset regression that do exact search but avoid
-exhaustive fitting of all models can be found in the \proglang{R}
-package~\pkg{leaps}~\citep{leaps} based on \cite{miller:02}.
-Exhaustive search has been considered also within the context of
-generalized linear models and summarized in the \pkg{bestglm}
-package~\citep{bestglm}.
-%
-Alternative approximate solutions based on simulated annealing were
-introduced in the \pkg{subselect} package~\citep{subselect} based
-on~\cite{duarte_silva:j_multivariate_anal:01}.  Furthermore,
-approximate solutions via genetic algorithms for generalized linear
-models and beyond have been implemented in
-\pkg{glmulti}~\citep{calcagno:j_stat_softw:10} and \pkg{kofnGA}
-\citep{wolters:j_stat_softw:15}.  Regularized estimation of parametric
-models with automatic variable selection is performed by lasso or
-elastic net estimation for generalized linear
-models~\citep{friedman:j_stat_softw:10}.
+Several packages that deal with variable subset selection are
+available on the {\R} platform.  The package \pkg{leaps}~\citep{leaps}
+implements exact, non-exhaustive algorithms for subset regression
+based on \cite{miller:02}.  Exhaustive algorithms have been considered
+within the context of generalized linear models by the package
+\pkg{bestglm}~\citep{bestglm}.  The package \pkg{subselect} proposes
+simulated annealing algorithms based on
+\cite{duarte_silva:j_multivariate_anal:01}.  Furthermore, genetic
+algorithms for generalized linear models and beyond have been
+implemented by the packages
+\pkg{glmulti}~\citep{calcagno:j_stat_softw:10} and
+\pkg{kofnGA}~\citep{wolters:j_stat_softw:15}.  Non-exact algorithms
+for regularized estimation of parametric models with automatic
+variable selection performed by lasso or elastic net estimation for
+generalized linear models can be found
+in~\cite{friedman:j_stat_softw:10}.
 
 Here, the \pkg{lmSubsets} package for exact variable-subset regression
-is presented. It embeds functions for solving both the {\em
+is presented.  It offers methods for solving both the {\em
   best-subset}~\eqref{eq:best_subset} and the {\em
-  all-subsets}~\eqref{eq:all_subsets} problems.  It implements the
-algorithms presented by \cite{gatu:j_comput_graph_stat:06} and
+  all-subsets}~\eqref{eq:all_subsets} selection problems.  It
+implements the algorithms presented by
+\cite{gatu:j_comput_graph_stat:06} and
 \cite{hofmann:comput_stat_data_an:07}.  A branch-and-bound strategy is
 employed to reduce the size of the search space.  The package further
-proposes non-exhaustive methods that compute approximate solutions
-very quickly while giving guarantees on the quality of the results.
-The core or the package is written in \proglang{C++}.  The package is
+proposes approximation methods that compute non-exact solutions very
+quickly while giving guarantees on the quality of the results.  The
+core of the package is written in \proglang{C++}.  The package is
 available for the \proglang{R} system for statistical
-computing~\citep{R} from The Comprehensive \proglang{R} Archive Network at
-\url{https://CRAN.R-project.org/package=lmSubsets}.
+computing~\citep{R} from The Comprehensive \proglang{R} Archive
+Network at \url{https://CRAN.R-project.org/package=lmSubsets}.
 
-\TODO{The remainder of this manuscript is organized \dots}
+Section~\ref{sec:comput} reviews the theoretical background and the
+underlying algorithms.  Section~\ref{sec:R} presents the functions,
+methods and objects part of the package's {\R} interface.  A usage
+example is given in Section~\ref{sec:usecase:1}, while benchmark
+results are illustrated in Section~\ref{sec:benchmark}.
+
+\TODO{No discussion?}
 
 
 %--------------------------------------------------------------------%
@@ -258,12 +275,6 @@ computing~\citep{R} from The Comprehensive \proglang{R} Archive Network at
 
 \section{Computational strategies}
 \label{sec:comput}
-
-Before discussing the implementation in \pkg{lmSubsets}, the underlying
-methods and algorithms are briefly reviewed. Emphasis is given to the
-general idea and strategy whereas for all theory and algorithmic details
-we refer to \cite{gatu:j_comput_graph_stat:06} and \cite{hofmann:comput_stat_data_an:07},
-respectively.
 
 The linear regression model~\eqref{eq:olm} has $2^N$ possible subset
 models which can be efficiently organized in a regression tree.  A
@@ -288,8 +299,8 @@ Child nodes are generated by dropping (deleting) a variable:
 \end{equation*}
 %
 Numerically, this is equivalent to downdating an orthogonal matrix
-decomposition after a column has been deleted
-\citep{golub:96,kontoghiorghes:00,smith:comput_stat_data_an:89}.
+decomposition after a column has been
+deleted~\citep{golub:96,kontoghiorghes:00,smith:comput_stat_data_an:89}.
 Givens rotations are employed to efficiently move from one node to
 another.  The DCA maintains a subset table $r$ with $N$ entries; entry
 $r_n$ contains the RSS and the variable subset of the current-best
@@ -348,8 +359,8 @@ A cutting test is employed to determine which parts of the DCA tree
 are redundant: A new node $\drop(S,j)$ is generated only if
 $\rss(S)<r_j$ ($j=k+1,\ldots,n-1$).  The quantity $\rss(S)$ is said to
 be the \emph{bound} of the subtree rooted in $(S,k)$: no subset model
-extracted from the subtree can have a lower RSS
-\citep{gatu:j_comput_graph_stat:06}.  Note that the BBA is an
+extracted from the subtree can have a lower
+RSS~\citep{gatu:j_comput_graph_stat:06}.  Note that the BBA is an
 exhaustive algorithm, i.e. it provides the exact solution to the
 problem~\eqref{eq:all_subsets}.
 
@@ -437,23 +448,24 @@ generated nodes.
 \section[Implementation in R]{Implementation in \proglang{R}}
 \label{sec:R}
 
-The \proglang{R} package \pkg{lmSubsets} provides infrastructure
-for solving both the all-subsets regression \eqref{eq:all_subsets} and the
-best-subset selection \eqref{eq:best_subset} problem in least-squares
+The \proglang{R} package \pkg{lmSubsets} provides infrastructure for
+solving both the all-subsets regression~\eqref{eq:all_subsets} and the
+best-subset selection~\eqref{eq:best_subset} problem in least-squares
 regression models. The corresponding high-level \SSS{} generics are
 \fct{lmSubsets} and \fct{lmSelect}, respectively.
 
-The interfaces of both methods are closely modeled after the \fct{lm} function
-and implement \R{}'s standard \code{formula} interface: they can be
-called with any entity that can be coerced to a \code{formula} object \citep{chambers:92}.
-After the \code{formula} description has been processed, the raw data as
-well as problem-specific parameters are forwarded to the appropriate
-core function.  The workhorse functions \fct{lmSubsets\_fit} and
-\fct{lmSelect\_fit} implement the core problem logic without any
-\code{formula}-related overhead.  An \SSS{} object of class
-\class{lmSubsets} or \class{lmSelect} is returned, for which several
-standard extractor methods have been defined.  An overview of the
-various functions is given in Table~\ref{tab:generators}.
+The interfaces of both methods are closely modeled after the \fct{lm}
+function and implement \R{}'s standard \code{formula} interface: they
+can be called with any entity that can be coerced to a \code{formula}
+object~\citep{chambers:92}.  After the \code{formula} description has
+been processed, the raw data as well as problem-specific parameters
+are forwarded to the appropriate core function.  The workhorse
+functions \fct{lmSubsets\_fit} and \fct{lmSelect\_fit} implement the
+core problem logic without any \code{formula}-related overhead.  An
+\SSS{} object of class \class{lmSubsets} or \class{lmSelect} is
+returned, for which several standard extractor methods have been
+defined.  An overview of the various functions is given in
+Table~\ref{tab:generators}.
 
 \begin{table}[t!]
   \centering
@@ -557,13 +569,14 @@ the expression
 %
 where \code{penalty} is the \emph{penalty per model parameter} defined
 in~\eqref{eq:aic}, \code{logLik} the log-likelihood of the fitted
-model, and \code{npar} the number of model parameters (including the error variance).  The \code{penalty} value indicates
-how strongly model parameters are penalized with higher values
-favoring more parsimonious solutions.  When $\mathtt{penalty}=2$, the
-criterion corresponds to Akaike's information criterion
+model, and \code{npar} the number of model parameters (including the
+error variance).  The \code{penalty} value indicates how strongly
+model parameters are penalized with higher values favoring more
+parsimonious solutions.  When $\mathtt{penalty}=2$, the criterion
+corresponds to Akaike's information criterion
 \citep[AIC,][]{akaike:ieee_t_automat_contr:74}; when
 $\mathtt{penalty}=\log(\mathtt{nobs})$, to Schwarz's Bayesian
-information criterion \citep[BIC,][]{schwarz:ann_stat:78},
+information criterion~\citep[BIC,][]{schwarz:ann_stat:78},
 \texttt{nobs} being the number of observations.  For example, either
 one of
 %
@@ -789,7 +802,7 @@ submodel at a time if passed a numeric vector as an argument to either
 
 Over the last decades the field of weather forecasting made steady and
 substantial improvements especially through improvements in numerical
-weather prediction (NWP) models \citep{bauer:nature:15}.  Starting
+weather prediction (NWP) models~\citep{bauer:nature:15}.  Starting
 from \cite{glahn:j_appl_meteorol:72} the outputs from these
 physically-based large-scale (typically global) NWP models is
 statistically post-processed to correct small-scale biases and obtain
@@ -802,8 +815,9 @@ NWP forecasts should enter the MOS regression.
 
 More specifically, we model 00UTC temperature observations (in degree
 Celsius) based on the corresponding 24-hour reforecast ensemble means
-from the Global Ensemble Forecast System \citep[GEFS,][]{hamill:b_am_meteorol_soc:13}
-for meteorological station Innsbruck Airport (11120; 47.260, 11.357) from 2011-01-01 to
+from the Global Ensemble Forecast
+System~\citep[GEFS,][]{hamill:b_am_meteorol_soc:13} for meteorological
+station Innsbruck Airport (11120; 47.260, 11.357) from 2011-01-01 to
 2015-12-31. The data frame \code{IbkTemperature} contains 1824 daily
 observations/forecasts for the observed response, 36 NWP outputs, and
 five deterministic time trend/season patterns that are available as
