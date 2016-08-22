@@ -97,10 +97,9 @@
   If a method is not available, \code{refit} can be called explicitly to
   obtain the \code{lm} object.
 
-  For convenience, the submodel size may be specified implicitly by
-  passing the name of an information criterion as the \code{size}
-  argument.  Currently, only \code{"AIC"} and \code{"BIC"} are
-  recognized.
+  For convenience, the submodel size can be inferred from the name of an
+  information criterion passed as the \code{size} argument.  Currently,
+  only \code{"AIC"} and \code{"BIC"} are recognized.
 
   The method \code{refit} returns an \code{lm} object fitted to the
   desired size and rank.
@@ -118,7 +117,7 @@ data("AirPollution", package = "lmSubsets")
 ## fit subsets (5 best subsets per size)
 all.AirPoll <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 5)
 
-## extract information (for subset of size 3)
+## extract information (for best subset of size 3)
 coef(all.AirPoll, size = 3)
 vcov(all.AirPoll, size = 3)
 residuals(all.AirPoll, size = 3)
@@ -134,7 +133,7 @@ logLik(best.AirPoll)
 AIC(best.AirPoll)
 BIC(best.AirPoll, best = 1:5)
 
-## refit model (using implicit size specification)
+## refit model (inferred size)
 lm5 <- refit(all.AirPoll, size = "BIC")
 summary(lm5)
 ## (Note that the p-values are not valid due to model selection.)
