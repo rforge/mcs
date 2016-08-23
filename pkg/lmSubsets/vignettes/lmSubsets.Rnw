@@ -2,8 +2,7 @@
 % PREAMBLE                                                           %
 %====================================================================%
 
-\documentclass[nojss]{jss}
-\shortcites{hamill:b_am_meteorol_soc:13}
+\documentclass[nojss,shortnames]{jss}
 
 
 %--------------------------------------------------------------------%
@@ -28,12 +27,11 @@
 % packages                                                           %
 %--------------------------------------------------------------------%
 
-\usepackage{thumbpdf,lmodern}
+\usepackage{thumbpdf,auto-pst-pdf}
+\usepackage{lmodern}
 \usepackage{booktabs,dcolumn}
-\usepackage{pdfcomment}
 \usepackage{amsmath,amssymb}
 \usepackage{pstricks,pst-tree}
-\usepackage{auto-pst-pdf}
 
 
 %--------------------------------------------------------------------%
@@ -137,7 +135,7 @@ where the residual sum of squares (RSS) of $\beta$ is given by
 That is, $\hat{\beta}_{\text{OLS}}$ minimizes the norm of the residual
 vector.  The computation of the RSS does not require to explicitly
 determine $\beta$; it can be done by means of orthogonal matrix
-decomposition methods and is numerically stable.
+decomposition methods and is numerically stable~\citep{golub:96}.
   
 Let $V=\{1,\ldots,N\}$ denote the set of all possible variables.  A
 subset model (or submodel) is denoted by $S$, $S\subseteq V$.  Given a
@@ -163,8 +161,8 @@ is
   \quad\card{S_1}=\card{S_2}\text{.}
 \end{equation}
 
-Common selection criteria observe this structure, such as the AIC
-family given by the formula
+Common selection criteria exhibit this property, such as those
+belonging to the AIC family of criteria defined by the formula
 %
 \begin{equation}
   \label{eq:aic}
@@ -173,8 +171,8 @@ family given by the formula
 \end{equation}
 %
 where the scalar $k$ represents a \emph{penalty per parameter}
-($k>0$).  The standard AIC and BIC criteria are obtained for $k=2$ and
-$k=\log M$, respectively~\citep{miller:02}.  It follows
+($k>0$).  The usual AIC and BIC are obtained for $k=2$ and $k=\log M$,
+respectively~\citep{miller:02}.  It follows
 that~\eqref{eq:best_subset} is equivalent to
 %
 \begin{equation*}
@@ -196,77 +194,75 @@ Finding the solution to~\eqref{eq:all_subsets} is called the
 solving~\eqref{eq:best_subset} can be seen as an indirect, two-stage
 procedure:
 %
-\begin{enumerate}
-\item For each subset size $n$, find the subset $S^*_n$
+\begin{description}
+\item[Stage 1] For each subset size $n$, find the subset $S^*_n$
   ($\card{S^*_n}=n$) with the smallest RSS.
-\item Compute $f(S^*_n)$ for all $n$, and determine $\nu$ such that
-  $f(S^*_\nu)$ is minimal.
-\end{enumerate}
+\item[Stage 2] Compute $f(S^*_n)$ for all $n$, and determine $\nu$
+  such that $f(S^*_\nu)$ is minimal.
+\end{description}
 %
-Note that solving~\eqref{eq:best_subset} directly can allow a
-computational strategy to optimize for a specific selection criterion,
-thus lowering the compuational cost.  On the other hand, by explicitly
-solving the more costly all-subsets regression
-problem~\eqref{eq:all_subsets} once and for all, the list of all $N$
-submodels is made readily available for further exploration:
-evaluating multiple criterion functions (e.g., AIC and BIC), or
-performing a more elaborate statistical inference, then comes at a
-negligible cost.  Thus, it can be advisable to adopt a two-stage
-approach in the case of a broader and more thorough statistical
-investigation.
+Note that the computational strategy may be optimized for a specific
+selection criterion when solving the best-subset selection
+problem~\eqref{eq:best_subset} directly, thus lowering the
+compuational cost.  On the other hand, by explicitly solving the
+all-subsets regression problem~\eqref{eq:all_subsets} once and for all
+(Stage 1), the list of all $N$ submodels is made readily available for
+further exploration: the evaluation of multiple criterion functions
+(e.g., AIC and BIC), or a more elaborate statistical inference, can be
+done at a negligible cost (Stage 2).  Thus, it can be advisable to
+adopt a two-stage approach in the case of a broader and more thorough
+statistical investigation.
 
 Brute-force (or exhaustive) search procedures that enumerate all
-possible subsets to solve~\eqref{eq:best_subset}
-and~\eqref{eq:all_subsets} become intractable even for a modest number
-of variables.  Exact algorithms must employ techniques to reduce the
-size of the search space -- i.e., the number of enumerated subsets --
-in order to tackle larger problems.  Heuristic algorithms trade
-optimality for speed: they are designed for solving a problem more
-quickly, but make no guarantees on the quality of the solution
-produced; genetic algorithms and simulated annealing count among the
-well-known heuristic strategies.  Approximation algorithms, on the
-other hand, return a solution that provably lies within well specified
-bounds of the optimum.
+possible subsets become intractable even for a modest number of
+variables.  Exact algorithms must employ techniques to reduce the size
+of the search space -- i.e., the number of enumerated subsets -- in
+order to tackle larger problems.  Heuristic algorithms renounce
+optimality in order to decrease execution times: they are designed for
+solving a problem more quickly, but make no guarantees on the quality
+of the solution produced; genetic algorithms and simulated annealing
+count among the well-known heuristic algorithms.  Approximation
+algorithms, on the other hand, return a solution that provably lies
+within well specified bounds of the optimum.
 
 Several packages that deal with variable subset selection are
 available on the {\R} platform.  The package \pkg{leaps}~\citep{leaps}
 implements exact, non-exhaustive algorithms for subset regression
-based on \cite{miller:02}.  Exhaustive algorithms have been considered
-within the context of generalized linear models by the package
-\pkg{bestglm}~\citep{bestglm}.  The package \pkg{subselect} proposes
-simulated annealing algorithms based on
-\cite{duarte_silva:j_multivariate_anal:01}.  Furthermore, genetic
-algorithms for generalized linear models and beyond have been
-implemented by the packages
-\pkg{glmulti}~\citep{calcagno:j_stat_softw:10} and
-\pkg{kofnGA}~\citep{wolters:j_stat_softw:15}.  Non-exact algorithms
-for regularized estimation of parametric models with automatic
-variable selection performed by lasso or elastic net estimation for
-generalized linear models can be found
-in~\cite{friedman:j_stat_softw:10}.
+based on~\citet{miller:02}.  Exhaustive algorithms have been
+considered within the context of generalized linear
+models~\citep[package \pkg{bestglm},][]{bestglm}.  The package
+\pkg{subselect} proposes simulated annealing algorithms based on the
+work of~\citet{duarte_silva:j_multivariate_anal:01}.  Furthermore,
+genetic algorithms for generalized linear models and beyond have been
+implemented by~\citet[package \pkg{glmulti}]{calcagno:j_stat_softw:10}
+and~\citet[package \pkg{kofnGA}]{wolters:j_stat_softw:15}.  Non-exact
+algorithms for regularized estimation of parametric models with
+automatic variable selection performed by lasso or elastic net
+estimation for generalized linear models have been investigated
+by~\citet{friedman:j_stat_softw:10}.
 
-Here, the \pkg{lmSubsets} package for exact variable-subset regression
-is presented.  It offers methods for solving both the {\em
-  best-subset}~\eqref{eq:best_subset} and the {\em
+Here, the \pkg{lmSubsets} package~\citep{lmSubsets} for exact
+variable-subset regression is presented.  It offers methods for
+solving both the {\em best-subset}~\eqref{eq:best_subset} and the {\em
   all-subsets}~\eqref{eq:all_subsets} selection problems.  It
-implements the algorithms presented by
-\cite{gatu:j_comput_graph_stat:06} and
-\cite{hofmann:comput_stat_data_an:07}.  A branch-and-bound strategy is
-employed to reduce the size of the search space.  The package further
-proposes approximation methods that compute non-exact solutions very
-quickly while giving guarantees on the quality of the results.  The
-core of the package is written in \proglang{C++}.  The package is
-available for the \proglang{R} system for statistical
+implements the algorithms presented
+by~\citet{gatu:j_comput_graph_stat:06}
+and~\citet{hofmann:comput_stat_data_an:07}.  A branch-and-bound
+strategy is employed to reduce the size of the search space.  The
+package further proposes approximation methods that compute non-exact
+solutions very quickly while giving guarantees on the quality of the
+result.  The core of the package is written in \proglang{C++}.  The
+package is available for the \proglang{R} system for statistical
 computing~\citep{R} from The Comprehensive \proglang{R} Archive
 Network at \url{https://CRAN.R-project.org/package=lmSubsets}.
 
 Section~\ref{sec:comput} reviews the theoretical background and the
-underlying algorithms.  Section~\ref{sec:R} presents the functions,
-methods and objects part of the package's {\R} interface.  A usage
-example is given in Section~\ref{sec:usecase:1}, while benchmark
-results are illustrated in Section~\ref{sec:benchmark}.
+underlying algorithms.  The package's {\R} interface is presented in
+Section~\ref{sec:R}.  A usage example is given in
+Section~\ref{sec:usecase:1}, while benchmark results are illustrated
+in Section~\ref{sec:benchmark}.
 
-\TODO{No discussion?}
+\TODO{No discussion section?}
 
 
 %--------------------------------------------------------------------%
@@ -573,8 +569,8 @@ model, and \code{npar} the number of model parameters (including the
 error variance).  The \code{penalty} value indicates how strongly
 model parameters are penalized with higher values favoring more
 parsimonious solutions.  When $\mathtt{penalty}=2$, the criterion
-corresponds to Akaike's information criterion
-\citep[AIC,][]{akaike:ieee_t_automat_contr:74}; when
+corresponds to Akaike's information
+criterion~\citep[AIC,][]{akaike:ieee_t_automat_contr:74}; when
 $\mathtt{penalty}=\log(\mathtt{nobs})$, to Schwarz's Bayesian
 information criterion~\citep[BIC,][]{schwarz:ann_stat:78},
 \texttt{nobs} being the number of observations.  For example, either
@@ -803,7 +799,7 @@ submodel at a time if passed a numeric vector as an argument to either
 Over the last decades the field of weather forecasting made steady and
 substantial improvements especially through improvements in numerical
 weather prediction (NWP) models~\citep{bauer:nature:15}.  Starting
-from \cite{glahn:j_appl_meteorol:72} the outputs from these
+from~\citet{glahn:j_appl_meteorol:72} the outputs from these
 physically-based large-scale (typically global) NWP models is
 statistically post-processed to correct small-scale biases and obtain
 predictions for specific locations. Below we use such model output
@@ -856,7 +852,7 @@ m1 <- update(m0, . ~ . + t2m)
 A graphical comparison of the raw data and the fitted values from
 both models is provided in Figure~\ref{fig:temp}. The corresponding
 estimated coefficients (and standard errors) are shown in
-Table~\ref{tab:mtable} (produced with \pkg{memisc}, \citealp{memisc}).
+Table~\ref{tab:mtable} (produced with \pkg{memisc},~\citealp{memisc}).
 This shows that, not surprisingly, inclusion of the 2-meter
 temperature leads to substantial (and highly significant)
 improvements. The season/trend coefficients are dampened but remain
@@ -1010,11 +1006,11 @@ To conclude, it is also worth pointing out that recently there has
 been increasing interest in MOS models beyond least-squares linear
 regression.  Incorporating heteroscedasticity is important ensemble
 MOS models as well as censoring or truncation for quantities like
-precipitation or wind (see the \pkg{crch} package of
-\citealp{messner:r_j:16} for some examples). All-subsets regression
+precipitation or wind (see the \pkg{crch} package
+of~\citealp{messner:r_j:16} for some examples). All-subsets regression
 for those models would be much more burdensome and is not available in
 \pkg{lmSubsets}. An alternative solution in those situations is for
-example boosting as proposed by \cite{messner:16}.
+example boosting as proposed by~\citet{messner:16}.
 
 
 %--------------------------------------------------------------------%
