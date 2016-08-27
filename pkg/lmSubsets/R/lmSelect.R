@@ -135,8 +135,7 @@ lmSubsets_select <- function (object, penalty = "BIC", ...) {
 lmSelect_fit <- function (x, y, weights = NULL, offset = NULL,
                           include = NULL, exclude = NULL, penalty = "BIC",
                           tolerance = 0, pradius = NULL, nbest = 1, ...,
-                          .algo = "phbba")
-{
+                          .algo = "phbba") {
     ## model weights and offset
     if (is.null(w <- weights))  w <- rep(1, NROW(x))
     if (is.null(o <- offset))  o <- rep(0, NROW(x))
@@ -450,8 +449,7 @@ lmSelect.default <- function (formula, data, subset, weights, na.action,
 ##
 ## Rval:  (lmSelect) invisible
 ##
-print.lmSelect <- function (x, ...)
-{
+print.lmSelect <- function (x, ...) {
     catln <- function (...) base::cat(..., "\n", sep = "")
     paste <- function (..., sep = "") base::paste(..., sep = sep)
 

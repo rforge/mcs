@@ -173,8 +173,7 @@ print.summary.lmSubsets <- function (x, ...) {
 ##
 ## Rval: (summary.lmSelect) invisible
 ##
-print.summary.lmSelect <- function (x, ...)
-{
+print.summary.lmSelect <- function (x, ...) {
     catln <- function (..., sep = "") base::cat(..., "\n", sep = sep)
     paste <- function (..., sep = "") base::paste(..., sep = sep)
 
