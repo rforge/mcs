@@ -469,7 +469,7 @@ variable.names.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing(size)) {
         return (x.names)
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -497,7 +497,7 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 
         return (f)
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -536,7 +536,7 @@ model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
 
     ## 'size' processing
     if (!missing(size) && is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -589,7 +589,7 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing(size)) {
         return (x)
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -636,7 +636,7 @@ refit.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing (size)) {
         stop ("missing argument: 'size'")
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -665,7 +665,7 @@ deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -700,7 +700,7 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -749,7 +749,7 @@ AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -786,7 +786,7 @@ BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     if (missing(size)) {
         size <- object$nmin:object$nmax
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -823,7 +823,7 @@ coef.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing(size)) {
         stop ("missing argument: 'size'")
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -859,7 +859,7 @@ vcov.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing(size)) {
         stop ("missing argument: 'size'")
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -900,7 +900,7 @@ fitted.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing(size)) {
         stop ("missing argument: 'size'")
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
@@ -930,7 +930,7 @@ residuals.lmSubsets <- function (object, size, best = 1, ...) {
     if (missing(size)) {
         stop ("missing argument: 'size'")
     } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (implicit size)")
+        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
         size <- lmSelect(object, penalty = size)$df[1] - 1
     }
