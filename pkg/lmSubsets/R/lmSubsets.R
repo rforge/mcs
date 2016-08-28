@@ -499,7 +499,7 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
     } else if (is.character(size)) {
         if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+        size <- lmSelect(x, penalty = size)$df[1] - 1
     }
 
     ## environment
@@ -535,31 +535,31 @@ model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
     mf <- formula[["model"]]
 
     ## 'size' processing
-    if (!missing(size) && is.character(size)) {
+    if (missing(size)) {
+        if (!is.null(mf))  return (mf)
+    } else if (is.character(size)) {
         if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+        size <- lmSelect(formula, penalty = size)$df[1] - 1
     }
 
     ## (re-)build model frame
-    if (!missing(size) || is.null(mf)) {
-        cl <- formula$call
-        m <- c("formula", "data", "subset",
-               "weights", "na.action", "offset")
-        m <- match(m, names(cl), 0L)
-        cl <- cl[c(1L, m)]
-        cl$drop.unused.levels <- TRUE
-        cl[[1L]] <- quote(stats::model.frame)
-        cl$xlev <- formula$xlevels
-        cl$formula <- stats::formula(formula, size = size, best = best)
+    cl <- formula$call
+    m <- c("formula", "data", "subset",
+           "weights", "na.action", "offset")
+    m <- match(m, names(cl), 0L)
+    cl <- cl[c(1L, m)]
+    cl$drop.unused.levels <- TRUE
+    cl[[1L]] <- quote(stats::model.frame)
+    cl$xlev <- formula$xlevels
+    cl$formula <- stats::formula(formula, size = size, best = best)
 
-        env <- environment(formula$terms)
-        if (is.null(env)) {
-            env <- parent.frame()
-        }
-
-        mf <- eval(cl, env)
+    env <- environment(formula$terms)
+    if (is.null(env)) {
+        env <- parent.frame()
     }
+
+    mf <- eval(cl, env)
 
     ## done
     mf
