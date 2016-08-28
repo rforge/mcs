@@ -2,7 +2,7 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
                             main = "Subset selection", xlab = "", ylab = NULL,
                             xaxs = "i", yaxs = "i", cex = 0.9,
                             col = gray.colors(2), hilite = "BIC", hilite.hue = 0,
-                            uline = hilite, srt = 45, gap = "white", ...) {
+                            uline = hilite, srt = 45, gaps = "white", ...) {
     hilite.colors <- function (n, hue, start = 0.3, end = 0.9, gamma = 2.2, alpha = NULL) {
         ans <- seq.int(from = start^gamma, to = end^gamma, length.out = n)^(1/gamma)
         ans <- hsv(hue, ans, 1, alpha)
@@ -72,7 +72,7 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
     
     ## paint heatmap
     graphics::rect(row(which) - 0.5, col(which) - 0.5, row(which) + 0.5, col(which) + 0.5,
-                   col = heatmap, border = gap)
+                   col = heatmap, border = gaps)
 
     ## x-axis labels (variable names)
     text(1L:M, par("usr")[3] + 0.02 * N, labels = rlab, srt = srt, 

@@ -13,7 +13,7 @@
   main = "Subset selection", xlab = "", ylab = NULL,
   xaxs = "i", yaxs = "i", cex = 0.9,
   col = gray.colors(2), hilite = "BIC", hilite.hue = 0,
-  uline = hilite, srt = 45, gap = "white", ...)
+  uline = hilite, srt = 45, gaps = "white", ...)
 
 }
 
@@ -33,7 +33,7 @@
     respectively.}
   \item{hilite.hue}{Hue for the selected \code{rect}angle(s) (if any).}
   \item{srt}{Angle of the x-axis labels.}
-  \item{gap}{Color of border between tiles.}
+  \item{gaps}{Color of border between tiles.}
   \item{\dots}{Further arguments passed to \code{\link[graphics]{plot}}.}
 }
 
@@ -49,7 +49,7 @@ lms <- lmSubsets(mortality ~ ., data = AirPollution)
 image(lms)
 
 ## variations
-## only some subset sizes and no-highlighting
+## only some subset sizes and no highlighting
 image(lms, size = 3:10, hilite = FALSE)
 ## highlight multiple sizes
 image(lms, hilite = c(5, 10), hilite.hue = c(0, 0.65))
