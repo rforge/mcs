@@ -9,7 +9,7 @@
 }
 
 \usage{
-\method{image}{lmSubsets}(x, nbest = 1, size = NULL, which = NULL,
+\method{image}{lmSubsets}(x, best = 1, size = NULL, which = NULL,
   xlab = "", ylab = NULL, main = "Subset selection",
   xaxs = "i", yaxs = "i", cex = 0.9,
   col = gray.colors(2), rcol = 2, rect = "BIC", uline = rect,
@@ -19,7 +19,7 @@
 
 \arguments{
   \item{x}{an object of class \code{\link{lmSubsets}}.}
-  \item{nbest}{Number of best subset solution.}
+  \item{best}{Rank of best subset solution.}
   \item{size}{Subset sizes to be plotted (default: all).}
   \item{which}{Regressors to be plotted (default: all).}
   \item{xlab, ylab, main}{Axis and main titles.}

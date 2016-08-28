@@ -1,11 +1,11 @@
-image.lmSubsets <- function(x, nbest = 1, size = NULL, which = NULL,
+image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
   xlab = "", ylab = NULL, main = "Subset selection",
   xaxs = "i", yaxs = "i", cex = 0.9,
   col = gray.colors(2), rcol = 2, rect = "BIC", uline = rect,
   srt = 45, ...)
 {
   ## all subset selections
-  z <- x$which[, nbest, ]
+  z <- x$which[, best, ]
   if(!is.null(which)) z <- z[which, , drop = FALSE]
   if(!is.null(size)) z <- z[, as.character(size), drop = FALSE]
   z <- z[ , apply(!is.na(z), 2L, all), drop = FALSE]
@@ -13,7 +13,7 @@ image.lmSubsets <- function(x, nbest = 1, size = NULL, which = NULL,
   ## empty plot
   nr <- nrow(z)
   nc <- ncol(z)
-  if(is.null(ylab)) ylab <- sprintf("Number of regressors (nbest = %s)", nbest)
+  if(is.null(ylab)) ylab <- sprintf("Number of regressors (best = %s)", best)
   plot(0, 0, xlim = c(0, nr) + 0.5, ylim = c(nc, 0) + 0.5, type = "n",
     axes = FALSE, xaxs = xaxs, yaxs = yaxs,
     xlab = xlab, ylab = ylab, main = main, ...)
@@ -26,7 +26,7 @@ image.lmSubsets <- function(x, nbest = 1, size = NULL, which = NULL,
   if(!is.null(rect) | !identical(rect, FALSE)) {
     if(identical(rect, TRUE)) rect <- "BIC"    
     if(is.character(rect)) {
-      rect <- summary(x, penalty = rect)$summary$val[nbest, ]
+      rect <- summary(x, penalty = rect)$summary$val[best, ]
       rect <- as.numeric(names(rect))[which.min(rect)]
     }
     y_rect <- match(rect, as.numeric(colnames(z)))
@@ -43,7 +43,7 @@ image.lmSubsets <- function(x, nbest = 1, size = NULL, which = NULL,
   if(!is.null(uline) | !identical(uline, FALSE)) {
     if(identical(uline, TRUE)) uline <- "BIC"    
     if(is.character(uline)) {
-      uline <- summary(x, penalty = uline)$summary$val[nbest, ]
+      uline <- summary(x, penalty = uline)$summary$val[best, ]
       uline <- as.numeric(names(uline))[which.min(uline)]
     }
     y_uline <- match(uline, as.numeric(colnames(z)))
