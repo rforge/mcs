@@ -751,16 +751,15 @@ gathered on the selected submodels in order to help him identify
 usual way, and can be used to extract variable names, coefficients,
 covariance matrices, fitted values, etc.
 
-In order to specify a submodel on which information is to be obtained,
-\class{lmSubsets} methods provide two parameters, namely \code{size}
-and \code{best}, to specify the number of regressors in, and the
-ranking of the desired submodel, respectively.  The user must always
-indicate the desired \code{size}, while \code{best} defaults to
-\code{1} if left unspecified.  Moreover, the name of a selection
-criterion (\code{"AIC"} or \code{"BIC"}) may be given as the
-\code{size} argument, in which case the submodel with the smallest
-criterion value is extracted.  For \class{lmSelect} methods, the
-\code{size} parameter has no meaning and is not defined.  Lastly,
+In order to designate a submodel, \class{lmSubsets} methods provide
+the parameters \code{size} and \code{best} to specify the number of
+regressors in and the ranking of the desired submodel, respectively.
+The user must always indicate the desired \code{size}, while
+\code{best} defaults to \code{1} if left unspecified.  Moreover, the
+name of a selection criterion (\code{"AIC"} or \code{"BIC"}) may be
+given as the \code{size} argument, in which case the submodel with the
+smallest criterion value is extracted.  For \class{lmSelect} methods,
+the \code{size} parameter has no meaning and is not defined.  Lastly,
 methods that return scalar values -- i.e., \fct{deviance},
 \fct{logLik}, \fct{AIC}, \fct{BIC} -- can extract more than one
 submodel at a time if passed a numeric vector as an argument to either
