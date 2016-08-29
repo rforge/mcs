@@ -1,18 +1,20 @@
 image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
+                            hilite = "BIC", uline = hilite,
                             main = "Subset selection", xlab = "", ylab = NULL,
+                            col = "gray30", tint = 0.8, gaps = "white",
+                            hilite.col = "red", hilite.tint = 0.8,
                             xaxs = "i", yaxs = "i", cex = 0.9,
-                            col = gray.colors(2), hilite = "BIC", hilite.hue = 0,
-                            uline = hilite, srt = 45, gaps = "white", ...) {
-    hilite.colors <- function (n, hue, start = 0.3, end = 0.9, gamma = 2.2, alpha = NULL) {
-        ans <- seq.int(from = start^gamma, to = end^gamma, length.out = n)^(1/gamma)
-        ans <- hsv(hue, ans, 1, alpha)
-        rev(ans)
+                            srt = 45, ...) {
+    tint.col <- function (col, factor = 0.8) {
+        rgb <- col2rgb(col)
+        rgb <- rgb + (255 - rgb) * factor
+        rgb(rgb[1], rgb[2], rgb[3], maxColorValue = 255)
     }
 
     ## which
-    arg.which <- which;  which <- NULL
+    which.arg <- which;  which <- NULL
     which <- x$which[, best, ]
-    if (!is.null(arg.which))  which <- which[arg.which, , drop = FALSE]
+    if (!is.null(which.arg))  which <- which[which.arg, , drop = FALSE]
     if (!is.null(size))  which <- which[, as.character(size), drop = FALSE]
     which <- which[ , apply(!is.na(which), 2L, all), drop = FALSE]
     
@@ -20,7 +22,9 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
     N <- ncol(which)
 
     ## heatmap
-    heatmap <- structure(col[2L - which], dim = c(M, N))
+    tint.arg <- tint;  tint <- NULL
+    tint <- col;  tint[2] <- tint.col(tint[1], tint.arg)
+    heatmap <- structure(tint[2L - which], dim = c(M, N))
 
     ## highlight
     if (!is.null(hilite) || !identical(hilite, FALSE)) {
@@ -31,11 +35,12 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
         }
         y_hilite <- match(hilite, as.numeric(colnames(which)))
         if (!all(is.na(y_hilite))) {
-            hilite.hue <- rep(hilite.hue, length.out = length(y_hilite))
-            hilite.hue <- hilite.hue[!is.na(y_hilite)]
+            hilite.col <- rep(hilite.col, length.out = length(y_hilite))[!is.na(y_hilite)]
+            hilite.tint <- rep(hilite.tint, length.out = length(y_hilite))[!is.na(y_hilite)]
             y_hilite <- y_hilite[!is.na(y_hilite)]
             for (i in seq_along(y_hilite)) {
-                heatmap[, y_hilite[i]] <- hilite.colors(2, hilite.hue[i])[2L - which[, y_hilite[i], drop = FALSE]]
+                tint <- hilite.col[i];  tint[2] <- tint.col(tint[1], hilite.tint[i])
+                heatmap[, y_hilite[i]] <- tint[2L - which[, y_hilite[i], drop = FALSE]]
             }
         }
     } else {
@@ -71,7 +76,7 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
          main = main, ...)
     
     ## paint heatmap
-    graphics::rect(row(which) - 0.5, col(which) - 0.5, row(which) + 0.5, col(which) + 0.5,
+    graphics::rect(row(heatmap) - 0.5, col(heatmap) - 0.5, row(heatmap) + 0.5, col(heatmap) + 0.5,
                    col = heatmap, border = gaps)
 
     ## x-axis labels (variable names)
