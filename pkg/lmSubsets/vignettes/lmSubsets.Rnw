@@ -134,8 +134,9 @@ where the residual sum of squares (RSS) of $\beta$ is given by
 %
 That is, $\hat{\beta}_{\text{OLS}}$ minimizes the norm of the residual
 vector.  The computation of the RSS does not require to explicitly
-determine $\beta$; it can be done by means of orthogonal matrix
-decomposition methods and is numerically stable~\citep{golub:96}.
+determine $\beta$; the former can be done by means of orthogonal
+matrix decomposition methods and is numerically
+stable~\citep{golub:96}.
   
 Let $V=\{1,\ldots,N\}$ denote the set of all possible variables.  A
 subset model (or submodel) is denoted by $S$, $S\subseteq V$.  Given a
@@ -162,7 +163,7 @@ is
 \end{equation}
 
 Common selection criteria exhibit this property, such as those
-belonging to the AIC family of criteria defined by the formula
+belonging to the AIC family defined by the formula
 %
 \begin{equation}
   \label{eq:aic}
@@ -208,10 +209,10 @@ compuational cost.  On the other hand, by explicitly solving the
 all-subsets regression problem~\eqref{eq:all_subsets} once and for all
 (Stage 1), the list of all $N$ submodels is made readily available for
 further exploration: the evaluation of multiple criterion functions
-(e.g., AIC and BIC), or a more elaborate statistical inference, can be
-done at a negligible cost (Stage 2).  Thus, it can be advisable to
-adopt a two-stage approach in the case of a broader and more thorough
-statistical investigation.
+(e.g., AIC and BIC), or conducting a more elaborate statistical
+inference, can be done at a negligible cost (Stage 2).  Thus, it can
+be advisable to adopt a two-stage approach in the case of a broader
+and more thorough statistical investigation.
 
 Brute-force (or exhaustive) search procedures that enumerate all
 possible subsets become intractable even for a modest number of
@@ -353,9 +354,9 @@ deleted from a regression model, that is:
 %
 A cutting test is employed to determine which parts of the DCA tree
 are redundant: A new node $\drop(S,j)$ is generated only if
-$\rss(S)<r_j$ ($j=k+1,\ldots,n-1$).  The quantity $\rss(S)$ is said to
-be the \emph{bound} of the subtree rooted in $(S,k)$: no subset model
-extracted from the subtree can have a lower
+$\rss(S)<r_j$ ($j=k+1,\ldots,n-1$).  The quantity $\rss(S)$ is called
+the \emph{bound} of the subtree rooted in $(S,k)$: no subset model
+extracted from the subtree can have a smaller
 RSS~\citep{gatu:j_comput_graph_stat:06}.  Note that the BBA is an
 exact algorithm, i.e., it computes the optimal solution of the
 all-subsets regression problem~\eqref{eq:all_subsets}.
@@ -414,7 +415,7 @@ over heuristic algorithms is that the relative error of the solution
 is bounded by the tolerance
 parameter~\citep{gatu:j_comput_graph_stat:06,hofmann:comput_stat_data_an:07},
 thus giving the user control over the tradeoff between solution
-quality and execution time.  Note that ``heuristic BBA'' is a
+quality and speed of execution.  Note that ``heuristic BBA'' is a
 misnomer, as the algorithm does not belong to the class of heuristic
 algorithms at all; rather, it is an approximation algorithm.
 
@@ -507,17 +508,17 @@ specified by the user.  For example, the call
 %
 specifies a response variable (\code{mortality}) and fifteen predictor
 variables, all taken from the \code{AirPollution}
-dataset~\citep{miller:02}.  In this case, the call can be abbreviated
-to
+dataset~\citep{miller:02}.  It is common to shorten the call by
+emloying {\R}'s practical ``dot-notation'':
 %
-\begin{Code}
-  lmSubsets(mortality ~ ., data = AirPollution)
+\begin{Code}[commandchars=\\\{\}]
+  lmSubsets(mortality ~ ., data = AirPollution)\textrm{,}
 \end{Code}
 %
-using standard {\R} formula notation, where the dot (\code{.}) stands
-for ``all variables not mentioned in the left-hand side of the
-formula''.  By default, an intercept term is included in the model;
-that is, the call in the previous example is equivalent to
+where the dot (\code{.}) stands for ``all variables not mentioned in
+the left-hand side of the formula''.  By default, an intercept term is
+included in the model; that is, the call in the previous example is
+equivalent to
 %
 \begin{Code}[commandchars=\\\{\}]
   lmSubsets(mortality ~ . + 1, data = AirPollution)\textrm{.}
@@ -567,7 +568,7 @@ where \code{penalty} is the \emph{penalty per model parameter} defined
 in~\eqref{eq:aic}, \code{logLik} the log-likelihood of the fitted
 model, and \code{npar} the number of model parameters (including the
 error variance).  The \code{penalty} value indicates how strongly
-model parameters are penalized, with higher values favoring
+model parameters are penalized, with large values favoring
 parsimonious models.  When $\mathtt{penalty}=2$, the criterion
 corresponds to Akaike's information
 criterion~\citep[AIC,][]{akaike:ieee_t_automat_contr:74}; when
@@ -621,23 +622,23 @@ and
 The parameters are summarized in Table~\ref{tab:params}.
 
 The \code{weights} and \code{offset} parameters correspond to the
-homonomic parameters of the \code{lm} function.  The \code{include}
+homonymous parameters of the \code{lm} function.  The \code{include}
 and \code{exclude} parameters allow the user to specify variables that
 are to be included in, or excluded from all candidate models.  They
 are either logical vectors -- with each entry corresponding to one
-variable -- or are automatically expanded to such if given in the form
-of an integer vector (i.e., set of variable indices) or character
-vector (i.e., set of variable names).
+variable -- or are automatically expanded if given in the form of an
+integer vector (i.e., set of variable indices) or character vector
+(i.e., set of variable names).
 
 For a large number of variables (see Section~\ref{sec:benchmark}),
 execution times may become intractable.  In order to speed up the
 execution, either the search space can be reduced, or one may settle
-for a non-exhaustive solution.  In the first approach, the user may
-specify values for the \code{nmin} and \code{nmax} parameters as
-defined in~\eqref{eq:all_subsets:subrange}, in which case submodels
-with less than \code{nmin} or more than \code{nmax} variables are
-discarded.  Well-defined regions of the regression tree can be ignored
-by the selection algorithm, and the search space is thus reduced.
+for a non-exact solution.  In the first approach, the user may specify
+values for the \code{nmin} and \code{nmax} parameters as defined
+in~\eqref{eq:all_subsets:subrange}, in which case submodels with less
+than \code{nmin} or more than \code{nmax} variables are discarded.
+Well-defined regions of the regression tree can be ignored by the
+selection algorithm, and the search space is thus reduced.
 
 In the second approach, expectations with respect to the solution
 quality are lowered, i.e., non-optimal solutions are \emph{tolerated}.
@@ -703,15 +704,15 @@ for testing purposes only and should never be set by the user.
 \subsection{Extracting submodels}
 \label{sec:extracting}
 
-The user is handed back a result object that encapsulates the
-solution to an all-subsets (class \class{lmSubsets}) or best-subset
-(class \class{lmSelect}) selection problem.  An object of class
+The user is handed back a result object that encapsulates the solution
+to an all-subsets (class \class{lmSubsets}) or best-subset (class
+\class{lmSelect}) selection problem.  An object of class
 \class{lmSubsets} represents a two-dimensional
 $\mathtt{nbest}\times\mathtt{nvar}$ set of submodels; an object of
 class \class{lmSelect}, a linear sequence of \code{nbest} submodels.
 Problem-specific information is stored alongside the selected
 submodels.  Table~\ref{tab:components} summarizes the components of
-the result object.
+the result objects.
 
 \begin{table}[t!]
   \centering
@@ -742,21 +743,24 @@ the result object.
 \end{table}
 
 A wide range of standard methods to visualize, summarize, and extract
-information is provided (see Table~\ref{tab:methods}).  The
+information are provided (see Table~\ref{tab:methods}).  The
 \fct{print}, \fct{plot}, and \fct{summary} methods give the user a
 compact overview -- either textual or graphical -- of the information
-gathered on the selected submodels, in order to help him identify
-``good'' submodels.  The remaining extractor functions behave in the
+gathered on the selected submodels in order to help him identify
+``good'' candidates.  The remaining extractor functions behave in the
 usual way, and can be used to extract variable names, coefficients,
 covariance matrices, fitted values, etc.
 
 In order to specify a submodel on which information is to be obtained,
 \class{lmSubsets} methods provide two parameters, namely \code{size}
-and \code{best}, which specify the number of regressors in, and the
+and \code{best}, to specify the number of regressors in, and the
 ranking of the desired submodel, respectively.  The user must always
 indicate the desired \code{size}, while \code{best} defaults to
-\code{1} if left unspecified.  For \class{lmSelect} methods, the
-\code{size} parameter has no meaning and is not defined.  Furthermore,
+\code{1} if left unspecified.  Moreover, the name of a selection
+criterion (\code{"AIC"} or \code{"BIC"}) may be given as the
+\code{size} argument, in which case the submodel with the smallest
+criterion value is extracted.  For \class{lmSelect} methods, the
+\code{size} parameter has no meaning and is not defined.  Lastly,
 methods that return scalar values -- i.e., \fct{deviance},
 \fct{logLik}, \fct{AIC}, \fct{BIC} -- can extract more than one
 submodel at a time if passed a numeric vector as an argument to either
