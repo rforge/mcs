@@ -148,7 +148,7 @@ lmSelect_fit <- function (x, y, weights = NULL, offset = NULL,
     nvar <- NCOL(x)
 
     ## variables names
-    x.names <- sapply(colnames(x), as.name)
+    x.names <- colnames(x)
 
     ## include
     if (is.null(include)) {

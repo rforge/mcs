@@ -894,20 +894,20 @@ the relevant regressors from the remaining 35 NWP variables.
 <<ms2>>=
 ms2 <- lmSubsets(temp ~ ., data = IbkTemperature,
   include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
-m2 <- refit(lmSelect(ms2, penalty = "BIC"))
+m2 <- refit(ms2, size = "BIC")
 @
-After obtaining the all-subsets regression \code{ms2} with \fct{lmSubsets}
-the best BIC solution is extracted with \fct{lmSelect} and turned
-into a \class{lm} model with \fct{refit}. The more costly all-subsets
+After obtaining the all-subsets regression \code{ms2} with
+\fct{lmSubsets} the best BIC solution is extracted and turned into a
+\class{lm} model with \fct{refit}. The more costly all-subsets
 regression is solved here to gain more insights into the selected
-variables not only for the best-BIC solution but also other models. 
+variables not only for the best-BIC solution but also other models.
 
 To assess whether our initial MOS strategy in \code{m1} (and forced
 into \code{m2}) is really the most suitable we also carry out another
 all-subsets regression without restricting the search space.
 <<ms3>>=
 ms3 <- lmSubsets(temp ~ ., data = IbkTemperature)
-m3 <- refit(lmSelect(ms3, penalty = "BIC"))
+m3 <- refit(ms3, size = "BIC")
 @
 Obtaining \code{ms3} is computationally somewhat more costly than
 \code{ms2} but still very fast taking only a couple of seconds on

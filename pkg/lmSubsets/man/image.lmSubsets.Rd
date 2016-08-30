@@ -13,7 +13,7 @@
   hilite = "BIC", uline = hilite,
   main = "Subset selection", xlab = "", ylab = NULL,
   col = "gray30", tint = 0.8, gaps = "white",
-  hilite.col = "red", hilite.tint = 0.8,
+  hilite.col = "red", hilite.tint = tint,
   xaxs = "i", yaxs = "i", cex = 0.9, srt = 45, ...)
 }
 
