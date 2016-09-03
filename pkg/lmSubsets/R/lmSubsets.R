@@ -226,6 +226,7 @@ lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
     rval$df <- array(C_rval$df, dim = c(nbest, nvar),
                      dimnames = list(.cnames, 1:nvar))
     not.valid <- rval$df < 0
+    not.valid[, -(nmin:nmax)] <- TRUE
     rval$df[not.valid] <- NA
     ## rss
     rval$rss <- array(C_rval$rss, dim = c(nbest, nvar),
