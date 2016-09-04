@@ -1,7 +1,26 @@
+## heatmap
+##
+## Args:
+##   x           - (lmSubsets)
+##   best        - (integer)
+##   size        - (integer[])
+##   which       - (integer[]|character[])
+##   hilite      - (integer|character)
+##   uline       - (integer|character)
+##   col         - (character)
+##   tint        - (numeric)
+##   gaps        - (character)
+##   hilite.col  - (character[])
+##   hilite.tint - (numeric[])
+##   ...         - forwarded to 'plot' function
+##   (graphical parameters)
+##
+## Rval:  (numeric[,])
+##
 image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
                             hilite = "BIC", uline = hilite,
                             main = "Subset selection", xlab = "", ylab = NULL,
-                            col = "gray30", tint = 0.8, gaps = "white",
+                            col = gray.colors(1), tint = 0.8, gaps = "white",
                             hilite.col = "red", hilite.tint = tint,
                             xaxs = "i", yaxs = "i", cex = 0.9,
                             srt = 45, ...) {
@@ -28,7 +47,7 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
     N <- ncol(heatmap)
 
     hot <- col;  cold <- col.tint(col, tint)
-    heatmap.col <- array(c(hot, cold)[2L - heatmap], dim = c(M, N))
+    heatmap.temp <- array(c(hot, cold)[2L - heatmap], dim = c(M, N))
 
     ## highlight
     if (!is.null(hilite) && !identical(hilite, FALSE)) {
@@ -41,8 +60,9 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
         hilite.ix <- match(hilite, rownames(heatmap))
 
         for (i in seq_along(hilite.ix)) {
-            heatmap.col[(row(heatmap) == hilite.ix[i]) &  heatmap] <- hilite.col[i]
-            heatmap.col[(row(heatmap) == hilite.ix[i]) & !heatmap] <- col.tint(hilite.col[i], hilite.tint)
+            hot <- hilite.col[i];  cold <- col.tint(hilite.col[i], hilite.tint)
+            heatmap.temp[(row(heatmap) == hilite.ix[i]) &  heatmap] <- hot
+            heatmap.temp[(row(heatmap) == hilite.ix[i]) & !heatmap] <- cold
         }
     } else {
         hilite <- NULL
@@ -78,10 +98,10 @@ image.lmSubsets <- function(x, best = 1, size = NULL, which = NULL,
     
     ## paint heatmap
     graphics::rect(col(heatmap) - 0.5, row(heatmap) - 0.5, col(heatmap) + 0.5, row(heatmap) + 0.5,
-                   col = heatmap.col, border = gaps)
+                   col = heatmap.temp, border = gaps)
 
     ## x-axis labels (variable names)
-    text(1L:N, par("usr")[3] + 0.02 * N, labels = x.labels, srt = srt, 
+    text(1L:N, par("usr")[3] + 0.02 * M, labels = x.labels, srt = srt, 
          adj = c(1, 1), xpd = TRUE, cex = cex)  
 
     ## y-axis labels (subset sizes)

@@ -962,7 +962,7 @@ further, e.g., soil moisture \code{vsmc}) among others.
 \centering
 \setkeys{Gin}{width=\textwidth}
 <<fig-image2, fig=TRUE, echo=FALSE, height=5, width=12>>=
-par(mar = c(3.2, 4, 4, 1))
+par(mar = c(4, 4, 4, 1))
 image(ms2, size = 8:20)
 @
 \caption{\label{fig:image2} Subset selection for \code{ms2}.}
@@ -972,7 +972,7 @@ image(ms2, size = 8:20)
 \centering
 \setkeys{Gin}{width=\textwidth}
 <<fig-image3, fig=TRUE, echo=FALSE, height=7, width=12>>=
-par(mar = c(3.4, 4, 4, 1))
+par(mar = c(4.2, 4, 4, 1))
 image(ms3, size = 2:20)
 @
 \caption{\label{fig:image3} Subset selection for \code{ms3}.}
