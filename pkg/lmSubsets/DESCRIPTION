@@ -1,27 +1,22 @@
 Package: lmSubsets
-Version: 0.1-0
-Date: 2016-08-03
-Title: Exact linear subset regression
+Version: 0.1
+Date: 2017-11-01
+Title: Exact linear variable-subset regression in R
 Authors@R: c(person(given = "Marc", family = "Hofmann",
                     role  = c("aut", "cre"),
                     email = "marc.hofmann@gmail.com"),
              person(given = "Cristian", family = "Gatu",
                     role  = "aut",
-                    email = "cgatu@info.uaic.ro",
-                    comment = c(ORCID = "0000-0002-7362-424X")),
+                    email = "cgatu@info.uaic.ro"),
              person(given = "Erricos J.", family = "Kontoghiorghes",
                     role = "aut",
                     email = "erricos@dcs.bbk.ac.uk"),
              person(given = "Achim", family = "Zeileis",
                     role = "aut",
                     email = "Achim.Zeileis@R-project.org",
-                    comment = c(ORCID = "0000-0003-0918-3766")))
+		    comment = c(ORCID = "0000-0003-0918-3766"))
 Description: Efficient algorithms for computing exact
   variable-subset regression models.
-Depends: R (>= 3.0.0)
+Depends: R (>= 3.4.0)
 Imports: stats, graphics, grDevices
-Suggests: memisc
 License: GPL-2 | GPL-3
-SystemRequirements: C++11
-URL: TODO: MCS homepage?
-Acknowledgements: TODO: Dietmar, Manfred, ...

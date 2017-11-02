@@ -11,234 +11,204 @@
 
 ## workhorse function
 ##
-## Args:
-##   x         - (matrix) model matrix
-##   y         - (numeric[]) model response
-##   weights   - (numeric[]) 
-##   offset    - (numeric[])
+## Arguments:
+##   x         - (double[,]) model matrix
+##   y         - (double[]) model response
+##   weights   - (double[]) 
+##   offset    - (double[])
 ##   include   - (integer[]) regressors to force in
 ##   exclude   - (integer[]) regressors to force out
 ##   nmin      - (integer)
 ##   nmax      - (integer)
-##   tolerance - (numeric[])
-##   pradius   - (integer) preordering radius
+##   tolerance - (double[])
 ##   nbest     - (integer) number of best subsets
 ##   ...       - ignored
-##   .algo     - (character) for interal use
+##   pradius   - (integer) preordering radius
 ##
-## Rval:  (list)
-##   nobs      - (integer)
-##   nvar      - (integer)
-##   weights   - (numeric[]) 
-##   offset    - (numeric[])
-##   intercept - (logical)
-##   include   - (integer[])
-##   exclude   - (integer[])
-##   nmin      - (integer)
-##   nmax      - (integer)
-##   tolerance - (numeric[])
-##   nbest     - (integer)
-##   df        - (integer[nbest,nvar])
-##   rss       - (numeric[nbest,nvar])
-##   which     - (numeric[nvar,nbest,nvar])
-##   .info     - (integer)
-##   .nodes    - (integer)
-##
-## NOTE: '.algo'
-##   The following values are recognized:
-##   'dca'  :  Dropping Column Algorithm (no branch and bound)
-##   'bba'  :  Branch and Bound Algorithm
-##   'pbba' :  BBA with variable preordering
-##   'hbba' :  Heuristic BBA
-##   'phbba':  HBBA with variable preordering
-##   'xbba.':  experimental PBBA
+## Result: (list)
+##   NOBS         - (integer)
+##   nobs         - (integer)
+##   nvar         - (integer)
+##   weights      - (double[]) 
+##   intercept    - (logical)
+##   include      - (integer[])
+##   exclude      - (integer[])
+##   sizes        - (integer[])
+##   tolerance    - (double[])
+##   nbest        - (integer)
+##   rank         - (integer[nbest,nvar])
+##   df_residual  - (integer[nbest,nvar])
+##   rss          - (double[nbest,nvar])
+##   which        - (logical[nvar,nbest,nvar])
+##   .interrupted - (logical)
+##   .nodes       - (integer)
 ##
 lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
-                           include = NULL, exclude = NULL, nmin = NULL,
-                           nmax = NULL, tolerance = 0, pradius = NULL,
-                           nbest = 1, ..., .algo = "phbba") {
-    ## model weights and offset
-    if (is.null(w <- weights))  w <- rep(1, NROW(x))
-    if (is.null(o <- offset))  o <- rep(0, NROW(x))
-    wok <- w != 0;  w <- w[wok];  o <- o[wok]
-    x <- sqrt(w) * x[wok, , drop = FALSE]
-    y <- sqrt(w) * y[wok,   drop = FALSE] - o
+                           include = NULL, exclude = NULL,
+                           nmin = NULL, nmax = NULL, tolerance = 0,
+                           nbest = 1, ..., pradius = NULL) {
+    ## dims
+    NOBS <- NROW(x)
+
+    ## intercept
+    has_intercept <- all(x[, 1] == 1)
+
+    ## offset
+    if (is.null(o <- offset))  o <- rep(0, NOBS)
+
+    y <- y - o
+
+    ## weights
+    if (is.null(w <- weights))  w <- rep(1, NOBS)
+
+    ok <- w != 0
+    w <- sqrt(w[ok])
+
+    x <- w * x[ok, , drop = FALSE]
+    y <- w * y[ok,   drop = FALSE]
 
     ## dims
     nobs <- NROW(x)
     nvar <- NCOL(x)
 
     ## variables names
-    x.names <- colnames(x)
+    x_names <- colnames(x)
 
     ## include
     if (is.null(include)) {
-        include <- numeric(0)
+        include <- logical(nvar)
     } else {
-        ## numeric --> numeric
         if (is.numeric(include)) {
-            include <- match(include, 1:nvar)
-        }
-        ## character --> numeric
-        if (is.character(include)) {
-            include <- match(include, x.names)
-        }
-        ## logical --> numeric
-        if (is.logical(include)) {
+            ## numeric --> numeric
+            include <- match(include, seq_len(nvar))
+        } else if (is.character(include)) {
+            ## character --> numeric
+            include <- match(include, x_names)
+        } else if (is.logical(include)) {
+            ## logical --> numeric
             include <- which(rep(include, length.out = nvar))
         }
-        ## canonicalize include
+
         if (any(is.na(include))) {
-            include <- na.omit(include)
-            warning ("non-existing columns selected in 'include'; fixing 'include': ",
-                     "c(", paste(include, collapse = ","), ")")
+            warning ("non-existing columns selected in 'include'")
         }
-        include <- sort(unique(include))
+
+        ## canonicalize
+        include <- is.element(seq_len(nvar), include)
     }
+
+    names(include) <- x_names
 
     ## exclude
     if (is.null(exclude)) {
-        exclude <- numeric(0)
+        exclude <- logical(nvar)
     } else {
-        ## numeric --> numeric
         if (is.numeric(exclude)) {
-            exclude <- match(exclude, 1:nvar)
-        }
-        ## character --> numeric
-        if (is.character(exclude)) {
-            exclude <- match(exclude, x.names)
-        }
-        ## logical --> numeric
-        if (is.logical(exclude)) {
+            ## numeric --> numeric
+            exclude <- match(exclude, seq_len(nvar))
+        } else if (is.character(exclude)) {
+            ## character --> numeric
+            exclude <- match(exclude, x_names)
+        } else if (is.logical(exclude)) {
+            ## logical --> numeric
             exclude <- which(rep(exclude, length.out = nvar))
         }
-        ## canonicalize exclude
+
         if (any(is.na(include))) {
-            exclude <- na.omit(exclude)
-            warning ("invalid columns selected in 'exclude'; fixing 'exclude': ",
-                     "c(", paste(exclude, collapse = ","), ")")
+            warning ("invalid columns selected in 'exclude'")
         }
-        exclude <- sort(unique(exclude))
+
+        ## canonicalize
+        exclude <- is.element(seq_len(nvar), exclude)
     }
 
+    names(exclude) <- x_names
+
     ## include/exclude non-overlapping
-    if (any(intersect(include, exclude))) {
-        exclude <- setdiff(exclude, include)
-        warning ("'include' and 'exclude' overlap; fixing 'exclude': ",
-                 "c(", paste(exclude, collapse = ","), ")")
+    if (any(include & exclude)) {
+        warning ("'include' and 'exclude' overlap: fixing 'exclude'")
+
+        exclude <- exclude & !include
     }
 
     ## intercept
-    has.intercept <- all(x[, 1] == 1)
-    if (has.intercept) {
-        if (any(include == 1)) {
-            ## OK, already selected
-        } else if (any(exclude == 1)) {
-            ## not selected
+    if (has_intercept) {
+        if (include[1]) {
+            ## OK: included
+        } else if (exclude[1]) {
+            ## OK: excluded
         } else {
-            ## select
-            include <- c(1, include)
+            ## default: include
+            include[1] <- TRUE
         }
     }
 
     ## which
-    which <- c(include, setdiff(1:nvar, include))
-    which <- setdiff(which, exclude)
+    which_include <- which(include)
+    which_exclude <- which(exclude)
+
+    which_maybe <- setdiff(seq_len(nvar), which_include)
+    which_maybe <- setdiff(which_maybe, which_exclude)
+
+    which_model <- c(which_include, which_maybe)
 
     ## size
-    size <- length(which)
-    mark <- length(include)
+    size <- length(which_model)
+    mark <- length(which_include)
     nmin <- max(nmin, mark + 1)
     nmax <- min(nmax, size)
 
     ## preordering radius
     ## TODO: validate
     if (is.null(pradius)) {
-        pmin <- 8
-    } else {
-        pmin <- size - mark - pradius + 1
+        pradius <- floor((size - mark) / 3)
     }
 
     ## tolerance
     ## TODO: validate
-    tolerance <- rep(tolerance, length.out = nvar)
-    tolerance[-(nmin:nmax)] <- +Inf
+    tolerance <- rep(tolerance, length.out = size)
+    tolerance[-seq.int(nmin, nmax)] <- +Inf
 
     ## call C
-    C_v <- which - 1
-    C_xy <- cbind(x[, which], y)
-    C_tau <- tolerance + 1
+    z <- .Call("lmSubsets", list(...)$.algo,
+               cbind(x[, which_model], y), mark, tolerance + 1,
+               nbest, pradius)
 
-    C_index <- rep(0, nvar * nbest)
-    C_df <- rep(-1, nvar * nbest)
-    C_rss <- rep(0, nvar * nbest)
-    C_which <- rep(0, nvar * nbest * nvar)
+    ## result
+    best_names <- format_ordinal(seq_len(nbest))
+    size_names <- seq_len(nvar)
 
-    C_args <- list(
-        algo    = as.character(.algo),
-        nobs    = as.integer(nobs),
-        nvar    = as.integer(nvar),
-        size    = as.integer(size),
-        mark    = as.integer(mark),
-        nbest   = as.integer(nbest),
-        pmin    = as.integer(pmin),
-        v       = as.integer(C_v),
-        xy      = as.double(C_xy),
-        df      = as.integer(C_df),
-        rss     = as.double(C_rss),
-        which   = as.logical(C_which),
-        tau     = as.double(C_tau),
-        info    = integer(1),
-        nodes   = integer(1),
-        NAOK    = TRUE
-    )
+    ans <- list()
+    ans$NOBS <- NOBS
+    ans$nobs <- nobs
+    ans$nvar <- nvar
+    ans$weights <- weights
+    ans$intercept <- has_intercept
+    ans$include <- include
+    ans$exclude <- exclude
+    ans$sizes <- seq.int(nmin, nmax)
+    ans$tolerance <- array(tolerance, dim = nvar,
+                           dimnames = list(size_names))
+    ans$nbest <- nbest
 
-    C_rval <- do.call(".C", c("R_lmSubsets", C_args))
-    if (C_rval$info < 0) {
-        stop ("invalid argument: ", names(C_rval)[-C_rval$info])
-    }
+    ans$rank <- array(NA, dim = c(nbest, nvar),
+                      dimnames = list(best_names, size_names))
+    ans$rank[, seq_len(size)] <- z$rank
+    ans$df_residual <- ans$nobs - ans$rank
 
-    ## return value
-    rval <- list(call      = call,
-                 nobs      = nobs,
-                 nvar      = nvar,
-                 weights   = weights,
-                 intercept = has.intercept,
-                 include   = include,
-                 exclude   = exclude,
-                 nmin      = nmin,
-                 nmax      = nmax,
-                 tolerance = NULL,
-                 nbest     = nbest,
-                 df        = NULL,
-                 rss       = NULL,
-                 which     = NULL,
-                 .info     = C_rval$info,
-                 .nodes    = C_rval$nodes)
-    class(rval) <- "lmSubsets"
+    ans$rss <- array(NA, dim = c(nbest, nvar),
+                     dimnames = list(best_names, size_names))
+    ans$rss[, seq_len(size)] <- z$rss
 
-    ## extract value and subsets
-    .cnames <- format.ordinal(1:nbest)
-    ## tolerance
-    rval$tolerance <- array(tolerance, dim = nvar,
-                            dimnames = list(1:nvar))
-    ## df
-    rval$df <- array(C_rval$df, dim = c(nbest, nvar),
-                     dimnames = list(.cnames, 1:nvar))
-    not.valid <- rval$df < 0
-    not.valid[, -(nmin:nmax)] <- TRUE
-    rval$df[not.valid] <- NA
-    ## rss
-    rval$rss <- array(C_rval$rss, dim = c(nbest, nvar),
-                      dimnames = list(.cnames, 1:nvar))
-    rval$rss[not.valid] <- NA
-    ## which
-    rval$which <- array(C_rval$which, dim = c(nvar, nbest, nvar),
-                        dimnames = list(x.names, .cnames, 1:nvar))
-    rval$which[rep(not.valid, each = nvar)] <- NA
+    ans$which <- array(NA, dim = c(nvar, nbest, nvar),
+                       dimnames = list(x_names, best_names, size_names))
+    ans$which[which_model, , seq_len(size)] <- z$which
+
+    ans$.interrupted <- z$.interrupted
+    ans$.nodes <- z$.nodes
 
     ## done
-    rval
+    ans
 }
 
 
@@ -248,29 +218,72 @@ lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
 #########################
 
 
+## matrix interface
+##
+## Arguments:
+##   formula  - (double[,])
+##   y        - (double[])
+##   interept - (logical)
+##   ...      - forwarded
+##
+## Result: (lmSubsets) see also 'lmSubsets.default'
+##
+lmSubsets.matrix <- function (formula, y, intercept = TRUE, ...) {
+    x <- formula;  formula <- NULL
+
+    ## names
+    x_names <- paste0("x[, ", seq_len(ncol(x)), "]")
+    if (all(x[, 1] == 1)) {
+        x_names <- x_names[-1]
+        intercept <- TRUE
+    }
+
+    ## formula
+    f <- stats_formula(x_names, "y", intercept)
+
+    ## forward call
+    cl <- match.call()
+    cl[[1]] <- quote(lmSubsets)
+    cl$data <- bquote(list(x = .(x), y = .(y)), list(x = cl$formula, y = cl$y))
+    cl$formula <- f
+    cl$y <- cl$intercept <- NULL
+
+    eval(cl, parent.frame())
+}
+
+
 ## standard formula interface
 ##
-## Args:
+## Arguments:
 ##   formula   - (formula) an object that can be coerced to class 'formula'
 ##   data      - (data.frame)
 ##   subset    - (vector) subset of observations
-##   weights   - (numeric[])
+##   weights   - (double[])
 ##   na.action - (function)
 ##   model     - (logical)
 ##   x         - (logical)
 ##   y         - (logical)
 ##   contrasts - (list)
-##   offset    - (numeric[])
+##   offset    - (double[])
 ##   ...       - forwarded to 'lmSubsets_fit'
 ##
-## Rval:  (lmSubsets) see 'lmSubsets_fit'
+## Result: (lmSubsets) see also 'lmSubsets_fit'
+##   call      - (call)
+##   na.action - ()
+##   offset    - (double[])
+##   contrasts - (list)
+##   xlevels   - (list)
+##   terms     - (terms, formula)
+##   model     - (data.frame) model frame
+##   x         - (double[,])
+##   y         - (double[])
 ##
 lmSubsets.default <- function (formula, data, subset, weights, na.action,
                                model = TRUE, x = FALSE, y = FALSE,
                                contrasts = NULL, offset, ...) {
-    ret.m <- model;  model <- NULL
-    ret.x <- x;  x <- NULL
-    ret.y <- y;  y <- NULL
+    ret_m <- model;  model <- NULL
+    ret_x <- x;  x <- NULL
+    ret_y <- y;  y <- NULL
 
     ## keep call (of generic)
     cl <- match.call()
@@ -282,8 +295,8 @@ lmSubsets.default <- function (formula, data, subset, weights, na.action,
            "weights", "na.action", "offset")
     m <- match(m, names(mf), 0L)
     mf <- mf[c(1L, m)]
+    mf[[1L]] <- quote(model.frame)
     mf$drop.unused.levels <- TRUE
-    mf[[1L]] <- quote(stats::model.frame)
     mf <- eval(mf, parent.frame())
 
     ## model terms
@@ -291,7 +304,7 @@ lmSubsets.default <- function (formula, data, subset, weights, na.action,
 
     ## model matrix and response
     x <- model.matrix(mt, mf, contrasts)
-    y <- model.response(mf, "numeric")
+    y <- model_response(mf, "numeric")
 
     ## weights
     w <- as.vector(model.weights(mf))
@@ -306,23 +319,24 @@ lmSubsets.default <- function (formula, data, subset, weights, na.action,
     }
 
     ## fit subsets
-    rval <- lmSubsets_fit(x, y, weights = w, offset = offset, ...)
+    ans <- lmSubsets_fit(x, y, weights = w, offset = offset, ...)
 
-    ## return value
-    class(rval) <- "lmSubsets"
-    rval$call <- cl
-    rval$na.action <- attr(mf, "na.action")
-    rval$offset <- offset
-    rval$contrasts <- attr(x, "contrasts")
-    rval$xlevels <- .getXlevels(mt, mf)
-    rval$terms <- mt
+    ## result
+    class(ans) <- "lmSubsets"
 
-    if (ret.m)  rval$model <- mf
-    if (ret.x)  rval$x <- x
-    if (ret.y)  rval$y <- y
+    ans$call <- cl
+    ans$na.action <- attr(mf, "na.action")
+    ans$offset <- offset
+    ans$contrasts <- attr(x, "contrasts")
+    ans$xlevels <- .getXlevels(mt, mf)
+    ans$terms <- mt
+
+    if (ret_m)  ans$model <- mf
+    if (ret_x)  ans$x <- x
+    if (ret_y)  ans$y <- y
 
     ## done
-    rval
+    ans
 }
 
 
@@ -332,62 +346,79 @@ lmSubsets.default <- function (formula, data, subset, weights, na.action,
 ########################
 
 
-## print method for 'lmSubsets' objects
+## format method for 'lmSubsets' objects
 ##
-## Args:
+## Arguments:
 ##   x   - (lmSubsets)
-##   ... - ignored
+##   ... - forwarded
 ##
-## Rval:  (lmSubsets) invisible
+## Result: (list)
 ##
-print.lmSubsets <- function (x, ...) {
-    catln <- function (...) base::cat(..., "\n", sep = "")
-    paste <- function (..., sep = "") base::paste(..., sep = sep)
+format.lmSubsets <- function (x, ...) {
+    ans <- list()
 
     ## call
-    catln()
-    catln("Call:")
-    catln("  ", deparse(x$call, width.cutoff = floor(getOption("width") * 0.85)))
+    ans$call <- paste(deparse(x$call), sep = "\n", collapse = "\n")
 
-    ## arguments
-    catln()
-    cat("Arguments:")
-    output <- c(format(x$nobs), format(x$nvar),
-                if (is.null(x$weights)) "No" else "Yes",
-                if (is.null(x$offset)) "No" else "Yes",
-                if (x$intercept) "Yes" else "No",
-                format(x$nmin), format(x$nmax),
-                format(x$nbest))
-    output <- as.matrix(output, ncol = 1)
-    colnames(output) <- ""
-    rownames(output) <- paste("  ", c("N observations", "N regressors",
-                                      "Weights", "Offset", "Intercept",
-                                      "N min", "N max", "N best"), ":")
-    print(output, quote = FALSE)
-
-    ## fit
-    catln()
-    catln("Model fit:")
-    catln("  best x size (tolerance)")
-    catln("    DEVIANCE")
-    output <- x$rss[, x$nmin:x$nmax, drop = FALSE]
-    output <- ifelse(is.na(output), "", format(output, nsmall = 2))
-    rownames(output) <- paste("  ", rownames(output))
-    colnames(output) <- paste(colnames(output), " (", x$tolerance[x$nmin:x$nmax], ")")
-    print(output, quote = FALSE)
+    ## rss
+    ans$rss <- x$rss[, x$sizes, drop = FALSE]
+    ans$rss <- ifelse(is.na(ans$rss), "", format_numeric(ans$rss, ...))
+    colnames(ans$rss) <- paste0(colnames(ans$rss), " (",
+                                format_numeric(x$tolerance[x$sizes], ...),
+                                ")")
 
     ## which
+    ans$which <- apply(x$which[, , , drop = FALSE], c(1, 2), format_which)
+    rownames(ans$which)[x$include] <- paste0("+", rownames(ans$which)[x$include])
+    rownames(ans$which)[x$exclude] <- paste0("-", rownames(ans$which)[x$exclude])
+
+    ## done
+    ans
+}
+
+
+## print method for 'lmSubsets' objects
+##
+## Arguments:
+##   x       - (lmSubsets)
+##   ...     - forwarded
+##
+## Result: (lmSubsets) invisible
+##
+print.lmSubsets <- function (x, ...) {
+    catln <- function (...)  base::cat(..., "\n", sep = "")
+    print <- function (..., skip = 0, indent = 0) {
+        output <- capture.output(base::print(...))
+        if (skip > 0) output <- output[-seq_len(skip)]
+        indent <- paste0(rep(" ", indent), collapse = "")
+        cat(paste0(indent, output, "\n"), sep = "")
+    }
+
+    ## format
+    fmt <- format(x, digits = 3, ...)
+
     catln()
+
+    ## call
+    catln("Call:")
+    catln("  ", fmt$call)
+
+    catln()
+
+    ## fit
+    catln("Model fit:")
+    catln("  best x size (tolerance)")
+    catln("    deviance")
+    print(fmt$rss, quote = FALSE, indent = 2)
+
+    catln()
+
+    ## which
     catln("Which:")
     catln("  variable x best")
-    catln("    Size")
-    output <- apply(x$which[, , , drop = FALSE], c(1, 2), format.which)
-    rownames(output)[x$include] <- paste("+", rownames(output)[x$include])
-    rownames(output)[x$exclude] <- paste("-", rownames(output)[x$exclude])
-    rownames(output) <- paste("  ", rownames(output))
-    print(output, quote = FALSE)
+    catln("    sizes")
+    print(fmt$which, quote = FALSE, indent = 2)
 
-    ## pad
     catln()
 
     ## done
@@ -397,52 +428,105 @@ print.lmSubsets <- function (x, ...) {
 
 ## plot method for 'lmSubsets' objects
 ##
-## Args:
-##   x    -   (lmSubsets)
-##   ...  -   passed to plotting functions
-##   legend - (character)
+## Arguments:
+##   x       - (lmSubsets)
+##   penalty - (character|numeric|function)
+##   ...     - forwarded
+##   axes    - (logical) draw axes
+##   ann     - (logical) annotate
 ##
-## Rval:  (lmSubsets) invisible
+## Result: (lmSubsets) invisible
 ##
-plot.lmSubsets <- function (x, ..., legend) {
-    localPlot <- function (object, main, sub, xlab, ylab, type = "o",
-                           lty = c(1, 3), pch = c(16, 21), col = "black",
-                           bg = "white", ...) {
-        if (missing(main))  main <- "All subsets"
-        if (missing(sub))   sub  <- paste("nbest =", object$nbest, sep = " ")
-        if (missing(xlab))  xlab <- "Number of regressors"
-        if (missing(ylab))  ylab <- "Deviance"
+plot.lmSubsets <- function (x, penalty = "BIC", ...,
+                            axes = TRUE, ann = par("ann")) {
+    object <- x;  x <- NULL
 
-        type <- rep(type, length = 2)
-        lty  <- rep(lty , length = 2)
-        pch  <- rep(pch , length = 2)
-        col  <- rep(col , length = 2)
-        bg   <- rep(bg  , length = 2)
+    ## new plot
+    plot.new()
 
-        x <- matrix(rep(object$nmin:object$nmax, each = object$nbest),
-                    nrow = object$nbest)
-        y <- object$rss[object$nbest:1, object$nmin:object$nmax, drop = FALSE]
+    ## pars
+    opar <- par(no.readonly = TRUE)
+    on.exit(par(opar))
 
-        matplot(x = x, y = y, main = main, sub = sub, xlab = xlab, ylab = ylab,
-                type = type[2], lty = lty[2], pch = pch[2], col = col[2],
-                bg = bg[2], ...)
-        lines(x[1, ], y[object$nbest, ], type = type[1], lty = lty[1],
-              pch = pch[1], col = col[1], bg = bg[1], ...)
+    ## margins
+    par(mar = c(5, 4, 4, 4) + 0.1)
 
-        if (!is.null(legend)) {
-            legend("topright", legend = legend, lty = lty,
-                   pch = pch, col = col, pt.bg = bg, bty = "n")
+    ## RSS
+    xlim <- range(object$sizes)
+    ylim <- range(object$rss, na.rm = TRUE)
+    plot.window(xlim, ylim, ...)
+
+    for (j in object$sizes) {
+        x <- rep_len(j, object$nbest)
+        y <- rev(object$rss[seq_len(object$nbest), j])
+
+        lines(x, y, type = "o", lty = 3,
+              pch = c(rep_len(21, object$nbest - 1), NA),
+              col = "black", bg = "white", ...)
+    }
+
+    lines(object$sizes, object$rss[1, object$sizes], type = "o",
+          lty = 1, pch = 16, col = "black", bg = "white", ...)
+
+    ## axes
+    if (axes) {
+        axis(1)
+        axis(2)
+        box()
+    }
+
+    ## annotations
+    if (ann) {
+        title(main = "All subsets",
+              sub = paste("nbest = ", object$nbest),
+              xlab = "Number of regressors", ylab = "Deviance")
+
+        legend <- "Deviance: RSS"
+    }
+
+    ## penalty
+    if (!is.null(penalty)) {
+        pen <- get("penalty", envir = parent.env())
+        pen <- do.call(pen, list(spec = penalty))
+
+        val <- eval_penalty(pen, object)
+
+        ylim <- range(val, na.rm = TRUE)
+        plot.window(xlim, ylim, ...)
+
+        for (j in object$sizes) {
+            x <- rep_len(j, object$nbest)
+            y <- rev(val[seq_len(object$nbest), j])
+
+            lines(x, y, type = "o", lty = 3,
+                  pch = c(rep_len(21, object$nbest - 1), NA),
+                  col = "red", bg = "white", ...)
+        }
+
+        lines(object$sizes, val[1, object$sizes], type = "o", lty = 1,
+              pch = 16, col = "red", bg = "white", ...)
+
+        ## axes
+        if (axes) {
+            axis(4)
+        }
+
+        ## annotations
+        if (ann) {
+            mtext("Penalty", side = 4, line = 3)
+
+            legend <- c(legend, paste0("Penalty: ", format_penalty(pen)))
         }
     }
 
-    ## default legend
-    if (missing(legend))  legend <- "Deviance (RSS)"
-
-    ## plot
-    localPlot(x, ...)
+    ## legend
+    if (ann) {
+        legend("topright", legend = legend, lty = 1, pch = 16,
+               col = c("black", "red"), pt.bg = "white", bty = "n")
+    }
 
     ## done
-    invisible(x)
+    invisible(object)
 }
 
 
@@ -452,44 +536,90 @@ plot.lmSubsets <- function (x, ..., legend) {
 #########################
 
 
+## is NA
+##
+## Arguments:
+##   x    - (lmSubsets)
+##   size - (integer[])
+##   best - (integer[])
+##   ...  - ignored
+##   drop - (logical)
+##
+## Result: (logical[,])
+##
+is_NA.lmSubsets <- function (x, size, best = 1, ..., drop = TRUE) {
+    ## 'size' processing
+    if (missing(size)) {
+        size <- x$sizes
+    } else if (is.null(size)) {
+        size <- seq_len(x$nvar)
+    }
+
+    ## 'best' processing
+    if (is.null(best)) {
+        best <- seq_len(x$nbest)
+    }
+
+    ans <- is.na(x$rank[best, size, drop = FALSE])
+    if (drop)  ans <- drop(ans)
+
+    ## done
+    ans
+}
+
+
 ## extract variable names
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer|character)
+##   size   - (integer)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
-## Rval:  (character[])
+## Result: (character[])
 ##
 variable.names.lmSubsets <- function (object, size, best = 1, ...) {
     ## full model
-    x.names <- dimnames(object$which)[[1]]
+    x_names <- dimnames(object$which)[[1]]
 
     ## 'size' processing
     if (missing(size)) {
-        return (x.names)
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+        stop ("missing argument: 'size'")
+    }
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
     }
 
     ## submodel
     which <- object$which[, best, size]
-    x.names[which]
+    x_names[which]
 }
 
 
 ## extract formula
 ##
-## Args:
+## Arguments:
 ##   x    - (lmSubsets)
-##   size - (integer|character)
+##   size - (integer)
 ##   best - (integer)
 ##   ...  - ignored
 ##
-## Rval:  (formula)
+## Result: (formula)
 ##
 formula.lmSubsets <- function (x, size, best = 1, ...) {
     ## 'size' processing
@@ -497,102 +627,145 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
         f <- formula(x$terms)
 
         return (f)
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
-
-        size <- lmSelect(x, penalty = size)$df[1] - 1
     }
 
-    ## environment
-    e <- new.env();
-    e$x <- model.matrix(x, size = size, best = best)
-    e$y <- model.response(x)
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
 
-    ## intercept handling
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(x, size, best)) {
+        return (NA)
+    }
+
+    ## names
+    y_name <- all.vars(x$terms)[1]
+    x_names <- variable.names(x, size = size, best = best)
+
     if (x$intercept) {
-        e$x <- e$x[, -1]
-        f <- formula("y ~ x + 1", env = e)
-    } else {
-        f <- formula("y ~ x + 0", env = e)
+        x_names <- x_names[-1]
     }
-    
-    ## done
-    f
+
+    ## build formula
+    stats_formula(x_names, y_name, x$intercept,
+                  env = environment(x$terms))
 }
 
 
 ## extract model frame
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer|character)
+##   size   - (integer)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
-## Rval:  (model.frame)
+## Result: (model.frame)
 ##
 model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
-    ## full model
-    mf <- formula[["model"]]
-
+    ## further arguments
+    args <- list(...)
+    m <- c("data", "na.action", "subset")
+    m <- match(m, names(args), 0L)
+    args <- args[m]
+    
     ## 'size' processing
     if (missing(size)) {
-        if (!is.null(mf))  return (mf)
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+        if ((length(args) == 0) && !is.null(mf <- formula[["model"]]))  return (mf)
+    } else if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
 
-        size <- lmSelect(formula, penalty = size)$df[1] - 1
+        size <- size[1]
     }
 
-    ## (re-)build model frame
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (!missing(size) && is_NA(formula, size, best)) {
+        return (NA)
+    }
+
+    ## extract formula
+    if (!missing(size)) {
+        f <- formula(formula, size = size, best = best)
+    } else {
+        f <- terms(formula)
+    }
+
+    ## forward call to 'model.frame'
     cl <- formula$call
     m <- c("formula", "data", "subset",
            "weights", "na.action", "offset")
     m <- match(m, names(cl), 0L)
     cl <- cl[c(1L, m)]
+    cl[[1L]] <- quote(model.frame)
+    cl$formula <- f
     cl$drop.unused.levels <- TRUE
-    cl[[1L]] <- quote(stats::model.frame)
     cl$xlev <- formula$xlevels
-    cl$formula <- stats::formula(formula, size = size, best = best)
+    cl[names(args)] <- args
 
     env <- environment(formula$terms)
     if (is.null(env)) {
         env <- parent.frame()
     }
 
-    mf <- eval(cl, env)
-
-    ## done
-    mf
+    eval(cl, env)
 }
 
 
 ## extract model matrix
 ##
-## Args:
-##   object        - (lmSubsets)
-##   size          - (integer|character)
-##   best          - (integer)
-##   ...           - ignored
+## Arguments:
+##   object - (lmSubsets)
+##   size   - (integer)
+##   best   - (integer)
+##   ...    - forwarded
 ##
-## Rval:  (numeric[,])
+## Result: (double[,])
 ##
 model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
     ## full model
     x <- object[["x"]]
     if (is.null(x)) {
-        data <- model.frame(object)
-        x <- model.matrix.default(object, data = data,
-                                  contrasts.arg = object$contrasts)
+        data <- model.frame(object, xlev = object$xlevels, ...)
+        x <- NextMethod("model.matrix", data = data, contrasts.arg = object$contrasts)
     }
 
     ## 'size' processing
     if (missing(size)) {
         return (x)
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+    }
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
     }
 
     ## submodel
@@ -603,13 +776,13 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
 
 ## extract model response
 ##
-## Args:
+## Arguments:
 ##   data - (lmSubsets)
 ##   ...  - ignored
 ##
-## Rval:  (formula)
+## Result: (formula)
 ##
-model.response.lmSubsets <- function (data, ...) {
+model_response.lmSubsets <- function (data, ...) {
     ## extract response
     y <- data[["y"]]
     if (is.null(y)) {
@@ -624,51 +797,84 @@ model.response.lmSubsets <- function (data, ...) {
 
 ## refit
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer|character)
+##   size   - (integer)
 ##   best   - (integer)
-##   ...    - forwarded to 'lm'
+##   ...    - forwarded
 ##
-## Rval:  (lm)
+## Result: (lm)
 ##
 refit.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing (size)) {
         stop ("missing argument: 'size'")
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
-
-        size <- lmSelect(object, penalty = size)$df[1] - 1
     }
 
-    ## build formula
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
+    }
+
+    ## extract formula
     f <- formula(object, size = size, best = best)
 
-    ## build 'lm'
-    lm(f, ...)
+    ## forward call to 'lm'
+    cl <- object$call
+    m <- c("formula", "data", "subset",
+           "weights", "na.action", "offset")
+    m <- match(m, names(cl), 0L)
+    cl <- cl[c(1L, m)]
+    cl[[1L]] <- quote(lm)
+    cl$formula <- f
+
+    dots <- list(...)
+    cl[names(dots)] <- dots
+
+    env <- environment(object$terms)
+    if (is.null(env)) {
+        env <- parent.frame()
+    }
+
+    eval(cl, env)
 }
 
 
 ## extract deviance
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer[]|character)
+##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   drop   - (logical)
 ##
-## Rval:  (numeric[,])
+## Result: (double[,])
 ##
 deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     ## 'size' processing
     if (missing(size)) {
-        size <- object$nmin:object$nmax
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+        size <- object$sizes
+    } else if (is.null(size)) {
+        size <- seq_len(object$nvar)
+    }
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+    ## 'best' processing
+    if (is.null(best)) {
+        best <- seq_len(object$nbest)
     }
 
     ## extract RSS
@@ -685,48 +891,129 @@ deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 }
 
 
-## extract log-likelihood (base method)
+## extract residual standard deviation
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer[]|character)
+##   size   - (integer)
+##   best   - (integer)
+##   ...    - ignored
+##
+## Result: (double)
+##
+sigma.lmSubsets <- function (object, size, best = 1, ...) {
+    ## 'size' processing
+    if (missing(size)) {
+        stop ("missing argument: 'size'")
+    }
+
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
+    }
+
+    ## compute
+    rss <- deviance(object, size = size, best = best)
+    sigma2 <- stats_sigma2(rss, object$nobs - size)
+    sqrt(sigma2)
+}
+
+
+## extract log-likelihood
+##
+## Arguments:
+##   object - (lmSubsets)
+##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   drop   - (logical)
 ##
-## Rval: (numeric[,])
+## Result: (double[,])
 ##
-logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
+log_lik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     ## 'size' processing
     if (missing(size)) {
-        size <- object$nmin:object$nmax
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
-
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+        size <- object$sizes
+    } else if (is.null(size)) {
+        size <- seq_len(object$nvar)
     }
 
-    ## weights
-    N <- object$nobs
-    if (is.null(w <- object$weights)) {
-        S <- 0
-    } else {
-        S <- sum(log(w[w != 0]))
+    ## 'best' processing
+    if (is.null(best)) {
+        best <- seq_len(object$nbest)
     }
 
-    ## extract rss
-    rss <- deviance(object, size = size, best = best, drop = FALSE)
-    if (drop)  rss <- as.numeric(rss)
-
-    ## extract df
-    df <- object$df[best, size, drop = FALSE]
-    df <- t(df)
-    if (drop)  df <- as.numeric(df)
+    ## extract RSS
+    rss <- object$rss[best, size, drop = FALSE]
 
     ## compute log-likelihoods
-    ll <- 0.5 * (S - N * (log(2 * pi) + 1 - log(N) + log(rss)))
-    ans <- structure(ll, df = df, nobs = N)
-    if (drop)  class(ans) <- "logLik"
+    ans <- stats_log_lik(object$nobs, object$weights, rss)
+    ans <- t(ans)
+
+    ## drop
+    if (drop) {
+        ans <- drop(ans)
+    }
+
+    ## done
+    ans
+}
+
+
+## extract log-likelihood
+##
+## Arguments:
+##   object - (lmSubsets)
+##   size   - (integer)
+##   best   - (integer)
+##   ...    - ignored
+##
+## Result: (logLik)
+##
+logLik.lmSubsets <- function (object, size, best = 1, ...) {
+    ## 'size' processing
+    if (missing (size)) {
+        stop ("missing argument: 'size'")
+    }
+
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
+    }
+
+    ## compute log-likelihoods
+    ans <- log_lik(object, size = size, best = best)
+
+    ## decorate
+    ans <- structure(ans, df = size + 1,
+                     nobs = object$ nobs)
+    class(ans) <- "logLik"
 
     ## done
     ans
@@ -735,35 +1022,82 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 
 ## compute AIC
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer[]|character)
+##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   k      - (numeric) penalty
+##   k      - (double)
 ##   drop   - (logical)
 ##
-## Rval: (numeric[,])
+## Result: (double[,])
 ##
-AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
+aic.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
     ## 'size' processing
     if (missing(size)) {
-        size <- object$nmin:object$nmax
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
-
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+        size <- object$sizes
+    } else if (is.null(size)) {
+        size <- seq_len(object$nvar)
     }
 
-    ## extract log-likelihoods
-    ll <- logLik(object, size = size, best = best, drop = drop)
+    ## 'best' processing
+    if (is.null(best)) {
+        best <- seq_len(object$nbest)
+    }
 
-    ## compute AICs
-    ans <- -2 * as.numeric(ll) + k * attr(ll, "df")
+    ## extract log-likelihood
+    ll <- log_lik(object, size = size, best = best, drop = FALSE)
 
-    ## data frame?
-    if (drop && (length(ans) > 1)) {
-        ans <- data.frame(df = attr(ll, "df"), AIC = ans)
+    ## extract DF
+    df <- object$rank[best, size, drop = FALSE] + 1
+    df <- t(df)
+
+    ## compute AIC
+    ans <- stats_aic(ll, k, df)
+
+    ## drop
+    if (drop) {
+        ans <- drop(ans)
+    }
+
+    ## done
+    ans
+}
+
+
+## compute AIC
+##
+## Arguments:
+##   object - (lmSubsets)
+##   size   - (integer[])
+##   best   - (integer)
+##   ...    - ignored
+##   k      - (double) penalty
+##
+## Result: (double|data.frame)
+##
+AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2) {
+    ## 'size' processing
+    if (missing(size)) {
+        size <- object$sizes
+    } else if (is.null(size)) {
+        size <- seq_len(object$nvar)
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## compute AIC
+    ans <- aic(object, size = size, best = best, k = k)
+
+    ## decorate
+    if (length(ans) > 1) {
+        ans <- data.frame(df = object$rank[best, size] + 1,
+                          AIC = ans)
     }
 
     ## done
@@ -773,35 +1107,80 @@ AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE) {
 
 ## compute BIC
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer[]|character)
+##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   drop   - (logical)
 ##
-## Rval: (numeric[,])
+## Result: (double[,])
 ##
-BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
+bic.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
     ## 'size' processing
     if (missing(size)) {
-        size <- object$nmin:object$nmax
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
-
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+        size <- object$sizes
+    } else if (is.null(size)) {
+        size <- seq_len(object$nvar)
     }
 
-    ## extract log-likelihoods
-    ll <- logLik(object, size = size, best = best, drop = drop)
+    ## 'best' processing
+    if (is.null(best)) {
+        best <- seq_len(object$nbest)
+    }
 
-    ## compute BICs
-    k <- log(attr(ll, "nobs"))
-    ans <- -2 * as.numeric(ll) + k * attr(ll, "df")
+    ## extract log-likelihood
+    ll <- log_lik(object, size = size, best = best, drop = FALSE)
 
-    ## data frame?
-    if (drop && (length(ans) > 1)) {
-        ans <- data.frame(df = attr(ll, "df"), BIC = ans)
+    ## extract DF
+    df <- object$rank[best, size, drop = FALSE] + 1
+    df <- t(df)
+
+    ## compute AIC
+    ans <- stats_bic(ll, object$nobs, df)
+
+    ## drop
+    if (drop) {
+        ans <- drop(ans)
+    }
+
+    ## done
+    ans
+}
+
+
+## compute BIC
+##
+## Arguments:
+##   object - (lmSubsets)
+##   size   - (integer[])
+##   best   - (integer[])
+##   ...    - ignored
+##
+## Result: (double)
+##
+BIC.lmSubsets <- function (object, size, best = 1, ...) {
+    ## 'size' processing
+    if (missing(size)) {
+        size <- object$sizes
+    } else if (is.null(size)) {
+        size <- seq_len(object$nvar)
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## compute BIC
+    ans <- bic(object, size = size, best = best)
+
+    ## decorate
+    if (length(ans) > 1) {
+        ans <- data.frame(df = object$rank[best, size] + 1,
+                          BIC = ans)
     }
 
     ## done
@@ -811,34 +1190,48 @@ BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE) {
 
 ## extract ceofficients
 ##
-## Args:
-##   object        - (lmSubsets)
-##   size          - (integer|character)
-##   best          - (integer)
-##   ...           - ignored
+## Arguments:
+##   object - (lmSubsets)
+##   size   - (integer)
+##   best   - (integer)
+##   ...    - ignored
 ##
-## Rval:  (numeric[])
+## Result: (double[])
 ##
 coef.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+    }
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
     }
 
     ## extract submodel
     x <- model.matrix(object, size = size, best = best)
-    y <- model.response(object)
+    y <- model_response(object)
 
     ## solve
-    ans <- qr.solve(x, y)
+    ans <- stats_coef(x, y, object$offset, object$weights)
 
     ## names
-    x.names <- variable.names(object, size = size, best = best)
-    names(ans) <- x.names
+    x_names <- variable.names(object, size = size, best = best)
+    names(ans) <- x_names
 
     ## done
     ans
@@ -847,39 +1240,48 @@ coef.lmSubsets <- function (object, size, best = 1, ...) {
 
 ## extract variance-covariance matrix
 ##
-## Args:
-##   object        - (lmSubsets)
-##   size          - (integer|character)
-##   best          - (integer)
-##   ...           - ignored
+## Arguments:
+##   object - (lmSubsets)
+##   size   - (integer)
+##   best   - (integer)
+##   ...    - ignored
 ##
-## Rval:  (numeric[,])
+## Result: (double[,])
 ##
 vcov.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+    }
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
     }
 
     ## extract submodel
     x <- model.matrix(object, size = size, best = best)
-    y <- model.response(object)
+    y <- model_response(object)
 
-    ## compute 'vcov'
-    qr <- qr(cbind(x, y))
-    r <- qr$qr[1:size, 1:size, drop = FALSE]
-    rdf <- object$nobs - size
-    rss <- object$rss[best, size]
-    sigma2 <- rss/rdf
-    ans <- chol2inv(r) * sigma2
+    ## solve
+    ans <- stats_vcov(x, y, object$offset, object$weights)
 
     ## names
-    x.names <- variable.names(object, size = size, best = best)
-    dimnames(ans) <- list(x.names, x.names)
+    x_names <- variable.names(object, size = size, best = best)
+    dimnames(ans) <- list(x_names, x_names)
 
     ## done
     ans
@@ -888,59 +1290,97 @@ vcov.lmSubsets <- function (object, size, best = 1, ...) {
 
 ## extract fitted values
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer|character)
+##   size   - (integer)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
-## Rval:  (numeric[])
+## Result: (double[])
 ##
 fitted.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+    }
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
     }
 
     ## extract submodel
     x <- model.matrix(object, size = size, best = best)
-    y <- model.response(object)
+    y <- model_response(object)
 
-    ## fit
-    qr <- qr(x)
-    qr.fitted(qr, y)
+    ## solve
+    ans <- stats_fitted(x, y, object$offset, object$weights)
+
+    ## NA action
+    ans <- napredict(object$na.action, ans)
+
+    ## done
+    ans
 }
 
 
 ## extract residuals
 ##
-## Args:
+## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer|character)
+##   size   - (integer)
 ##   best   - (integer)
 ##   ...    - ignored
 ##
-## Rval:  (numeric[])
+## Result: (double[])
 ##
 residuals.lmSubsets <- function (object, size, best = 1, ...) {
     ## 'size' processing
     if (missing(size)) {
         stop ("missing argument: 'size'")
-    } else if (is.character(size)) {
-        if (best > 1)  stop ("unsupported operation:  'best' > 1  (inferred size)")
+    }
 
-        size <- lmSelect(object, penalty = size)$df[1] - 1
+    if (length(size) > 1) {
+        warning ("'size' has length > 1: only the first element will be used")
+
+        size <- size[1]
+    }
+
+    ## 'best' processing
+    if (length(best) > 1) {
+        warning ("'best' has length > 1: only the first element will be used")
+
+        best <- best[1]
+    }
+
+    ## available?
+    if (is_NA(object, size, best)) {
+        return (NA)
     }
 
     ## extract submodel
     x <- model.matrix(object, size = size, best = best)
-    y <- model.response(object)
+    y <- model_response(object)
 
-    ## fit
-    qr <- qr(x)
-    qr.resid(qr, y)
+    ## solve
+    ans <- stats_residuals(x, y, object$offset, object$weights)
+
+    ## NA action
+    ans <- naresid(object$na.action, ans)
+
+    ## done
+    ans
 }

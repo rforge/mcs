@@ -1,16 +1,22 @@
 \name{AirPollution}
+
+
 \alias{AirPollution}
 
+
 \title{Air Pollution and Mortality}
+
 
 \description{
   Data relating air pollution and mortality, frequently used
   for illustrations in ridge regression and related tasks.
 }
 
+
 \usage{
 data("AirPollution")
 }
+
 
 \format{
   A data frame containing 60 observations on 16 variables.
@@ -39,14 +45,16 @@ data("AirPollution")
   }
 }
 
+
 \source{\url{http://lib.stat.cmu.edu/datasets/pollution}}
 
+
 \references{
-McDonald GC, Schwing RC (1973).
+  McDonald GC, Schwing RC (1973).
   Instabilities of Regression Estimates Relating Air Pollution to Mortality.
   \emph{Technometrics}, \bold{15}, 463--482.
 
-Miller AJ (2002). 
+  Miller AJ (2002). 
   \emph{Subset Selection in Regression}.
   New York: Chapman and Hall. Related software can be found online at
   \url{http://users.bigpond.net.au/amiller/}.
@@ -59,15 +67,13 @@ data("AirPollution", package = "lmSubsets")
 for (i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
 
 ## fit subsets
-all.AirPoll <- lmSubsets(mortality ~ ., data = AirPollution)
-plot(all.AirPoll)
-
-## summary with BIC
-summary(all.AirPoll, penalty = log(nrow(AirPollution)))
+lm_all <- lmSubsets(mortality ~ ., data = AirPollution)
+plot(lm_all)
 
 ## refit best model
-lm6.AirPoll <- refit(all.AirPoll, size = 6)
-summary(lm6.AirPoll)
+lm6 <- refit(lm_all, size = 6)
+summary(lm6)
 }
+
 
 \keyword{datasets}

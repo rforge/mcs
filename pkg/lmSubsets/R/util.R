@@ -1,59 +1,31 @@
-
-
-format.ordinal <- function (x) {
-    ind <- c("th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "th", "th", "th", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
-             "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th")
-    paste(x, ind[x %% 100 + 1], sep = "")
+parent.env <- function (env = parent.frame()) {
+    base::parent.env(env)
 }
 
 
-format.which <- function (mask, seq.ind = "-", seq.sep = ",") {
-    w <- which(mask)
-    if (length(w) < 1) {
-        return ("")
+pix2usr <- function (x, y, carry) {
+    if (!missing(x)) {
+        if (!missing(y))  warning ("unused argument 'y' will be discarded")
+
+        ans <- grconvertX(x, "device", "user") - grconvertX(0, "device", "user")
+        if (!missing(carry))  ans <- carry_sign(carry, x, ans)
+    } else if (!missing(y)) {
+        ans <- grconvertY(y, "device", "user") - grconvertY(0, "device", "user")
+        if (!missing(carry))  ans <- carry_sign(carry, y, ans)
+    } else {
+        stop ("please specify 'x' or 'y'")
     }
 
-    d <- c(diff(w), -1)
-    z <- character(0)
+    ans
+}
 
-    state <- 1
-    pos <- 1
-    while (state > 0) {
-        switch (state, {
-            ## state = 1
-            if (d[pos] < 0) {
-                z <- c(z, w[pos])
-                state <- -1
-            } else if (d[pos] == 1) {
-                z <- c(z, w[pos], seq.ind)
-                state <- 2
-            } else {
-                z <- c(z, w[pos], seq.sep)
-                state <- 1
-            }
-        }, {
-            ## state = 2
-            if (d[pos] < 0) {
-                z <- c(z, w[pos])
-                state <- -1
-            } else if (d[pos] == 1) {
-                state <- 2
-            } else {
-                z <- c(z, w[pos], seq.sep)
-                state <- 1
-            }
-        })
 
-        pos <- pos + 1
+carry_sign <- function (carry, a, b) {
+    if (carry > 0) {
+        sign(a) * abs(b)
+    } else if (carry < 0) {
+        -sign(a) * abs(b)
+    } else {
+        abs(b)
     }
-
-    paste(z, collapse = "")
 }
