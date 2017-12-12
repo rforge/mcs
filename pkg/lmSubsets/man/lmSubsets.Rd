@@ -21,14 +21,14 @@
 \usage{
 lmSubsets(formula, \ldots)
 
-\method{lmSubsets}{default}(formula, data, subset, weights, na.action,
-  model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
+\method{lmSubsets}{default}(formula, data, subset, weights, na.action, model = TRUE,
+          x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 \method{lmSubsets}{matrix}(formula, y, intercept = TRUE, \ldots)
 
-lmSubsets_fit(x, y, weights = NULL, offset = NULL,
-  include = NULL, exclude = NULL, nmin = NULL, nmax = NULL,
-  tolerance = 0, nbest = 1, \ldots, pradius = NULL)
+lmSubsets_fit(x, y, weights = NULL, offset = NULL, include = NULL,
+              exclude = NULL, nmin = NULL, nmax = NULL,
+              tolerance = 0, nbest = 1, \ldots, pradius = NULL)
 }
 
 
@@ -46,30 +46,29 @@ lmSubsets_fit(x, y, weights = NULL, offset = NULL,
 
 
 \details{
-  The generic \code{lmSubsets} computes all-variable-subsets regression
-  for ordinary linear models.  It provides various methods to
-  conveniently specify the regressor and response variables.  The
-  standard \code{formula} interface (see \code{\link[stats]{lm}}) can be
-  used, or the information can be extracted from an already fitted
-  \code{"lm"} object.  The regressor matrix and response variable can
-  also be passed in directly.
+  The \code{lmSubsets} generic provides various methods to conveniently
+  specify the regressor and response variables.  The standard
+  \code{formula} interface (see \code{\link[stats]{lm}}) can be used, or
+  the information can be extracted from an already fitted \code{"lm"}
+  object.  The regressor matrix and response variable can also be passed
+  in directly.
 
-  The method computes the \code{nbest} best subset models for every
-  subset size, where the "best" models are the models with the lowest
+  The call is forwarded to \code{lmSubsets_fit}, which provides a
+  low-level matrix interface.
+
+  The \code{nbest} best subset models for every subset size are
+  computed, where the "best" models are the models with the lowest
   residual sum of squares (RSS).  The scope of the search can be limited
   to a range of subset sizes by setting \code{nmin} and \code{nmax}.  A
   tolerance vector (expanded if necessary) may be specified to speed up
-  the algorithm, where \code{tolerance[j]} is the tolerance applied to
+  the search, where \code{tolerance[j]} is the tolerance applied to
   subset models of size \code{j}.
 
   By way of \code{include} and \code{exclude}, variables may be forced
   in to or out of the regression, respectively.
 
-  The function will preorder the variables to reduce execution time if
-  \code{pradius > 0}.  Good execution times are usually attained for
-  approximately \code{pradius = n/3} (default value), where \code{n} is
-  the number of regressors in the model after evaluating \code{include}
-  and \code{exclude}.
+  The extent to which variables are preordered is controlled with the
+  \code{pradius} parameter.
 
   A set of standard extractor functions for fitted model objects is
   available for objects of class \code{"lmSubsets"}.  See
@@ -80,18 +79,17 @@ lmSubsets_fit(x, y, weights = NULL, offset = NULL,
 
 
 \value{
-  An object of class \code{"lmSubsets"}, i.e. a list with the
+  An object of class \code{"lmSubsets"}, i.e., a list with the
   following components:
   \item{nobs, nvar}{Number of observations, of variables.}
   \item{intercept}{\code{TRUE} if model has intercept term;
     \code{FALSE} otherwise.}
   \item{include, exclude}{Included, excluded regressors.}
-  \item{sizes}{Subset sizes.}
+  \item{size}{Subset sizes.}
   \item{tolerance}{Approximation tolerance (vector).}
   \item{nbest}{Number of best subsets.}
-  \item{rank, df_residual}{Rank, residual degrees of freedom.}
-  \item{rss}{Residual sum of squares.}
-  \item{which}{Selected variables.}
+  \item{submodel}{Submodel information.}
+  \item{subset}{Selected variables.}
 
   Further components include \code{call}, \code{na.action},
   \code{weights}, \code{offset}, \code{contrasts}, \code{xlevels},
@@ -140,7 +138,7 @@ summary(lm_all)
 ############################
 
 lm_force <- lmSubsets(lm_all, include = c("nox", "so2"),
-  exclude = "whitecollar")
+                      exclude = "whitecollar")
 lm_force
 
 

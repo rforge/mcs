@@ -205,7 +205,7 @@ stats_r2 <- function (rss, mss) {
 }
 
 
-stats_r2_adj <- function (m, r2, idf, rdf) {
+stats_r2adj <- function (m, r2, idf, rdf) {
     1 - (1 - r2) * ((m - idf) / rdf)
 }
 
@@ -234,27 +234,24 @@ stats_lmSubsets <- function (object, ...) {
     o <- object$offset
     w <- object$weights
 
+    p <- object$submodel$SIZE
+    best <- object$submodel$BEST
+    rss <- object$submodel$RSS
+
     y <- model_response(object)
 
-    mss <- matrix(NA, nrow = object$nbest, ncol = n)
+    mss <- sapply(seq_len(nrow(object$submodel)), function (i) {
+        if (is.na(rss[i]))  return (NA)
 
-    for (p in seq_len(n)) {
-        for (i in seq_len(object$nbest)) {
-            if (is_NA(object, size = p, best = i)) {
-                next
-            }
+        x <- model.matrix(object, size = p[i], best = best[i])
+        f <- stats_fitted(x, y, o, w)
 
-            x <- model.matrix(object, size = p, best = i)
-            f <- stats_fitted(x, y, o, w)
+        stats_mss(m, w, f, idf)
+    })
 
-            mss[i, p] <- stats_mss(m, w, f, idf)
-        }
-    }
+    ll <- stats_log_lik(m, w, rss)
 
-    ll <- stats_log_lik(m, w, object$rss)
-
-    list(m = m, n = n, idf = idf, rank = object$rank,
-         rdf = object$df_residual, rss = object$rss,
+    list(m = m, n = n, idf = idf, p = p, rdf = m - p, rss = rss,
          mss = mss, ll = ll, sigma2_full = sigma2_full)
 }
 
@@ -272,27 +269,27 @@ stats_lmSelect <- function (object, ...) {
     o <- object$offset
     w <- object$weights
 
+    best <- object$submodel$BEST
+    ic <- object$submodel$IC
+
     y <- model_response(object)
 
-    mss <- rep.int(NA, object$nbest)
+    mss <- sapply(best, function (i) {
+        if (is.na(ic[i]))  return (NA)
 
-    for (i in seq_len(object$nbest)) {
-        if (is_NA(object, best = i)) {
-            next
-        }
-
-        x <- model.matrix(object, best = i)
+        x <- model.matrix(object, best = best[i])
         f <- stats_fitted(x, y, o, w)
 
-        mss[i] <- stats_mss(m, w, f, idf)
-    }
+        stats_mss(m, w, f, idf)
+    })
 
-    rss <- deviance(object, best = NULL)
+    p <- object$submodel$SIZE
+    rss <- deviance(object, best = NULL, drop = TRUE, na.rm = FALSE)
+    rss <- as.vector(rss)
     ll <- stats_log_lik(m, w, rss)
 
-    list(m = m, n = n, idf = idf, rank = object$rank,
-         rdf = object$df_residual, rss = rss, mss = mss,
-         ll = ll, sigma2_full = sigma2_full)
+    list(m = m, n = n, idf = idf, p = p, rdf = m - p, rss = rss,
+         mss = mss, ll = ll, sigma2_full = sigma2_full)
 }
 
 
@@ -302,12 +299,12 @@ sigma_stats <- function (object, ...) {
 
 
 aic_stats <- function (object, ...) {
-    stats_aic(object$ll, 2, object$rank + 1)
+    stats_aic(object$ll, 2, object$p + 1)
 }
 
 
 bic_stats <- function (object, ...) {
-    stats_bic(object$ll, object$m, object$rank + 1)
+    stats_bic(object$ll, object$m, object$p + 1)
 }
 
 
@@ -316,17 +313,17 @@ r2_stats <- function (object, ...) {
 }
 
 
-r2_adj_stats <- function (object, ..., r2 = r2_stats(object, ...)) {
-    stats_r2_adj(object$m, r2, object$idf, object$rdf)
+r2adj_stats <- function (object, ..., r2 = r2_stats(object, ...)) {
+    stats_r2adj(object$m, r2, object$idf, object$rdf)
 }
 
 
 pval_stats <- function (object, ...) {
-    stats_pval(object$rank, object$rss, object$mss,
+    stats_pval(object$p, object$rss, object$mss,
                object$idf, object$rdf)
 }
 
 
 cp_stats <- function (object, ...) {
-    stats_cp(object$m, object$rank, object$rss, object$sigma2_full)
+    stats_cp(object$m, object$p, object$rss, object$sigma2_full)
 }

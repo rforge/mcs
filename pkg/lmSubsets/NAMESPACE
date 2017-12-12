@@ -7,14 +7,12 @@ useDynLib("lmSubsets")
 ##
 import("stats", "graphics")
 importFrom("grDevices", "gray.colors", "heat.colors")
-importFrom("utils", "capture.output")
+importFrom("utils", "capture.output", "head")
 
 
 ## export new generics
 ##
-export("lmSubsets", "lmSelect",
-       "model_response", "log_lik", "aic", "bic",
-       "refit")
+export("lmSubsets", "lmSelect", "model_response", "refit")
 
 
 ## export misc. methods
@@ -37,7 +35,6 @@ S3method("lmSubsets", "matrix")
 
 ## extractor methods
 ##
-S3method("format"        , "lmSubsets")
 S3method("print"         , "lmSubsets")
 S3method("plot"          , "lmSubsets")
 S3method("variable.names", "lmSubsets")
@@ -48,11 +45,8 @@ S3method("model_response", "lmSubsets")
 S3method("refit"         , "lmSubsets")
 S3method("deviance"      , "lmSubsets")
 S3method("sigma"         , "lmSubsets")
-S3method("log_lik"       , "lmSubsets")
 S3method("logLik"        , "lmSubsets")
-S3method("aic"           , "lmSubsets")
 S3method("AIC"           , "lmSubsets")
-S3method("bic"           , "lmSubsets")
 S3method("BIC"           , "lmSubsets")
 S3method("coef"          , "lmSubsets")
 S3method("vcov"          , "lmSubsets")
@@ -63,7 +57,6 @@ S3method("image"         , "lmSubsets")
 ## summary methods
 ##
 S3method("summary", "lmSubsets")
-S3method("format" , "summary.lmSubsets")
 S3method("print"  , "summary.lmSubsets")
 
 
@@ -83,7 +76,6 @@ S3method("lmSelect", "lmSubsets")
 
 ## extractor methods
 ##
-S3method("format"        , "lmSelect")
 S3method("print"         , "lmSelect")
 S3method("plot"          , "lmSelect")
 S3method("variable.names", "lmSelect")
@@ -94,11 +86,8 @@ S3method("model_response", "lmSelect")
 S3method("refit"         , "lmSelect")
 S3method("deviance"      , "lmSelect")
 S3method("sigma"         , "lmSelect")
-S3method("log_lik"       , "lmSelect")
 S3method("logLik"        , "lmSelect")
-S3method("aic"           , "lmSelect")
 S3method("AIC"           , "lmSelect")
-S3method("bic"           , "lmSelect")
 S3method("BIC"           , "lmSelect")
 S3method("coef"          , "lmSelect")
 S3method("vcov"          , "lmSelect")
@@ -109,5 +98,4 @@ S3method("image"         , "lmSelect")
 ## summary methods
 ##
 S3method("summary", "lmSelect")
-S3method("format" , "summary.lmSelect")
 S3method("print"  , "summary.lmSelect")

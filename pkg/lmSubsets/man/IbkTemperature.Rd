@@ -107,7 +107,7 @@ m1
 ## best subset selection of remaining variables for the MOS
 ## (i.e., forcing the regressors of m1 into the model)
 ms2 <- lmSubsets(temp ~ ., data = IbkTemperature,
-  include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
+                 include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
 plot(ms2)
 image(ms2, size = 8:20)
 ## -> Note that soil temperature and maximum temperature are selected
@@ -139,7 +139,7 @@ names(cf2) <- gsub("^x", "", names(coef(m2)))
 names(cf3) <- gsub("^x", "", names(coef(m3)))
 nam <- unique(c(names(cf0), names(cf1), names(cf2), names(cf3)))
 cf <- matrix(NA, nrow = length(nam), ncol = 4,
-  dimnames = list(nam, c("m0", "m1", "m2", "m3")))
+             dimnames = list(nam, c("m0", "m1", "m2", "m3")))
 cf[names(cf0), 1] <- cf0
 cf[names(cf1), 2] <- cf1
 cf[names(cf2), 3] <- cf2

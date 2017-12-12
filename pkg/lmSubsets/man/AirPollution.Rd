@@ -64,7 +64,7 @@ data("AirPollution")
 \examples{
 ## load data (with logs for relative potentials)
 data("AirPollution", package = "lmSubsets")
-for (i in 12:14) AirPollution[[i]] <- log(AirPollution[[i]])
+for (i in 12:14)  AirPollution[[i]] <- log(AirPollution[[i]])
 
 ## fit subsets
 lm_all <- lmSubsets(mortality ~ ., data = AirPollution)

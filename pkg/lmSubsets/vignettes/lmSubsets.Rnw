@@ -9,7 +9,7 @@
 % vignette                                                           %
 %--------------------------------------------------------------------%
 
-% \VignetteIndexEntry{lmSubsets: Exact linear variable-subset regression in R}
+% \VignetteIndexEntry{lmSubsets: Exact variable-subset selection in linear regression for R}
 % \VignetteKeywords{linear regression, model selection, variable selection, best-subset regression, R}
 % \VignettePackage{lmSubsets}
 % \VignetteDepends{stats,graphics}
@@ -31,6 +31,7 @@
 \usepackage{lmodern}
 \usepackage{booktabs,dcolumn}
 \usepackage{amsmath,amssymb}
+\usepackage{bbm}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{tikz,forest}
 \usepackage{multirow}
@@ -39,6 +40,8 @@
 %--------------------------------------------------------------------%
 % commands                                                           %
 %--------------------------------------------------------------------%
+
+\newcommand{\kode}[1]{\ifmmode\text{\code{#1}}\else\code{#1}\fi}
 
 \newcommand{\Rset}{\mathbb{R}}
 \newcommand{\rss}{\mathrm{RSS}}
@@ -54,7 +57,10 @@
 \newcommand{\class}[1]{\dquote{\code{#1}}}
 \newcommand{\drop}{\mathsf{drop}}
 \renewcommand{\hat}{\widehat}
-%
+
+\newlength{\Rwidth}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}p{\Rwidth}}
+
 \newcommand{\TODO}[1]{\texttt{TODO: #1}}
 
 
@@ -78,8 +84,8 @@
 }
 \Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Ana Colubi, Achim Zeileis}
 
-\title{\pkg{lmSubsets}: Exact linear variable-subset regression in {\R}}
-\Plaintitle{lmSubsets: Exact linear variable-subset regression in R}
+\title{\pkg{lmSubsets}: Exact variable-subset selection in linear regression for {\R}}
+\Plaintitle{lmSubsets: Exact variable-subset selection in linear regression for R}
 
 \Abstract{
   An {\R} package for computing the all-subsets regression problem is
@@ -165,8 +171,8 @@ methods~\citep{golub:96}.
   
 Let $V=\{1,\ldots,N\}$ denote the set of all independent variables.  A
 subset model (or submodel) is denoted by $S$, $S\subseteq V$.  Given a
-criterion function $f$, the {\em best-subset selection problem}
-consists in solving
+criterion function $f$, the best-subset selection problem consists in
+solving
 %
 \begin{equation}
   \label{eq:best_subset}
@@ -196,8 +202,8 @@ belonging to the AIC family defined by the formula
   \text{AIC}_k=M+M\log2\pi+M\log(\text{RSS}/M)+k(n+1)\text{,}
 \end{equation}
 %
-where the scalar $k$ represents a \emph{penalty per parameter}
-($k>0$).  The usual AIC and BIC are obtained for $k=2$ and $k=\log M$,
+where the scalar $k$ represents a penalty per parameter ($k>0$).  The
+usual AIC and BIC are obtained for $k=2$ and $k=\log M$,
 respectively~\citep{miller:02}.  It follows
 that~\eqref{eq:best_subset} is equivalent to
 %
@@ -286,7 +292,7 @@ Section~\ref{sec:comput} reviews the theoretical background and the
 underlying algorithms.  The package's {\R} interface is presented in
 Section~\ref{sec:R}.  A usage example is given in
 Section~\ref{sec:usecase}, while benchmark results are illustrated in
-Section~\ref{sec:benchmark}.
+Section~\ref{sec:benchmarks}.
 
 
 %--------------------------------------------------------------------%
@@ -459,9 +465,11 @@ standard cutting test for $f$ under the additional condition that $F$
 is non-decreasing in $n$.  Specifically, a node $\drop(S,j)$ is
 generated if and only if
 %
-\begin{equation*}
+\begin{equation}
+  \label{eq:bba+}
+  %
   F(j,\rss(S))<r_f\text{,}
-\end{equation*}
+\end{equation}
 %
 where $r_f$ is the single current-best solution.  This results in a
 more \dquote{informed} cutting test, and in a smaller number of
@@ -485,12 +493,11 @@ package offers {\R}'s standard formula interface: linear models can be
 specified by means of a symbolic formula, and possibly a data frame.
 The model specification is resolved into a regressor matrix and a
 response vector, which are forwarded to low-level functions for actual
-processing, together with optional arguments that serve to further
-specify the selection problem.  Routines to extract the best subsets
-from an all-subsets regression solution (i.e., to convert an
-\class{lmSubsets} to an \class{lmSelect} object) are also provided.
-An overview of the package structure is given in
-Table~\ref{tab:structure}.
+processing, together with optional arguments which further specify the
+selection problem.  A routine to extract the best submodels from an
+all-subsets regression solution (i.e., to convert an \class{lmSubsets}
+to an \class{lmSelect} object) is also provided.  An overview of the
+package structure is given in Table~\ref{tab:structure}.
 
 \begin{table}[t!]
   \centering
@@ -501,13 +508,13 @@ Table~\ref{tab:structure}.
     \class{lmSubsets}      & \fct{lmSubsets}          & all-subsets selection (generic function) \\
                            & \fct{lmSubsets.matrix}   & matrix interface                         \\
                            & \fct{lmSubsets.default}  & standard formula interface               \\
-                           & \fct{lmSubsets\_fit}     & low-level function                       \\
+                           & \fct{lmSubsets\_fit}     & low-level matrix interface               \\
     \midrule
     \class{lmSelect}       & \fct{lmSelect}           & best-subset selection (generic function) \\
                            & \fct{lmSelect.lmSubsets} & conversion method                        \\
                            & \fct{lmSelect.matrix}    & matrix interface                         \\
                            & \fct{lmSelect.default}   & standard formula interface               \\
-                           & \fct{lmSelect\_fit}      & low-level function                       \\
+                           & \fct{lmSelect\_fit}      & low-level matrix interface               \\
     \bottomrule
   \end{tabular}
   \caption{Package structure.}
@@ -539,7 +546,7 @@ the call
 specifies a response variable (\code{mortality}) and fifteen predictor
 variables, all taken from the \code{AirPollution}
 dataset~\citep{miller:02}.  It is common to shorten the call by
-emloying {\R}'s practical \dquote{dot-notation}:
+employing {\R}'s practical \dquote{dot-notation}:
 %
 \begin{Code}[commandchars=\\\{\}]
   lmSubsets(mortality ~ ., data = AirPollution)\textrm{,}
@@ -591,7 +598,7 @@ The criterion used for best-subset selection is evaluated following
 the expression
 %
 \begin{equation*}
-  -2\cdot\text{\code{logLik}} + \text{\code{penalty}}\cdot\text{\code{npar}}\text{,}
+  -2\cdot\kode{logLik} + \kode{penalty}\cdot\kode{npar}\text{,}
 \end{equation*}
 %
 where \code{penalty} is the penalty per model parameter defined
@@ -669,7 +676,7 @@ variable -- or automatically expanded if given in the form of an
 integer vector (i.e., set of variable indices) or character vector
 (i.e., set of variable names).
 
-For a large number of variables (see Section~\ref{sec:benchmark}),
+For a large number of variables (see Section~\ref{sec:benchmarks}),
 execution times may become prohibitive.  In order to speed up the
 execution, either the search space can be reduced, or one may settle
 for a non-exact solution.  In the first approach, the user may specify
@@ -713,18 +720,18 @@ for further information.
     \toprule
     Parameter        & Description               & Canonical representation                             \\
     \midrule
-    \code{x}         & data matrix               & \code{numeric[nobs,nvar]}                            \\
-    \code{y}         & response variable         & \code{numeric[nobs]}                                 \\
-    \code{weights}   & model weights             & \code{numeric[nobs]}                                 \\
-    \code{offset}    & model offset              & \code{numeric[nvar]}                                 \\
+    \code{x}         & data matrix               & \code{double[nobs,nvar]}                             \\
+    \code{y}         & response variable         & \code{double[nobs]}                                  \\
+    \code{weights}   & model weights             & \code{double[nobs]}                                  \\
+    \code{offset}    & model offset              & \code{double[nvar]}                                  \\
     \code{include}   & regressors to force in    & \code{logical[nvar]}                                 \\
     \code{exclude}   & regressors to force out   & \code{logical[nvar]}                                 \\
     \code{nmin}      & min.~number of regressors & \code{integer[1]}         & for \fct{lmSubsets} only \\
     \code{nmax}      & max.~number of regressors & \code{integer[1]}         & for \fct{lmSubsets} only \\
-    \code{penalty}   & penalty per parameter     & \code{numeric}            & for \fct{lmSelect} only  \\
-                     & or criterion function     & \code{function}           &                          \\
-    \code{tolerance} & BBA tolerance parameters  & \code{numeric[nvar]}      & for \fct{lmSubsets}      \\
-                     &                           & \code{numeric[1]}         & for \fct{lmSelect}       \\
+    \code{penalty}   & penalty per parameter     & \code{double[1]}          & for \fct{lmSelect} only  \\
+                     & or criterion function     & \code{function[1]}        &                          \\
+    \code{tolerance} & BBA tolerance parameters  & \code{double[nvar]}       & for \fct{lmSubsets}      \\
+                     &                           & \code{double[1]}          & for \fct{lmSelect}       \\
     \code{nbest}     & number of best subsets    & \code{integer[1]}                                    \\
     \code{pradius}   & preordering radius        & \code{integer[1]}                                    \\
     \bottomrule
@@ -745,7 +752,7 @@ The user is handed back a result object that encapsulates the solution
 to an all-subsets (class \class{lmSubsets}) or best-subset (class
 \class{lmSelect}) selection problem.  An object of class
 \class{lmSubsets} represents a two-dimensional
-$\mathtt{nbest}\times\mathtt{nvar}$ set of submodels; an object of
+$\mathtt{nvar}\times\mathtt{nbest}$ set of submodels; an object of
 class \class{lmSelect}, a linear sequence of \code{nbest} submodels.
 Problem-specific information is stored alongside the selected
 submodels.  Table~\ref{tab:components} summarizes the components of
@@ -754,26 +761,20 @@ the result objects.
 \begin{table}[t!]
   \centering
   \small
-  \begin{tabular}{llll}
+  \begin{tabular}{lll}
     \toprule
-    Component           & Description              & Canonical representation                                     \\
-    \midrule           
-    \code{nobs}         & number of observations   & \code{integer[1]}                                            \\
-    \code{nvar}         & number of regressors     & \code{integer[1]}                                            \\
-    \code{intercept}    & intercept flag           & \code{logical[1]}                                            \\
-    \code{include}      & regressors forced in     & \code{logical[nvar]}                                         \\
-    \code{exclude}      & regressors forced out    & \code{logical[nvar]}                                         \\
-    \code{sizes}        & covered subset sizes     & \code{numeric[]}                                             \\
-    \code{tolerance}    & tolerances used          & \code{numeric[nvar]}                                         \\
-    \code{nbest}        & number of best subsets   & \code{integer[1]}                                            \\
-    \code{rank}         & submodel rank            & \code{integer[nbest,nvar]}      & for \class{lmSubsets}      \\
-                        &                          & \code{integer[nbest]}           & for \class{lmSelect}       \\
-    \code{df\_residual} & residual deg. of freedom & \code{integer[nbest,nvar]}      & for \class{lmSubsets}      \\
-                        &                          & \code{integer[nbest]}           & for \class{lmSelect}       \\
-    \code{rss}          & residual sum of squares  & \code{numeric[nbest,nvar]}      & for \class{lmSubsets} only \\
-    \code{penalty}      & subset penalties         & \code{numeric[nbest]}           & for \class{lmSelect} only  \\
-    \code{which}        & selected regressors      & \code{logical[nvar,nbest,nvar]} & for \class{lmSubsets}      \\
-                        &                          & \code{logical[nvar,nbest]}      & for \class{lmSelect}       \\
+    Component        & Description            & Canonical representation \\
+    \midrule        
+    \code{nobs}      & number of observations & \code{integer[1]}        \\
+    \code{nvar}      & number of regressors   & \code{integer[1]}        \\
+    \code{intercept} & intercept flag         & \code{logical[1]}        \\
+    \code{include}   & regressors forced in   & \code{logical[nvar]}     \\
+    \code{exclude}   & regressors forced out  & \code{logical[nvar]}     \\
+    \code{size}      & covered subset sizes   & \code{integer[]}          \\
+    \code{tolerance} & tolerances used        & \code{double[nvar]}      \\
+    \code{nbest}     & number of best subsets & \code{integer[1]}        \\
+    \code{submodel}  & submodel information   & \code{data.frame}        \\
+    \code{subset}    & selected variables     & \code{data.frame}        \\
     \bottomrule
   \end{tabular}
   \caption{Components of \class{lmSubsets} and \class{lmSelect} objects.}
@@ -785,21 +786,24 @@ information are provided (see Table~\ref{tab:methods}).  The
 \fct{print}, \fct{plot}, and \fct{summary} methods give the user a
 compact overview -- either textual or graphical -- of the information
 gathered on the selected submodels in order to help identify
-\dquote{good} candidates.  The remaining extractor functions behave in
-the usual way, and can be used to extract variable names,
-coefficients, covariance matrices, fitted values, etc.
+\dquote{good} candidates.  The remaining extractor functions can be
+used to extract variable names, coefficients, covariance matrices,
+fitted values, etc.
 
 In order to designate a submodel, \class{lmSubsets} methods provide
-the parameters \code{size} and \code{best} to specify the number of
-regressors in and the ranking of the desired submodel, respectively.
-The user must always indicate the desired \code{size}, while
-\code{best} defaults to \code{1}.  For \class{lmSelect} methods, the
-\code{size} parameter has no meaning and is not defined.  Lastly,
-methods that return scalar values -- i.e., \fct{deviance},
-\fct{log\_lik}, \fct{aic}, \fct{bic} -- can extract more than one
+two parameters to specify the number of regressors and the ranking of
+the desired submodel, namely \code{size} and \code{best},
+respectively.  For \class{lmSelect} methods, the \code{size} parameter
+has no meaning and is not defined.  Some methods -- i.e.,
+\fct{variable.names}, \fct{deviance}, \fct{sigma}, \fct{logLik},
+\fct{AIC}, \fct{BIC}, and \fct{coef} -- can extract more than one
 submodel at a time if passed a numeric vector as an argument to either
 \code{size} (e.g., \code{size = 5:10}) or \code{best} (e.g.,
-\code{best = 1:3}).
+\code{best = 1:3}).  The shape of the return value can be controlled
+with the \code{drop} parameter: a \code{numeric} or \code{character}
+vector (in some cases, a \code{logical} or \code{numeric} matrix) is
+returned if \code{drop == TRUE}; otherwise, a \code{data.frame} object
+is handed back.
 
 \begin{table}[t!]
   \centering
@@ -807,7 +811,6 @@ submodel at a time if passed a numeric vector as an argument to either
     \toprule
     Method                & Description                         \\
     \midrule
-    \fct{format}          & format object                       \\
     \fct{print}           & print object                        \\
     \fct{plot}            & plot RSS or penalty                 \\
     \fct{image}           & heatmap of selected regressors      \\
@@ -821,9 +824,9 @@ submodel at a time if passed a numeric vector as an argument to either
     \fct{refit}           & fit sub-\class{lm}                  \\
     \fct{deviance}        & extract deviance (RSS)              \\
     \fct{sigma}           & extract residual standard deviation \\
-    \fct{log\_lik}        & extract log-likelihood              \\
-    \fct{aic}             & extract AIC values                  \\
-    \fct{bic}             & extract BIC values                  \\
+    \fct{logLik}          & extract log-likelihood              \\
+    \fct{AIC}             & extract AIC values                  \\
+    \fct{BIC}             & extract BIC values                  \\
     \fct{coef}            & extract regression coefficients     \\
     \fct{vcov}            & extract covariance matrix           \\
     \fct{fitted}          & extract fitted values               \\
@@ -1046,9 +1049,8 @@ present.
 \centering
 \setkeys{Gin}{width=\textwidth}
 <<fig-mos1-image, fig=TRUE, echo=FALSE, height=6, width=12>>=
-col <- cbind(c("red", rep("gray50", 19)), "gray90")
-image(MOS1.best, col = col, hilite = NULL, hilite_col = NULL,
-      hilite_lab = quote(bold(lab)))
+image(MOS1.best, col = c("gray50", "gray90"), lab = c("bold(lab)", "lab"),
+      hilite = 1, hilite_col = "red")
 @
 \caption{Subset selection for \code{MOS1.best}.}
 \label{fig:mos1:image}
@@ -1063,153 +1065,356 @@ assessment techniques.
 
 
 %--------------------------------------------------------------------%
-% section:  Benchmark                                                %
+% section:  Benchmark tests                                          %
 %--------------------------------------------------------------------%
 
-\section{Benchmark}
-\label{sec:benchmark}
+\section{Benchmark tests}
+\label{sec:benchmarks}
+
+Comparative tests are conducted to evaluate the computational
+efficiency of the proposed methods for exact all-subsets and exact
+best-subset regression.  The \fct{regsubsets} method from package
+\pkg{leaps}~\citep{leaps}, and the \fct{bestglm} method from package
+\pkg{bestglm}~\citep{bestglm} serve as benchmarks, respectively.
 
 Datasets which contain a \dquote{true} model are simulated, with
 \code{nobs} observations and \code{nvar} independent variables.  The
 dependent variable \code{y} is constructed from a linear combination
 of \code{ntrue} randomly selected independent variables, a noise
-vector, and the intercept.  The \code{ntrue} independent variables are
-assumed to belong to the \dquote{true} model.  The detailed procedure
-follows:
+vector \code{e}, and the intercept:
 %
-\begin{Code}
-# INPUT PARAMETERS:  nobs, nvar, ntrue, sigma
-# (A) DATA MATRIX:
-X <- rnorm(nobs * nvar, sd = 1.0)
-# (B) SELECTION VECTOR:
-beta <- rep_len(0.0, length.out = nvar)
-beta[sample.int(nvar, size = ntrue)] <- 1.0
-# (C) NOISE VECTOR:
-e <- rnorm(nobs, sd = sigma)
-# (D) DEPENDENT VARIABLE:
-y <- X %*% beta + e + 1.0
-\end{Code}
+\begin{equation*}
+  \kode{y}=\kode{X}\cdot\mathbbm{1}_\text{true}+\kode{e}+1\text{,}
+  \quad\kode{e}\sim(0,\kode{sigma}^2)\text{,}
+\end{equation*}
 %
+were \kode{X} is a $\kode{nobs}\times\kode{nvar}$ matrix of random
+data, and $\mathbbm{1}_\text{true}$ a (random) indicator function
+evaluating to 1 if the corresponding column of \kode{X} belongs to the
+\dquote{true} model.  All tests were conducted on a Dell XPS15 laptop
+with 8GB (7.4 GiB) of memory and an Intel Core i7-6700HQ
+CPU@2.60GHz$\times$8 processor, running a Ubuntu 64bit operating
+system.
 
-For the purpose of the benchmark, different data configurations are
-considered.  The simulated datasets have $\text{\code{nobs}}=1000$
-observations, and
-\begin{math}
-  \text{\code{nvar}} = 20, 40, 60, 80
-\end{math}
-independent variables.  The \dquote{true} model contains
-\begin{math}
-  \text{\code{ntrue}} = \text{\code{nvar}} / 2
-\end{math}
-variables, and the intercept.  Five different levels
-of noise
-\begin{math}
-  \text{\code{sigma}} = 0.05, 0.10, 0.50, 1.00, 5.00
-\end{math}
-are considered, giving rise to 20 different data configurations.  For
-each configuration, five datasets are generated, for a total of 100
-datasets.  The \code{lmSubsets} and the \code{lmSelect} (with the
-default search criterion, i.e., BIC) algorithms are executed for each
-dataset, once with
-\begin{math}
-\text{\code{tolerance}} = 0.0
-\end{math}
-(exact), and once with
-\begin{math}
-  \text{\code{tolerance}} = 0.1
-\end{math}
-(approximation).  Minimum (\code{tmin}), maximum (\code{tmax}), and
-average (\code{tavg}) execution times (in seconds) for each
-configuration are reported in Table~\ref{tab:bm}.
-
-The solutions for datasets with 20 and 40 variables are obtained in
-less than 1 second, in all cases.  For 60 variables, the
-\code{lmSubsets} procedure completes in 5 minutes or less (exact); the
-approximation algorithm performs about two times faster.  For 80
-variables, the computed subset sizes are restricted to between 30 and
-50 variables; the average execution times are less then 20 minutes
-(exact) and 8 minutes (approximation).  The \code{lmSelect} procedure
-completes in less than 1 second in all cases, with one exception: the
-worst and average case running times, respectively, for 80 variables
-with a high level of noise ($\text{\code{sigma}}=5.00$), are 24 and 9
-seconds (exact), and 9 and 4 seconds (approximation).
+Benchmark~1 concerns itself with all-subsets selection.  The
+\fct{lmSubsets} method is compared to \fct{regsubsets}, hereafter
+denoted by \fct{leaps}.  Data configurations with varying sizes
+($\kode{nvar}=20,25,30,35,40$) and degrees of noise
+($\kode{sigma}=0.05,0.10,0.50,1.00,5.00$) are considered; in all
+cases, \kode{nobs} = 1000 and $\kode{ntrue} =
+\lfloor\kode{nvar}/2\rfloor$.  For each configuration, five random
+datasets are generated, giving rise to five runs per method over which
+average execution times are determined.  The performance of
+\fct{leaps} can be improved by \dquote{manually} preordering the
+dataset in advance~\citep{hofmann:comput_stat_data_an:07}.  The
+average running times are summarized in Table~\ref{tab:bm1}, where
+\kode{leaps} denotes the \dquote{vanilla} \fct{leaps} function, and
+\kode{leaps1} the modified version with preordering.  The same setup
+is used in Benchmark~2, where methods for best-subset selection are
+compared, namely \fct{bestglm} and \fct{lmSelect}.  As in the previous
+benchmark, average execution times are determined for \fct{bestglm}
+with and without preordering.  The results are illustrated in
+Table~\ref{tab:bm2}.
 
 \begin{table}
-  \def\lmSubsets{\multirow{4}{*}{\rotatebox{90}{lmSubsets}}}
-  \def\lmSelect{\multirow{4}{*}{\rotatebox{90}{lmSelect~}}}
-  \centering
-  \scriptsize
+  \centering\scriptsize
   \texttt{%
-  \begin{tabular}{l|lrrr|rrr|rrr}
+  \settowidth{\Rwidth}{(speedup1)}
+  \begin{tabular}{rr|RR|RRR}
     \toprule
-    & & & & & \multicolumn{3}{c|}{tolerance = 0.0} & \multicolumn{3}{c}{tolerance = 0.1} \\
-    sigma & & nvar & nmin & nmax & tmin & tmax & tavg & tmin & tmax & tavg \\
-    \midrule
-    0.05 & \lmSubsets & 20 & -- & -- & 0.006   & 0.076    & 0.022    & 0.005   & 0.006    & 0.005    \\
-         &            & 40 & -- & -- & 0.302   & 0.379    & 0.338    & 0.216   & 0.251    & 0.232    \\
-         &            & 60 & -- & -- & 213.567 & 275.740  & 239.592  & 100.715 & 128.292  & 111.694  \\
-         &            & 80 & 30 & 50 & 784.364 & 1219.488 & 961.900  & 335.535 & 461.974  & 390.447  \\
-    \cmidrule{2-11}
-         & \lmSelect & 20 & -- & -- & 0.004   & 0.072    & 0.018    & 0.004   & 0.005    & 0.005    \\
-         &           & 40 & -- & -- & 0.009   & 0.011    & 0.010    & 0.010   & 0.012    & 0.011    \\
-         &           & 60 & -- & -- & 0.015   & 0.018    & 0.017    & 0.016   & 0.018    & 0.017    \\
-         &           & 80 & -- & -- & 0.024   & 0.028    & 0.026    & 0.023   & 0.028    & 0.025    \\
-    \midrule
-    & & & & & \multicolumn{3}{c|}{tolerance = 0.0} & \multicolumn{3}{c}{tolerance = 0.1} \\
-    sigma & & nvar & nmin & nmax & tmin & tmax & tavg & tmin & tmax & tavg \\
-    \midrule
-    0.10 & \lmSubsets & 20 & -- & -- & 0.005   & 0.010    & 0.007    & 0.005   & 0.006    & 0.006    \\
-         &            & 40 & -- & -- & 0.307   & 0.359    & 0.328    & 0.222   & 0.231    & 0.227    \\
-         &            & 60 & -- & -- & 179.847 & 298.430  & 230.644  & 87.746  & 132.034  & 106.971  \\
-         &            & 80 & 30 & 50 & 740.274 & 1321.999 & 1079.937 & 313.509 & 490.188  & 419.043  \\
-    \cmidrule{2-11}
-         & \lmSelect & 20 & -- & -- & 0.004   & 0.005    & 0.005    & 0.004   & 0.005    & 0.005    \\
-         &           & 40 & -- & -- & 0.010   & 0.012    & 0.011    & 0.010   & 0.012    & 0.011    \\
-         &           & 60 & -- & -- & 0.016   & 0.018    & 0.017    & 0.015   & 0.018    & 0.017    \\
-         &           & 80 & -- & -- & 0.024   & 0.034    & 0.027    & 0.025   & 0.029    & 0.027    \\
-    \midrule
-    & & & & & \multicolumn{3}{c|}{tolerance = 0.0} & \multicolumn{3}{c}{tolerance = 0.1} \\
-    sigma & & nvar & nmin & nmax & tmin & tmax & tavg & tmin & tmax & tavg \\
-    \midrule
-    0.50 & \lmSubsets & 20 & -- & -- & 0.005   & 0.010    & 0.008    & 0.005   & 0.005    & 0.005    \\
-         &            & 40 & -- & -- & 0.297   & 0.422    & 0.348    & 0.196   & 0.278    & 0.237    \\
-         &            & 60 & -- & -- & 167.291 & 303.223  & 218.706  & 84.314  & 135.472  & 103.185  \\
-         &            & 80 & 30 & 50 & 982.042 & 1351.623 & 1156.535 & 391.846 & 495.175  & 444.296  \\
-    \cmidrule{2-11}
-         & \lmSelect  & 20 & -- & -- & 0.004   & 0.005    & 0.005    & 0.004   & 0.005    & 0.005    \\
-         &            & 40 & -- & -- & 0.010   & 0.011    & 0.011    & 0.010   & 0.012    & 0.011    \\
-         &            & 60 & -- & -- & 0.016   & 0.018    & 0.017    & 0.015   & 0.018    & 0.017    \\
-         &            & 80 & -- & -- & 0.026   & 0.028    & 0.027    & 0.025   & 0.027    & 0.026    \\
-    \midrule
-    & & & & & \multicolumn{3}{c|}{tolerance = 0.0} & \multicolumn{3}{c}{tolerance = 0.1} \\
-    sigma & & nvar & nmin & nmax & tmin & tmax & tavg & tmin & tmax & tavg \\
-    \midrule
-    1.00 & \lmSubsets & 20 & -- & -- & 0.005   & 0.010    & 0.007    & 0.005   & 0.006    & 0.005    \\
-         &            & 40 & -- & -- & 0.278   & 0.415    & 0.326    & 0.195   & 0.250    & 0.214    \\
-         &            & 60 & -- & -- & 202.200 & 286.419  & 255.339  & 96.492  & 129.877  & 117.297  \\
-         &            & 80 & 30 & 50 & 698.940 & 1018.715 & 851.472  & 291.820 & 404.323  & 348.461  \\
-    \cmidrule{2-11}
-         & \lmSelect  & 20 & -- & -- & 0.004   & 0.005    & 0.005    & 0.005   & 0.005    & 0.005    \\
-         &            & 40 & -- & -- & 0.009   & 0.011    & 0.010    & 0.011   & 0.011    & 0.011    \\
-         &            & 60 & -- & -- & 0.015   & 0.018    & 0.017    & 0.016   & 0.020    & 0.018    \\
-         &            & 80 & -- & -- & 0.025   & 0.028    & 0.026    & 0.025   & 0.027    & 0.026    \\
-    \midrule
-    & & & & & \multicolumn{3}{c|}{tolerance = 0.0} & \multicolumn{3}{c}{tolerance = 0.1} \\
-    sigma & & nvar & nmin & nmax & tmin & tmax & tavg & tmin & tmax & tavg \\
-    \midrule
-    5.00 & \lmSubsets & 20 & -- & -- & 0.006   & 0.009    & 0.008    & 0.004   & 0.007    & 0.005    \\
-         &            & 40 & -- & -- & 0.153   & 0.290    & 0.193    & 0.120   & 0.191    & 0.143    \\
-         &            & 60 & -- & -- & 80.560  & 112.290  & 98.981   & 45.133  & 58.601   & 52.173   \\
-         &            & 80 & 30 & 50 & 70.523  & 1014.621 & 358.406  & 29.615  & 336.587  & 129.344  \\
-    \cmidrule{2-11}
-         & \lmSelect  & 20 & -- & -- & 0.004   & 0.005    & 0.005    & 0.004   & 0.005    & 0.004    \\
-         &            & 40 & -- & -- & 0.013   & 0.015    & 0.014    & 0.012   & 0.014    & 0.013    \\
-         &            & 60 & -- & -- & 0.098   & 0.289    & 0.199    & 0.062   & 0.156    & 0.111    \\
-         &            & 80 & -- & -- & 3.302   & 23.989   & 8.811    & 1.353   & 8.429    & 3.267    \\
+    sigma & nvar & leaps & leaps1 & lmSubsets & (speedup) & (speedup1) \\
+<<echo=FALSE, results=tex, strip.white=false>>=
+source("bm-01.R")
+
+df <- report_benchmark()
+
+junk <- lapply(split(df, with(df, SD)), function (grp) {
+    sd <- grp[1, "SD"]
+
+    grp <- with(grp, {
+        SPEEDUP <- LEAPS / LM_SUBSETS
+        SPEEDUP1 <- LEAPS1 / LM_SUBSETS
+
+        cbind(SD = "", formatC(NVAR, format = "d"),
+              formatC(cbind(LEAPS, LEAPS1, LM_SUBSETS),
+                      format = "f", digits = 3),
+              formatC(cbind(SPEEDUP, SPEEDUP1),
+                      format = "f", digits = 1))
+    })
+    grp[1, "SD"] <- formatC(sd, format = "f", digits = 2)
+
+    grp <- apply(grp, 1, paste0, collapse = " & ")
+
+    cat("\\midrule\n")
+    for (row in grp) {
+        cat(row)
+        cat("\\\\\n")
+    }
+})
+@ 
     \bottomrule
   \end{tabular}}
-  \caption{Minimum, maximum, and average execution times (in seconds).}
-  \label{tab:bm}
+  \caption{Average execution times (in seconds) of \fct{leaps} with
+    and without preordering, and \fct{lmSubsets}; the speedup of
+    \fct{lmSubsets} with respect to \fct{leaps} is also shown.}
+  \label{tab:bm1}
+\end{table}
+
+\begin{table}
+  \centering\scriptsize
+  \texttt{%
+  \settowidth{\Rwidth}{(speedup1)}
+  \begin{tabular}{rr|RR|RRR}
+    \toprule
+    sigma & nvar & bestglm & bestglm1 & lmSelect & (speedup) & (speedup1) \\
+<<echo=FALSE, results=tex, strip.white=false>>=
+source("bm-02.R")
+
+df <- report_benchmark()
+df <- subset(df, IC == "BIC")
+
+junk <- lapply(split(df, with(df, SD)), function (grp) {
+    sd <- grp[1, "SD"]
+
+    grp <- with(grp, {
+        SPEEDUP <- BESTGLM / LM_SELECT
+        SPEEDUP1 <- BESTGLM1 / LM_SELECT
+
+        cbind(SD = "", formatC(NVAR, format = "d"),
+                 formatC(cbind(BESTGLM, BESTGLM1, LM_SELECT),
+                         format = "f", digits = 3),
+                 formatC(cbind(SPEEDUP, SPEEDUP1),
+                         format = "f", digits = 1))
+    })
+    grp[1, "SD"] <- formatC(sd, format = "f", digits = 2)
+
+    grp <- apply(grp, 1, paste0, collapse = " & ")
+
+    cat("\\midrule\n")
+    for (row in grp) {
+        cat(row)
+        cat("\\\\\n")
+    }
+})
+@ 
+    \bottomrule
+  \end{tabular}}
+  \caption{Average execution times (in seconds) of \fct{bestglm} with
+    and without preordering, and \fct{lmSelect}; the speedup of
+    \fct{lmSelect} with respect to \fct{bestglm} is also shown.}
+  \label{tab:bm2}
+\end{table}
+
+It is not surprising that \fct{bestglm} is very close to \fct{leaps}
+in terms of running times, as the former post-processes the results
+returned by the latter; in fact, \fct{bestglm} implements the
+two-stage approach to solving the best-subset selection problem, where
+Stage~1 is tackled by \fct{leaps} (see Section~\ref{sec:intro} for
+further details).  Manually preordering the variables improves the
+performance of \fct{leaps} (and hence, of \fct{bestglm}) by a factor
+of approx. 2; for $\kode{nvar}=40$ and a high level of noise
+($\kode{sigma}=5.00$), by a factor of almost 4.  In
+Table~\ref{tab:bm1}, the speedup of \fct{lmSubsets} with respect to
+\fct{leaps} and \fct{leaps1} is reported in columns \kode{speedup} and
+\kode{speedup1}, respectively; likewise, the speedup of \fct{lmSelect}
+with respect to \fct{bestglm} is reported in Table~\ref{tab:bm2}.  In
+the tests conducted here, \fct{lmSubsets} is two orders of magnitude
+faster than \fct{leaps}, even with preordering; \fct{lmSelect} is
+three orders of magnitude faster than \fct{bestglm}.
+
+Benchmark~3 pits all-subsets and best-subset selection, exact and
+approximation algorithms against one another.  The average execution
+times of \fct{lmSubsets} and \fct{lmSelect}, for
+$\kode{tolerance}=0.0\text{ and }0.1$, are illustrated in
+Table~\ref{tab:bm3}.  Note that for large datasets ($\kode{nvar}=80$),
+subsets computed by \fct{lmSubsets} are restricted to sizes between
+$\kode{nmin}=30$ and $\kode{nmax}=50$ variables; the restriction does
+not apply to \fct{lmSelect}.
+
+\begin{table}
+  \centering\scriptsize
+  \texttt{%
+  \settowidth{\Rwidth}{(speedup)}
+  \begin{tabular}{rrrr|RRR|RRR}
+    \toprule
+    & & & & \multicolumn{3}{c|}{tolerance = 0.0} &
+    \multicolumn{3}{c}{tolerance = 0.1} \\
+    sigma & nvar & nmin & nmax & lmSubsets & lmSelect & (speedup) &
+    lmSubsets & lmSelect & (speedup) \\
+<<echo=FALSE, results=tex, strip.white=false>>=
+source("bm-03.R")
+
+df <- report_benchmark()
+
+junk <- lapply(split(df, with(df, SD)), function (grp) {
+    sd <- grp[1, "SD"]
+
+    grp <- do.call(rbind, lapply(split(grp, with(grp, NVAR)), function (grp) {
+        nvar <- grp[1, "NVAR"]
+        nmin <- grp[1, "NMIN"]
+        nmax <- grp[1, "NMAX"]
+
+        c(nvar, nmin, nmax,
+          with(subset(grp, TOLERANCE == 0.0),
+               c(LM_SUBSETS, LM_SELECT, LM_SUBSETS / LM_SELECT)),
+          with(subset(grp, TOLERANCE == 0.1),
+               c(LM_SUBSETS, LM_SELECT, LM_SUBSETS / LM_SELECT)))
+    }))
+
+    grp <- cbind(SD = "", formatC(grp[, 1], format = "d"),
+                 ifelse(is.na(grp[, 2:3]), "-",
+                        formatC(grp[, 2:3], format = "d")),
+                 formatC(grp[, 4:5], format = "f", digits = 3),
+                 formatC(grp[, 6], format = "f", digits = 1),
+                 formatC(grp[, 7:8], format = "f", digits = 3),
+                 formatC(grp[, 9], format = "f", digits = 1))
+    grp[1, "SD"] <- formatC(sd, format = "f", digits = 2)
+
+    grp <- apply(grp, 1, paste0, collapse = " & ")
+
+    cat("\\midrule\n")
+    for (row in grp) {
+        cat(row)
+        cat("\\\\\n")
+    }
+})
+@ 
+    \bottomrule
+  \end{tabular}}
+  \caption{Average execution times (in seconds) of \fct{lmSubsets} and
+    \fct{lmSelect}, for $\kode{tolerance}=0.0\text{ and }0.1$; the
+    speedup of \fct{lmSelect} with respect to \fct{lmSubsets} is also
+    shown.}
+  \label{tab:bm3}
+\end{table}
+
+In the case of \fct{lmSubsets}, the approximation algorithm
+($\kode{tolerance}=0.1$) is 2--3~times faster than the exact
+algorithm.  The speedup of \fct{lmSelect} with respect to
+\fct{lmSubsets} is four orders of magnitude for the exact, three
+orders of magnitude for the approximation algorithm.  It is
+interesting to note, that the computational performance of
+\fct{lmSubsets} increases for high levels of noise
+($\kode{sigma}=5.00$), contrary to \fct{lmSelect}.  Under these
+conditions, the relative speedup of \fct{lmSelect} is significantly
+lower.  As the noise increases, the information in the data is
+\dquote{blurred}, rendering the cutting test~\eqref{eq:bba+} -- which
+depends on the information criterion -- less effective; in this the
+respect, \fct{lmSubsets} is more robust, as it only depends on the
+RSS.
+
+In Benchmark~4, the effects of the \kode{nbest} parameter (number of
+computed best submodels) on the execution times of \fct{lmSelect} are
+investigated.  Two information criteria are considered
+($\kode{ic}=\kode{AIC}\text{ and }\kode{BIC}$).  The noise level used
+in the benchmark is $\kode{sigma}=1.0$.  Average execution times are
+reported in Table~\ref{tab:bm4} for $\kode{nbest}=1,5,10,15,20$.
+Finally, Benchmark~5 investigates how the AIC penalty per parameter
+(\kode{penalty}) affects the performance of \fct{lmSelect}.
+Table~\ref{tab:bm5} summarizes the results for
+$\kode{penalty}=1.0,2.0,4.0,8.0,16.0,32.0$.  Note that
+$\kode{penalty}=2.0$ and $\kode{penalty}=\kode{log}(1000)\approx 6.9$
+correspond to the usual AIC and BIC, respectively (here,
+$\kode{nobs}=1000$).  The results reveal that the execution time of
+\fct{lmSelect} increases linearly with \kode{nbest}, and -- from the
+values considered here -- is minimal for $\kode{penalty}=8.0$, which
+is close to the BIC.
+
+\begin{table}
+  \centering\scriptsize
+  \texttt{%
+  \settowidth{\Rwidth}{123.456}
+  \begin{tabular}{rr|RRRRR}
+    \toprule
+    & & \multicolumn{5}{c}{nbest} \\
+    nvar & ic & 1 & 5 & 10 & 15 & 20 \\
+<<echo=FALSE, results=tex, strip.white=false>>=
+source("bm-04.R")
+
+df <- report_benchmark()
+
+df <- {
+    x <- unique(with(df, data.frame(NVAR, IC)))
+
+    for (nbest in c(1, 5, 10, 15, 20)) {
+        x <- merge(x, with(subset(df, NBEST == nbest), {
+            z <- data.frame(NVAR, IC, LM_SELECT)
+            names(z)[3] <- nbest
+
+            z
+        }))
+    }
+
+    x
+}
+
+junk <- lapply(split(df, with(df, NVAR)), function (grp) {
+    nvar <- grp[1, "NVAR"]
+
+    grp <- cbind(NVAR = "", as.character(grp[, 2]),
+                 formatC(as.matrix(grp[, 3:7]), format = "f", digits = 3))
+    grp[1, "NVAR"] <- formatC(nvar, format = "d")
+
+    grp <- apply(grp, 1, paste0, collapse = " & ")
+
+    cat("\\midrule\n")
+    for (row in grp) {
+        cat(row)
+        cat("\\\\\n")
+    }
+})
+@ 
+    \bottomrule
+  \end{tabular}}
+  \caption{Average execution times (in seconds) of \fct{lmSelect} by
+    number of computed subset models (\kode{nbest}).}
+  \label{tab:bm4}
+\end{table}
+
+\begin{table}
+  \centering\scriptsize
+  \texttt{%
+  \settowidth{\Rwidth}{12.345}
+  \begin{tabular}{r|RRRRRR}
+    \toprule
+    & \multicolumn{6}{c}{penalty} \\
+    nvar & 1.0 & 2.0 & 4.0 & 8.0 & 16.0 & 32.0 \\
+<<echo=FALSE, results=tex, strip.white=false>>=
+source("bm-05.R")
+
+df <- report_benchmark()
+
+df <- {
+    x <- unique(with(df, data.frame(NVAR)))
+
+    for (ic in c(1, 2, 4, 8, 16, 32)) {
+        x <- merge(x, with(subset(df, IC == ic), {
+            z <- data.frame(NVAR, LM_SELECT)
+            names(z)[2] <- ic
+
+            z
+        }))
+    }
+
+    x
+}
+
+grp <- cbind(formatC(df[, 1], format = "d"),
+             formatC(as.matrix(df[, 2:7]), format = "f", digits = 3))
+
+grp <- apply(grp, 1, paste0, collapse = " & ")
+
+cat("\\midrule\n")
+for (row in grp) {
+    cat(row)
+    cat("\\\\\n")
+}
+@ 
+    \bottomrule
+  \end{tabular}}
+  \caption{Average execution times (in seconds) of \fct{lmSelect} for
+    varying AIC penalty per parameter (\kode{penalty}).}
+  \label{tab:bm5}
 \end{table}
 
 

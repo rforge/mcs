@@ -1,7 +1,7 @@
 Package: lmSubsets
 Version: 0.1
 Date: 2017-11-01
-Title: Exact Linear Variable Subset Regression in R
+Title: Exact variable-subset selection in linear regression
 Authors@R: c(person(given = "Marc", family = "Hofmann",
                     role  = c("aut", "cre"),
                     email = "marc.hofmann@gmail.com"),
@@ -16,8 +16,8 @@ Authors@R: c(person(given = "Marc", family = "Hofmann",
                     email = "Achim.Zeileis@R-project.org",
 		    comment = c(ORCID = "0000-0003-0918-3766")))
 Description: Efficient algorithms for computing exact
-  variable subset regression models based on Hofmann, Gatu, Kontoghiorghes
-  (2007, Computational Statistics & Data Analysis, <DOI:10.1016/j.csda.2007.03.017>).
+  variable-subset regression models.
 Depends: R (>= 3.4.0)
-Imports: stats, graphics, grDevices
+Suggests: leaps, bestglm
+Imports: stats, graphics, grDevices, utils
 License: GPL-2 | GPL-3

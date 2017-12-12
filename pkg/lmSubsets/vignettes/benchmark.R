@@ -1,4 +1,10 @@
+library("parallel")
+library("tools")
+
 library("lmSubsets")
+library("leaps")
+library("bestglm")
+
 
 
 data_frame <- function (...) {
@@ -24,6 +30,23 @@ frame_id <- function (df_new, df) {
 }
 
 
+preorder_data <- function (x, y, intercept) {
+    n <- ncol(x)
+
+    xy <- cbind(x, y)
+    if (intercept)  xy <- cbind(1, xy)
+
+    rss <- numeric(n)
+    for (j in seq_len(n)) {
+        rz <- qr.R(qr(xy[, -(j + intercept)]))
+        rss[j] <- rz[n + intercept, n + intercept]^2
+    }
+
+    x[, order(rss, decreasing = TRUE)]
+}
+
+
+
 ## Initialize benchmark.
 ##
 ## Arguments:
@@ -35,7 +58,7 @@ frame_id <- function (df_new, df) {
 ## Result: (list)
 ##   benchmark
 ##
-benchmark <- function (name = "bm", nrep = 1, timeout = Inf,
+benchmark <- function (name = "bm", nrep = 1, timeout = NULL,
                        seed = NULL) {
     bm <- list()
 
@@ -149,7 +172,7 @@ dist_benchmark <- function (bm, MEAN = NA, SD = NA, RATE = NA, MEANLOG = NA,
 ##   benchmark
 ##
 data_benchmark <- function (bm, NOBS, NVAR, NTRUE, DIST_ID,
-                             INTERCEPT = TRUE) {
+                            INTERCEPT = TRUE) {
     ## table DATA: artificial data
     T_DATA <- expand_frame(ID = NA, NOBS = NOBS, NVAR = NVAR, NTRUE = NTRUE,
                            DIST_ID = DIST_ID, INTERCEPT = INTERCEPT)
@@ -159,8 +182,9 @@ data_benchmark <- function (bm, NOBS, NVAR, NTRUE, DIST_ID,
     ## table SIMU:  simulations
     T_SIMU <- expand_frame(ID = NA, DATA_ID = T_DATA[, "ID"],
                            REP = seq_len(bm$nrep), SEED = NA, RSS_FUL = NA,
-                           BIC_FUL = NA, BIC_INF = NA, WHICH_TRU = NA,
-                           RSS_TRU = NA, BIC_TRU = NA)
+                           AIC_FUL = NA, BIC_FUL = NA, AIC_INF = NA,
+                           BIC_INF = NA, RSS_TRU = NA, AIC_TRU = NA,
+                           BIC_TRU = NA, WHICH = NA)
     T_SIMU[, "ID"] <- frame_id(T_SIMU, bm$SIMU)
     bm$SIMU <- rbind(bm$SIMU, T_SIMU)
 
@@ -174,11 +198,14 @@ data_benchmark <- function (bm, NOBS, NVAR, NTRUE, DIST_ID,
 
         simu_ix <- with(bm$SIMU, which(ID == simu_id))
         bm$SIMU[simu_ix, "RSS_FUL"] <- simu$rss_full
+        bm$SIMU[simu_ix, "AIC_FUL"] <- simu$aic_full
         bm$SIMU[simu_ix, "BIC_FUL"] <- simu$bic_full
+        bm$SIMU[simu_ix, "AIC_INF"] <- simu$aic_inf
         bm$SIMU[simu_ix, "BIC_INF"] <- simu$bic_inf
-        bm$SIMU[simu_ix, "WHICH_TRU"] <- paste0(as.integer(simu$true), collapse = "")
         bm$SIMU[simu_ix, "RSS_TRU"] <- simu$rss_true
+        bm$SIMU[simu_ix, "AIC_TRU"] <- simu$aic_true
         bm$SIMU[simu_ix, "BIC_TRU"] <- simu$bic_true
+        bm$SIMU[simu_ix, "WHICH"] <- paste0(as.integer(simu$true), collapse = "")
     }
 
     ## done
@@ -194,18 +221,19 @@ data_benchmark <- function (bm, NOBS, NVAR, NTRUE, DIST_ID,
 ##   NMIN      - (integer) 'lmSubsets' arg
 ##   NMAX      - (integer) 'lmSubsets' arg
 ##   TOLERANCE - (numeric) 'lmSubsets' arg
+##   NBEST     - (integer) 'lmSubsets' arg
 ##
 ## Result: (list)
 ##   benchmark
 ##
 lmSubsets_benchmark <- function (bm, DATA_ID, NMIN = NA, NMAX = NA,
-                                 TOLERANCE = NA) {
+                                 TOLERANCE = NA, NBEST = NA) {
     if (missing(DATA_ID)) {
         stop ("missing argument 'DATA_ID'")
     }
 
     TMP <- expand_frame(DATA_ID = DATA_ID, NMIN = NMIN, NMAX = NMAX,
-                        TOLERANCE = TOLERANCE)
+                        TOLERANCE = TOLERANCE, NBEST = NBEST)
 
     ## table CASE
     T_CASE <- data_frame(ID = NA, WHAT = "LM_SUBSETS",
@@ -216,7 +244,8 @@ lmSubsets_benchmark <- function (bm, DATA_ID, NMIN = NA, NMAX = NA,
     ## table LM_SUBSETS
     T_LM_SUBSETS <- data_frame(ID = NA, CASE_ID = T_CASE[, "ID"],
                                NMIN = TMP[, "NMIN"], NMAX = TMP[, "NMAX"],
-                               TOLERANCE = TMP[, "TOLERANCE"])
+                               TOLERANCE = TMP[, "TOLERANCE"],
+                               NBEST = TMP[, "NBEST"])
     T_LM_SUBSETS[, "ID"] <- frame_id(T_LM_SUBSETS, bm$LM_SUBSETS)
     bm$LM_SUBSETS <- rbind(bm$LM_SUBSETS, T_LM_SUBSETS)
 
@@ -235,7 +264,8 @@ lmSubsets_benchmark <- function (bm, DATA_ID, NMIN = NA, NMAX = NA,
         nvar <- with(bm$DATA, NVAR[ID == data_id])
 
         T_VALUE <- expand_frame(ID = NA, RUN_ID = run_id, RANK = seq_len(nvar),
-                                RSS = NA, BIC = NA, WHICH = NA, HIT = NA)
+                                RSS = NA, AIC = NA, BIC = NA, WHICH = NA,
+                                HIT = NA)
         T_VALUE[, "ID"] <- frame_id(T_VALUE, bm$VALUE)
         bm$VALUE <- rbind(bm$VALUE, T_VALUE)
     }
@@ -250,17 +280,21 @@ lmSubsets_benchmark <- function (bm, DATA_ID, NMIN = NA, NMAX = NA,
 ## Arguments:
 ##   bm        - (list) benchmark
 ##   DATA_ID   - (integer[]) relevant datasets
+##   IC        - (character) 'lmSelect' arg ('penalty')
 ##   TOLERANCE - (numeric) 'lmSelect' arg
+##   NBEST     - (integer) 'lmSelect' arg
 ##
 ## Result: (list)
 ##   benchmark
 ##
-lmSelect_benchmark <- function (bm, DATA_ID, TOLERANCE = NA) {
+lmSelect_benchmark <- function (bm, DATA_ID, IC = NA, TOLERANCE = NA,
+                                NBEST = NA) {
     if (missing(DATA_ID)) {
         stop ("missing argument 'DATA_ID'")
     }
 
-    TMP <- expand_frame(DATA_ID = DATA_ID, TOLERANCE = TOLERANCE)
+    TMP <- expand_frame(DATA_ID = DATA_ID, IC = IC, TOLERANCE = TOLERANCE,
+                        NBEST = NBEST)
 
     ## table CASE
     T_CASE <- data_frame(ID = NA, WHAT = "LM_SELECT",
@@ -270,7 +304,8 @@ lmSelect_benchmark <- function (bm, DATA_ID, TOLERANCE = NA) {
 
     ## table LM_SELECT
     T_LM_SELECT <- data_frame(ID = NA, CASE_ID = T_CASE[, "ID"],
-                              TOLERANCE = TMP[, "TOLERANCE"])
+                              IC = TMP[, "IC"], TOLERANCE = TMP[, "TOLERANCE"],
+                              NBEST = TMP[, "NBEST"])
     T_LM_SELECT[, "ID"] <- frame_id(T_LM_SELECT, bm$LM_SELECT)
     bm$LM_SELECT <- rbind(bm$LM_SELECT, T_LM_SELECT)
 
@@ -284,7 +319,121 @@ lmSelect_benchmark <- function (bm, DATA_ID, TOLERANCE = NA) {
 
     ## table VALUE
     T_VALUE <- expand_frame(ID = NA, RUN_ID = T_RUN[, "ID"], RANK = NA,
-                            RSS = NA, BIC = NA, WHICH = NA, HIT = NA)
+                            RSS = NA, AIC = NA, BIC = NA, WHICH = NA, HIT = NA)
+    T_VALUE[, "ID"] <- frame_id(T_VALUE, bm$VALUE)
+    bm$VALUE <- rbind(bm$VALUE, T_VALUE)
+
+    ## done
+    bm
+}
+
+
+## Define 'leaps' cases and runs.
+##
+## Arguments:
+##   bm      - (list) benchmark
+##   DATA_ID - (integer[]) relevant datasets
+##   NMAX    - (integer) 'leaps' arg ('nvmax')
+##   NBEST   - (integer) 'leaps' arg
+##   PREORD  - (logical)  preordering
+##
+## Result: (list)
+##   benchmark
+##
+leaps_benchmark <- function (bm, DATA_ID, NMAX = NA, NBEST = NA,
+                             PREORD = NA) {
+    if (missing(DATA_ID)) {
+        stop ("missing argument 'DATA_ID'")
+    }
+
+    TMP <- expand_frame(DATA_ID = DATA_ID, NMAX = NMAX,
+                        NBEST = NBEST, PREORD = PREORD)
+
+    ## table CASE
+    T_CASE <- data_frame(ID = NA, WHAT = "LEAPS",
+                         DATA_ID = TMP[, "DATA_ID"])
+    T_CASE[, "ID"] <- frame_id(T_CASE, bm$CASE)
+    bm$CASE <- rbind(bm$CASE, T_CASE)
+
+    ## table LEAPS
+    T_LEAPS <- data_frame(ID = NA, CASE_ID = T_CASE[, "ID"],
+                          NMAX = TMP[, "NMAX"], NBEST = TMP[, "NBEST"],
+                          PREORD = TMP[, "PREORD"])
+    T_LEAPS[, "ID"] <- frame_id(T_LEAPS, bm$LEAPS)
+    bm$LEAPS <- rbind(bm$LEAPS, T_LEAPS)
+
+    ## table RUN
+    T_RUN <- expand_frame(ID = NA, CASE_ID = T_CASE[, "ID"],
+                          REP = seq_len(bm$nrep), EXECUTED = FALSE,
+                          INTERRUPTED = NA, USER = NA, SYSTEM = NA,
+                          ELAPSED = NA)
+    T_RUN[, "ID"] <- frame_id(T_RUN, bm$RUN)
+    bm$RUN <- rbind(bm$RUN, T_RUN)
+
+    ## table VALUE
+    for (run_id in T_RUN[, "ID"]) {
+        case_id <- with(T_RUN, CASE_ID[ID == run_id])
+        data_id <- with(T_CASE, DATA_ID[ID == case_id])
+        nvar <- with(bm$DATA, NVAR[ID == data_id])
+
+        T_VALUE <- expand_frame(ID = NA, RUN_ID = run_id, RANK = seq_len(nvar),
+                                RSS = NA, AIC = NA, BIC = NA, WHICH = NA,
+                                HIT = NA)
+        T_VALUE[, "ID"] <- frame_id(T_VALUE, bm$VALUE)
+        bm$VALUE <- rbind(bm$VALUE, T_VALUE)
+    }
+
+    ## done
+    bm
+}
+
+
+## Define 'bestglm' cases and runs.
+##
+## Arguments:
+##   bm      - (list) benchmark
+##   DATA_ID - (integer[]) relevant datasets
+##   IC      - (character) 'bestglm' arg ('IC')
+##   NMAX    - (integer) 'bestglm' arg ('nvmax')
+##   NBEST   - (integer) 'bestglm' arg ('TopModels')
+##   PREORD  - (logical)  preordering
+##
+## Result: (list)
+##   benchmark
+##
+bestglm_benchmark <- function (bm, DATA_ID, IC = NA, NMAX = NA, NBEST = NA,
+                               PREORD = NA) {
+    if (missing(DATA_ID)) {
+        stop ("missing argument 'DATA_ID'")
+    }
+
+    TMP <- expand_frame(DATA_ID = DATA_ID, IC = IC, NMAX = NMAX,
+                        NBEST = NBEST, PREORD = PREORD)
+
+    ## table CASE
+    T_CASE <- data_frame(ID = NA, WHAT = "BESTGLM",
+                         DATA_ID = TMP[, "DATA_ID"])
+    T_CASE[, "ID"] <- frame_id(T_CASE, bm$CASE)
+    bm$CASE <- rbind(bm$CASE, T_CASE)
+
+    ## table BESTGLM
+    T_BESTGLM <- data_frame(ID = NA, CASE_ID = T_CASE[, "ID"],
+                            IC = TMP[, "IC"], NMAX = TMP[, "NMAX"],
+                            NBEST = TMP[, "NBEST"], PREORD = TMP[, "PREORD"])
+    T_BESTGLM[, "ID"] <- frame_id(T_BESTGLM, bm$BESTGLM)
+    bm$BESTGLM <- rbind(bm$BESTGLM, T_BESTGLM)
+
+    ## table RUN
+    T_RUN <- expand_frame(ID = NA, CASE_ID = T_CASE[, "ID"],
+                          REP = seq_len(bm$nrep), EXECUTED = FALSE,
+                          INTERRUPTED = NA, USER = NA, SYSTEM = NA,
+                          ELAPSED = NA)
+    T_RUN[, "ID"] <- frame_id(T_RUN, bm$RUN)
+    bm$RUN <- rbind(bm$RUN, T_RUN)
+
+    ## table VALUE
+    T_VALUE <- expand_frame(ID = NA, RUN_ID = T_RUN[, "ID"], RANK = NA,
+                            RSS = NA, AIC = NA, BIC = NA, WHICH = NA, HIT = NA)
     T_VALUE[, "ID"] <- frame_id(T_VALUE, bm$VALUE)
     bm$VALUE <- rbind(bm$VALUE, T_VALUE)
 
@@ -309,10 +458,11 @@ lmSelect_benchmark <- function (bm, DATA_ID, TOLERANCE = NA) {
 ##
 run_benchmark <- function (bm, what, cases, reps, runs, force = FALSE,
                            save = TRUE) {
-    message ("Running benchmark '", bm$name, "'...")
+    message ("Running benchmark '", bm$name, "'...",
+             format(Sys.time(), "  <%H:%M>"))
 
     if (missing(what)) {
-        what <- c("LM_SUBSETS", "LM_SELECT")
+        what <- c("LM_SUBSETS", "LM_SELECT", "LEAPS", "BESTGLM")
     }
 
     if (missing(cases)) {
@@ -330,13 +480,16 @@ run_benchmark <- function (bm, what, cases, reps, runs, force = FALSE,
     run_ixs <- with(bm$RUN, which(ID %in% runs))
     nrun <- NROW(run_ixs)
 
-    for (run_ix in run_ixs) {
+    for (i in seq_along(run_ixs)) {
+        run_ix <- run_ixs[i]
+
         run_id <- bm$RUN[run_ix, "ID"]
         case_id <- bm$RUN[run_ix, "CASE_ID"]
         rep <- bm$RUN[run_ix, "REP"]
 
-        message ("  Run ", run_id, "/", nrun, ": case ", case_id, "[",
-                 rep, "]...")
+        message ("(", i, "/", nrun, ")  Run ", run_id,
+                 ": Case ", case_id, " [", rep, "]...",
+                 format(Sys.time(), "  <%H:%M>"))
 
         if (!force && bm$RUN[run_ix, "EXECUTED"]) {
             message ("  ... skipping.")
@@ -347,16 +500,25 @@ run_benchmark <- function (bm, what, cases, reps, runs, force = FALSE,
         what <- with(bm$CASE, WHAT[ID == case_id])
         if (what == "LM_SUBSETS") {
             bm <- exec_lmSubsets_benchmark(bm, case_id, rep)
-        } else {
+        } else if (what == "LM_SELECT") {
             bm <- exec_lmSelect_benchmark(bm, case_id, rep)
+        } else if (what == "LEAPS") {
+            bm <- exec_leaps_benchmark(bm, case_id, rep)
+        } else if (what == "BESTGLM") {
+            bm <- exec_bestglm_benchmark(bm, case_id, rep)
+        } else {
+            warning ("unknown strategy: ", what)
         }
 
         if (save)  save_benchmark(bm)
 
-        message ("  ... done.  (", bm$RUN[run_ix, "ELAPSED"], "s)")
+        message ("  ... done.  (",
+                 format(bm$RUN[run_ix, "ELAPSED"], digits = 1, nsmall = 2),
+                 "s)")
     }
 
-    message ("... done.  (benchmark '", bm$name, "')")
+    message ("... done.  (benchmark '", bm$name, "')",
+             format(Sys.time(), "  <%H:%M>"))
 
     bm
 }
@@ -385,14 +547,26 @@ exec_lmSubsets_benchmark <- function (bm, case_id, rep = 1) {
     nmin <- bm$LM_SUBSETS[lmSubsets_ix, "NMIN"]
     nmax <- bm$LM_SUBSETS[lmSubsets_ix, "NMAX"]
     tolerance <- bm$LM_SUBSETS[lmSubsets_ix, "TOLERANCE"]
+    nbest <- bm$LM_SUBSETS[lmSubsets_ix, "NBEST"]
 
-    cl <- call("lmSubsets")
-    if (!is.na(nmin))  cl$nmin <- nmin
-    if (!is.na(nmax))  cl$nmax <- nmax
-    if (!is.na(tolerance))  cl$tolerance <- tolerance
+    hook <- function (x, y, intercept) {
+        cl <- call("lmSubsets")
+        if (!is.na(nmin))  cl$nmin <- nmin + intercept
+        if (!is.na(nmax))  cl$nmax <- nmax + intercept
+        if (!is.na(tolerance))  cl$tolerance <- tolerance
+        if (!is.na(nbest))  cl$nbest <- nbest
+
+        cl$formula <- x
+        cl$y <- y
+        cl$intercept <- intercept
+
+        time <- system.time(value <- eval(cl))
+
+        list(time = summary(time), value = value)
+    }
 
     simu_id <- with(bm$SIMU, ID[(DATA_ID == data_id) & (REP == rep)])
-    simu <- simu_benchmark(bm, simu_id, cl)
+    simu <- simu_benchmark(bm, simu_id, hook)
 
     run_ix <- with(bm$RUN, which((CASE_ID == case_id) & (REP == rep)))
     run_id <- bm$RUN[run_ix, "ID"]
@@ -402,24 +576,23 @@ exec_lmSubsets_benchmark <- function (bm, case_id, rep = 1) {
         rank <- bm$VALUE[val_ix, "RANK"]
         size <- rank + simu$intercept
 
-        if (is.na(simu$value$rank[1, size]))  next
+        if (with(simu$value$submodel, is.na(RSS[SIZE == size])))  next
 
-        rss <- deviance(simu$value, size = size)
-
-        which <- simu$value$which[, 1, size]
+        which <- variable.names(simu$value, size = size, drop = TRUE)
         if (simu$intercept)  which <- which[-1]
 
-        bm$VALUE[val_ix, "RSS"] <- rss
-        bm$VALUE[val_ix, "BIC"] <- bic(simu$value, size = size)
+        bm$VALUE[val_ix, "RSS"] <- deviance(simu$value, size = size)
+        bm$VALUE[val_ix, "AIC"] <- AIC(simu$value, size = size)
+        bm$VALUE[val_ix, "BIC"] <- BIC(simu$value, size = size)
         bm$VALUE[val_ix, "WHICH"] <- paste(as.integer(which), collapse = "")
         bm$VALUE[val_ix, "HIT"] <- all(which == simu$true)
     }
 
     bm$RUN[run_ix, "EXECUTED"] <- TRUE
     bm$RUN[run_ix, "INTERRUPTED"] <- simu$interrupted
-    bm$RUN[run_ix, "USER"] <- simu$user
-    bm$RUN[run_ix, "SYSTEM"] <- simu$system
-    bm$RUN[run_ix, "ELAPSED"] <- simu$elapsed
+    bm$RUN[run_ix, "USER"] <- simu$time["user"]
+    bm$RUN[run_ix, "SYSTEM"] <- simu$time["system"]
+    bm$RUN[run_ix, "ELAPSED"] <- simu$time["elapsed"]
 
     bm
 }
@@ -445,17 +618,29 @@ exec_lmSelect_benchmark <- function (bm, case_id, rep = 1) {
 
     lmSelect_ix <- with(bm$LM_SELECT, which(CASE_ID == case_id))
     lmSelect_id <- bm$LM_SELECT[lmSelect_ix, "ID"]
+    ic <- bm$LM_SELECT[lmSelect_ix, "IC"]
     tolerance <- bm$LM_SELECT[lmSelect_ix, "TOLERANCE"]
+    nbest <- bm$LM_SELECT[lmSelect_ix, "NBEST"]
 
-    cl <- call("lmSelect")
-    if (!is.na(tolerance))  cl$tolerance <- tolerance
+    hook <- function (x, y, intercept) {
+        cl <- call("lmSelect")
+        if (!is.na(ic))  cl$penalty <- ic
+        if (!is.na(tolerance))  cl$tolerance <- tolerance
+        if (!is.na(nbest))  cl$nbest <- nbest
+
+        cl$formula <- x
+        cl$y <- y
+        cl$intercept <- intercept
+
+        time <- system.time(value <- eval(cl))
+
+        list(time = summary(time), value = value)
+    }
 
     simu_id <- with(bm$SIMU, ID[(DATA_ID == data_id) & (REP == rep)])
-    simu <- simu_benchmark(bm, simu_id, cl)
+    simu <- simu_benchmark(bm, simu_id, hook)
 
-    rss <- deviance(simu$value)
-
-    which <- simu$value$which[, 1]
+    which <- variable.names(simu$value, drop = TRUE)
     if (simu$intercept)  which <- which[-1]
 
     run_ix <- with(bm$RUN, (CASE_ID == case_id) & (REP == rep))
@@ -463,16 +648,166 @@ exec_lmSelect_benchmark <- function (bm, case_id, rep = 1) {
     val_ix <- with(bm$VALUE, which(RUN_ID == run_id))
 
     bm$VALUE[val_ix, "RANK"] <- sum(which)
-    bm$VALUE[val_ix, "RSS"] <- rss
-    bm$VALUE[val_ix, "BIC"] <- bic(simu$value)
+    bm$VALUE[val_ix, "RSS"] <- deviance(simu$value)
+    bm$VALUE[val_ix, "AIC"] <- AIC(simu$value)
+    bm$VALUE[val_ix, "BIC"] <- BIC(simu$value)
     bm$VALUE[val_ix, "WHICH"] <- paste0(as.integer(which), collapse = "")
     bm$VALUE[val_ix, "HIT"] <- all(which == simu$true)
 
     bm$RUN[run_ix, "EXECUTED"] <- TRUE
     bm$RUN[run_ix, "INTERRUPTED"] <- simu$interrupted
-    bm$RUN[run_ix, "USER"] <- simu$user
-    bm$RUN[run_ix, "SYSTEM"] <- simu$system
-    bm$RUN[run_ix, "ELAPSED"] <- simu$elapsed
+    bm$RUN[run_ix, "USER"] <- simu$time["user"]
+    bm$RUN[run_ix, "SYSTEM"] <- simu$time["system"]
+    bm$RUN[run_ix, "ELAPSED"] <- simu$time["elapsed"]
+
+    bm
+}
+
+
+## Execute 'leaps' case.
+##
+## Arguments:
+##   bm      - (list) benchmark
+##   case_id - (integer) case
+##   rep     - (integer) repetition
+##
+## Result: (list)
+##   benchmark
+##
+exec_leaps_benchmark <- function (bm, case_id, rep = 1) {
+    if (missing(case_id)) {
+        stop ("missing argument 'case_id'")
+    }
+
+    case_ix <- with(bm$CASE, which(ID == case_id))
+    data_id <- bm$CASE[case_ix, "DATA_ID"]
+
+    leaps_ix <- with(bm$LEAPS, which(CASE_ID == case_id))
+    leaps_id <- bm$LEAPS[leaps_ix, "ID"]
+    nmax <- bm$LEAPS[leaps_ix, "NMAX"]
+    nbest <- bm$LEAPS[leaps_ix, "NBEST"]
+    preord <- bm$LEAPS[leaps_ix, "PREORD"]
+
+    hook <- function (x, y, intercept) {
+        if (preord) {
+            x <- preorder_data(x, y, intercept)
+        }
+
+        cl <- call("regsubsets", nbest = 1, nvmax = NULL)
+        if (!is.na(nbest))  cl$nbest <- nbest
+        if (!is.na(nmax))  cl$nvmax <- nmax
+
+        cl$x <- x
+        cl$y <- y
+        cl$intercept <- intercept
+
+        time <- system.time(value <- eval(cl))
+
+        list(time = summary(time), value = value)
+    }
+
+    simu_id <- with(bm$SIMU, ID[(DATA_ID == data_id) & (REP == rep)])
+    simu <- simu_benchmark(bm, simu_id, hook, fork = TRUE)
+
+    sum <- summary(simu$value)
+
+    run_ix <- with(bm$RUN, which((CASE_ID == case_id) & (REP == rep)))
+    run_id <- bm$RUN[run_ix, "ID"]
+    val_ixs <- with(bm$VALUE, which(RUN_ID == run_id))
+
+    for (val_ix in val_ixs) {
+        rank <- bm$VALUE[val_ix, "RANK"]
+        size <- rank
+
+        if (is.na(sum$rss[size]))  next
+
+        which <- sum$which[size, ]
+        if (simu$intercept)  which <- which[-1]
+
+        bm$VALUE[val_ix, "RSS"] <- sum$rss[size]
+        bm$VALUE[val_ix, "AIC"] <- NA
+        bm$VALUE[val_ix, "BIC"] <- sum$bic[size]
+        bm$VALUE[val_ix, "WHICH"] <- paste(as.integer(which), collapse = "")
+        bm$VALUE[val_ix, "HIT"] <- all(which == simu$true)
+    }
+
+    bm$RUN[run_ix, "EXECUTED"] <- TRUE
+    bm$RUN[run_ix, "INTERRUPTED"] <- simu$interrupted
+    bm$RUN[run_ix, "USER"] <- simu$time["user"]
+    bm$RUN[run_ix, "SYSTEM"] <- simu$time["system"]
+    bm$RUN[run_ix, "ELAPSED"] <- simu$time["elapsed"]
+
+    bm
+}
+
+
+## Execute 'bestglm' case.
+##
+## Arguments:
+##   bm      - (list) benchmark
+##   case_id - (integer) case
+##   rep     - (integer) repetition
+##
+## Result: (list)
+##   benchmark
+##
+exec_bestglm_benchmark <- function (bm, case_id, rep = 1) {
+    if (missing(case_id)) {
+        stop ("missing argument 'case_id'")
+    }
+
+    case_ix <- with(bm$CASE, which(ID == case_id))
+    data_id <- bm$CASE[case_ix, "DATA_ID"]
+
+    bestglm_ix <- with(bm$BESTGLM, which(CASE_ID == case_id))
+    bestglm_id <- bm$BESTGLM[bestglm_ix, "ID"]
+    ic <- bm$BESTGLM[bestglm_ix, "IC"]
+    nmax <- bm$BESTGLM[bestglm_ix, "NMAX"]
+    nbest <- bm$BESTGLM[bestglm_ix, "NBEST"]
+    preord <- bm$BESTGLM[bestglm_ix, "PREORD"]
+
+    hook <- function (x, y, intercept) {
+        if (preord) {
+            x <- preorder_data(x, y, intercept)
+        }
+
+        cl <- call("bestglm", TopModels = 1, nvmax = NULL)
+        if (!is.na(ic))  cl$IC <- ic
+        if (!is.na(nbest))  cl$TopModels <- nbest
+        if (!is.na(nmax))  cl$nvmax <- nmax
+
+        cl$Xy <- as.data.frame(cbind(x, y))
+        cl$intercept <- intercept
+
+        time <- system.time(value <- eval(cl))
+
+        list(time = summary(time), value = value)
+    }
+
+    simu_id <- with(bm$SIMU, ID[(DATA_ID == data_id) & (REP == rep)])
+    simu <- simu_benchmark(bm, simu_id, hook, fork = TRUE)
+
+    which <- simu$value$Subsets[simu$value$ModelReport$Bestk + 1, ]
+    which <- as.logical(which)
+    which <- head(which, -2)
+    if (simu$intercept)  which <- which[-1]
+
+    run_ix <- with(bm$RUN, which((CASE_ID == case_id) & (REP == rep)))
+    run_id <- bm$RUN[run_ix, "ID"]
+    val_ix <- with(bm$VALUE, which(RUN_ID == run_id))
+
+    bm$VALUE[val_ix, "RANK"] <- sum(which)
+    bm$VALUE[val_ix, "RSS"] <- deviance(simu$value$BestModel)
+    bm$VALUE[val_ix, "AIC"] <- AIC(simu$value$BestModel)
+    bm$VALUE[val_ix, "BIC"] <- BIC(simu$value$BestModel)
+    bm$VALUE[val_ix, "WHICH"] <- paste0(as.integer(which), collapse = "")
+    bm$VALUE[val_ix, "HIT"] <- all(which == simu$true)
+
+    bm$RUN[run_ix, "EXECUTED"] <- TRUE
+    bm$RUN[run_ix, "INTERRUPTED"] <- simu$interrupted
+    bm$RUN[run_ix, "USER"] <- simu$time["user"]
+    bm$RUN[run_ix, "SYSTEM"] <- simu$time["system"]
+    bm$RUN[run_ix, "ELAPSED"] <- simu$time["elapsed"]
 
     bm
 }
@@ -483,12 +818,14 @@ exec_lmSelect_benchmark <- function (bm, case_id, rep = 1) {
 ## Arguments:
 ##   bm      - (list) benchmark
 ##   simu_id - (integer) simulation ID
-##   cl      - (call)
+##   hook    - (function)
 ##   x, y    - (logical)
+##   fork    - (logical)
 ##
 ## Result: (list)
 ##
-simu_benchmark <- function (bm, simu_id, cl, x = FALSE, y = FALSE) {
+simu_benchmark <- function (bm, simu_id, hook, x = FALSE, y = FALSE,
+                            fork = FALSE) {
     ret_x <- x;  x <- NULL
     ret_y <- y;  y <- NULL
 
@@ -551,46 +888,66 @@ simu_benchmark <- function (bm, simu_id, cl, x = FALSE, y = FALSE) {
     ans$true <- as.logical(coefs)
 
     ## call
-    if (!missing(cl)) {
-        cl$formula <- x
-        cl$y <- y
-        cl$intercept <- intercept
+    if (!missing(hook)) {
+        ret <- NULL
 
-        tryCatch({
-            setTimeLimit(elapsed = bm$timeout)
+        if (fork) {
+            job <- mcparallel({
+                hook(x, y, intercept)
+            }, silent = FALSE)
 
-            t <- system.time(z <- eval(cl))
-            t <- summary(t)
+            if (is.null(bm$timeout)) {
+                ret <- mccollect(job, wait = TRUE)[[1]]
+            } else {
+                ret <- mccollect(job, wait = FALSE, timeout = bm$timeout)[[1]]
+            }
 
-            ans$value <- z
-            ans$interrupted <- z$.interrupted
-            ans$user <- t["user"]
-            ans$system <- t["system"]
-            ans$elapsed <- t["elapsed"]
-        }, finally = {
-            setTimeLimit(elapsed = NULL)
-        })
+            pskill(pid = job$pid, signal = SIGKILL)
+            pskill(pid = -1 * job$pid, signal = SIGKILL)
+
+            mccollect(job, wait = FALSE)
+        } else {
+            tryCatch({
+                setTimeLimit(elapsed = bm$timeout)
+
+                ret <- hook(x, y, intercept)
+            }, finally = {
+                setTimeLimit(elapsed = NULL)
+            })
+        }
+
+        if (is.null(ret)) {
+            ans$interrupted <- TRUE
+            ans$value <- NA
+            ans$time <- NA
+        } else {
+            ans$interrupted <- FALSE
+            ans$value <- ret$value
+            ans$time <- ret$time
+        }
+    } else {
+        ## stats
+        x_full <- cbind(intercept, x)
+        r_full <- qr.resid(qr(x_full), y)
+        rss_full <- sum(r_full^2)
+        ll_full <- lmSubsets:::stats_log_lik(nobs, NULL, rss_full)
+
+        ans$rss_full <- rss_full
+        ans$aic_full <- lmSubsets:::stats_aic(ll_full, 2, nvar + intercept + 1)
+        ans$bic_full <- lmSubsets:::stats_bic(ll_full, nobs, nvar + intercept + 1)
+
+        ans$aic_inf <- lmSubsets:::stats_aic(ll_full, 2, intercept + 1)
+        ans$bic_inf <- lmSubsets:::stats_bic(ll_full, nobs, intercept + 1)
+
+        x_true <- cbind(intercept, x[, ans$true])
+        r_true <- qr.resid(qr(x_true), y)
+        rss_true <- sum(r_true^2)
+        ll_true <- lmSubsets:::stats_log_lik(nobs, NULL, rss_true)
+
+        ans$rss_true <- rss_true
+        ans$aic_true <- lmSubsets:::stats_aic(ll_true, 2, ntrue + intercept + 1)
+        ans$bic_true <- lmSubsets:::stats_bic(ll_true, nobs, ntrue + intercept + 1)
     }
-
-    ## stats
-    x_full <- cbind(intercept, x)
-    r_full <- qr.resid(qr(x_full), y)
-    rss_full <- sum(r_full^2)
-    ll_full <- lmSubsets:::stats_log_lik(nobs, NULL, rss_full)
-
-    ans$rss_full <- rss_full
-    ans$rss_inf <- rss_full
-
-    ans$bic_full <- lmSubsets:::stats_bic(ll_full, nobs, nvar + intercept + 1)
-    ans$bic_inf <- lmSubsets:::stats_bic(ll_full, nobs, intercept + 1)
-
-    x_true <- cbind(intercept, x[, ans$true])
-    r_true <- qr.resid(qr(x_true), y)
-    rss_true <- sum(r_true^2)
-    ll_true <- lmSubsets:::stats_log_lik(nobs, NULL, rss_true)
-
-    ans$rss_true <- rss_true
-    ans$bic_true <- lmSubsets:::stats_bic(ll_true, nobs, ntrue + intercept + 1)
 
     if (ret_x)  ans$x <- x
     if (ret_y)  ans$y <- y
@@ -609,37 +966,16 @@ simu_benchmark <- function (bm, simu_id, cl, x = FALSE, y = FALSE) {
 ##   benchmark
 ##
 summary_benchmark <- function (bm) {
-    bm$SUMMARY <- NULL
+    T_SUM <- with(subset(bm$RUN, EXECUTED & !INTERRUPTED),
+                  data.frame(CASE_ID, TM = ELAPSED))
+    T_SUM <- split(T_SUM, T_SUM[, "CASE_ID"])
+    T_SUM <- lapply(T_SUM, function (grp) with(grp, {
+        cbind(CASE_ID = CASE_ID[1], TM_MIN = min(TM),
+              TM_MAX = max(TM), TM_AVG = mean(TM))
+    }))
+    T_SUM <- do.call(rbind, T_SUM)
 
-    for (case_id in bm$CASE[, "ID"]) {
-        run_ixs <- with(bm$RUN, {
-            which((CASE_ID %in% case_id) &
-                  (EXECUTED == TRUE) &
-                  (INTERRUPTED == FALSE))
-        })
-
-        nrun <- length(run_ixs)
-
-        T_SUM1 <- data.frame(ID = NA, CASE_ID = case_id, NRUN = nrun,
-                             NHIT = NA, TM_MIN = NA, TM_MAX = NA,
-                             TM_AVG = NA)
-
-        if (nrun > 0) {
-            tm <- bm$RUN[run_ixs, "ELAPSED"]
-
-            run_ids <- bm$RUN[run_ixs, "ID"]
-            nhit <- with(bm$VALUE, sum(HIT[RUN_ID %in% run_ids]))
-
-            T_SUM1[, "NHIT"] <- nhit
-            T_SUM1[, "TM_AVG"] <- mean(tm)
-            T_SUM1[, "TM_MIN"] <- min(tm)
-            T_SUM1[, "TM_MAX"] <- max(tm)
-        }
-
-        bm$SUMMARY <- rbind(bm$SUMMARY, T_SUM1)
-    }
-
-    bm$SUMMARY[, "ID"] <- seq_len(NROW(bm$SUMMARY))
+    bm$SUMMARY <- as.data.frame(T_SUM)
 
     bm
 }
@@ -693,7 +1029,7 @@ get_true_benchmark <- function (bm, data_id, rep) {
 }
 
 
-get_value_benchmark <- function (bm, case_id, rep, rank) {
+get_which_benchmark <- function (bm, case_id, rep, rank) {
     run_id <- with(bm$RUN, ID[(CASE_ID == case_id) & (REP == rep)])
 
     if (missing(rank)) {
@@ -718,93 +1054,4 @@ get_value_benchmark <- function (bm, case_id, rep, rank) {
     ans$val_id <- bm$VALUE[val_ix, "ID"]
 
     ans
-}
-
-
-
-## convert (quick and dirty)
-
-
-
-convert_benchmark <- function (bm_old) {
-    bm <- list()
-
-    ## params
-    bm$name <- bm_old$name
-    bm$nrep <- bm_old$nrep
-    bm$timeout <- bm_old$timeout
-    bm$seed <- bm_old$seed
-
-    ## distributions
-    bm$DIST <- bm_old$DIST
-
-    ## data
-    bm$DATA <- bm_old$BASE
-
-    ## simulations
-    bm$SIMU <- expand_frame(ID = NA, DATA_ID = bm$DATA[, "ID"],
-                            REP = seq_len(bm$nrep), SEED = NA, RSS_FUL = NA,
-                            BIC_FUL = NA, BIC_INF = NA, WHICH_TRU = NA,
-                            RSS_TRU = NA, BIC_TRU = NA)
-    bm$SIMU[, "ID"] <- bm_old$SIMU[, "ID"]
-    bm$SIMU[, "SEED"] <- bm_old$SIMU[, "SEED"]
-
-    for (simu_id in bm$SIMU[, "ID"]) {
-
-        simu <- simu_benchmark(bm, simu_id)
-
-        simu_ix <- with(bm$SIMU, which(ID == simu_id))
-        bm$SIMU[simu_ix, "RSS_FUL"] <- simu$rss_full
-        bm$SIMU[simu_ix, "BIC_FUL"] <- simu$bic_full
-        bm$SIMU[simu_ix, "BIC_INF"] <- simu$bic_inf
-        bm$SIMU[simu_ix, "WHICH_TRU"] <- paste0(as.integer(simu$true), collapse = "")
-        bm$SIMU[simu_ix, "RSS_TRU"] <- simu$rss_true
-        bm$SIMU[simu_ix, "BIC_TRU"] <- simu$bic_true
-    }
-
-    ## cases
-    nrun <- NROW(bm_old$RUN)
-
-    T_CASE <- bm_old$RUN[seq.int(bm$nrep, nrun, bm$nrep),
-                         c("ID", "WHAT", "CASE_ID")]
-    T_CASE[, "ID"] <- T_CASE[, "ID"] / bm$nrep
-    T_CASE["OLD_CASE_ID"] <- T_CASE["CASE_ID"];  T_CASE["CASE_ID"] <- NULL
-    T_CASE["DATA_ID"] <- NA
-
-    T_LM_SUBSETS <- bm_old$LM_SUBSETS;  T_LM_SUBSETS["CASE_ID"] <- NA
-    T_LM_SELECT <- bm_old$LM_SELECT;  T_LM_SELECT["CASE_ID"] <- NA
-    tmp <- list(LM_SUBSETS = T_LM_SUBSETS, LM_SELECT = T_LM_SELECT)
-
-    for (ix in seq_len(NROW(T_CASE))) {
-        what <- T_CASE[ix, "WHAT"]
-        old_case_id <- T_CASE[ix, "OLD_CASE_ID"]
-        old_what_ix <- with(bm_old[[what]], which(ID == old_case_id))
-        old_base_id <- bm_old[[what]][old_what_ix, "BASE_ID"]
-
-        T_CASE[ix, "DATA_ID"] <- old_base_id
-        tmp[[what]][old_what_ix, "CASE_ID"] <- T_CASE[ix, "ID"]
-    }
-
-    bm$CASE <- T_CASE[, c("ID", "WHAT", "DATA_ID")]
-    bm$LM_SUBSETS <- tmp$LM_SUBSETS[, c("ID", "CASE_ID", "NMIN", "NMAX",
-                                        "TOLERANCE")]
-    bm$LM_SELECT <- tmp$LM_SELECT[, c("ID", "CASE_ID", "TOLERANCE")]
-
-    ## runs
-    T_RUN <- bm_old$RUN
-    T_RUN["OLD_CASE_ID"] <- T_RUN["CASE_ID"];  T_RUN["CASE_ID"] <- NULL
-
-    T_RUN <- merge(T_RUN, T_CASE, by = c("WHAT", "OLD_CASE_ID"),
-                   suffix = c("", ".case"))
-    T_RUN["CASE_ID"] <- T_RUN["ID.case"]
-    bm$RUN <- T_RUN[order(T_RUN[, "ID"]), {
-        c("ID", "CASE_ID", "REP", "EXECUTED", "INTERRUPTED", "USER",
-          "SYSTEM", "ELAPSED")
-    }]
-
-    ## values
-    bm$VALUE <- bm_old$VALUE
-
-    ## done
-    bm
 }

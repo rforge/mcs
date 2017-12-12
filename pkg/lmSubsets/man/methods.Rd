@@ -4,9 +4,6 @@
 \alias{methods}
 
 \alias{model_response}
-\alias{log_lik}
-\alias{aic}
-\alias{bic}
 
 \alias{variable.names.lmSubsets}
 \alias{formula.lmSubsets}
@@ -16,11 +13,8 @@
 \alias{refit.lmSubsets}
 \alias{deviance.lmSubsets}
 \alias{sigma.lmSubsets}
-\alias{log_lik.lmSubsets}
 \alias{logLik.lmSubsets}
-\alias{aic.lmSubsets}
 \alias{AIC.lmSubsets}
-\alias{bic.lmSubsets}
 \alias{BIC.lmSubsets}
 \alias{coef.lmSubsets}
 \alias{vcov.lmSubsets}
@@ -35,11 +29,8 @@
 \alias{refit.lmSelect}
 \alias{deviance.lmSelect}
 \alias{sigma.lmSelect}
-\alias{log_lik.lmSelect}
 \alias{logLik.lmSelect}
-\alias{aic.lmSelect}
 \alias{AIC.lmSelect}
-\alias{bic.lmSelect}
 \alias{BIC.lmSelect}
 \alias{coef.lmSelect}
 \alias{vcov.lmSelect}
@@ -47,7 +38,7 @@
 \alias{residuals.lmSelect}
 
 
-\title{Methods for 'lmSubsets' and 'lmSelect' objects}
+\title{Methods for 'lmSubsets' and 'lmSelect' Objects}
 
 
 \description{
@@ -57,40 +48,34 @@
 
 
 \usage{
-\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots)
+\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
 \method{formula}{lmSubsets}(x, size, best = 1, \ldots)
 \method{model.frame}{lmSubsets}(formula, size, best = 1, \ldots)
 \method{model.matrix}{lmSubsets}(object, size, best = 1, \ldots)
 \method{model_response}{lmSubsets}(data, \ldots)
 \method{refit}{lmSubsets}(object, size, best = 1, \ldots)
-\method{deviance}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE)
-\method{sigma}{lmSubsets}(object, size, best = 1, \ldots)
-\method{log_lik}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE)
-\method{logLik}{lmSubsets}(object, size, best = 1, \ldots)
-\method{aic}{lmSubsets}(object, size, best = 1, \ldots, k = 2, drop = TRUE)
-\method{AIC}{lmSubsets}(object, size, best = 1, \ldots, k = 2)
-\method{bic}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE)
-\method{BIC}{lmSubsets}(object, size, best = 1, \ldots)
-\method{coef}{lmSubsets}(object, size, best = 1, \ldots)
+\method{deviance}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{sigma}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{logLik}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{AIC}{lmSubsets}(object, size, best = 1, \ldots, k = 2, drop = TRUE, na.rm = TRUE)
+\method{BIC}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{coef}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
 \method{vcov}{lmSubsets}(object, size, best = 1, \ldots)
 \method{fitted}{lmSubsets}(object, size, best = 1, \ldots)
 \method{residuals}{lmSubsets}(object, size, best = 1, \ldots)
 
-\method{variable.names}{lmSelect}(object, best = 1, \ldots)
+\method{variable.names}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
 \method{formula}{lmSelect}(x, best, \ldots)
 \method{model.frame}{lmSelect}(formula, best, \ldots)
 \method{model.matrix}{lmSelect}(object, best, \ldots)
 \method{model_response}{lmSelect}(data, \ldots)
 \method{refit}{lmSelect}(object, best = 1, \ldots)
-\method{deviance}{lmSelect}(object, best = 1, \ldots)
-\method{sigma}{lmSelect}(object, best = 1, \ldots)
-\method{log_lik}{lmSelect}(object, best = 1, \ldots)
-\method{logLik}{lmSelect}(object, best = 1, \ldots)
-\method{aic}{lmSelect}(object, best = 1, \ldots, k = 2)
-\method{AIC}{lmSelect}(object, best = 1, \ldots, k = 2)
-\method{bic}{lmSelect}(object, best = 1, \ldots)
-\method{BIC}{lmSelect}(object, best = 1, \ldots)
-\method{coef}{lmSelect}(object, best = 1, \ldots)
+\method{deviance}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{sigma}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{logLik}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{AIC}{lmSelect}(object, best = 1, \ldots, k = 2, drop = TRUE, na.rm = TRUE)
+\method{BIC}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{coef}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
 \method{vcov}{lmSelect}(object, best = 1, \ldots)
 \method{fitted}{lmSelect}(object, best = 1, \ldots)
 \method{residuals}{lmSelect}(object, best = 1, \ldots)
@@ -104,18 +89,27 @@
   \item{best}{The submodel ranking.}
   \item{\dots}{Forwarded arguments.}
   \item{k}{AIC penalty.}
-  \item{drop}{Reduce dimensionality of returned object.}
+  \item{drop}{Control shape of return value.}
+  \item{na.rm}{Remove missing submodels.}
 }
 
 
 \details{
   The extractor methods work for \code{"lmSubsets"} and
-  \code{"lmSelect"} objects, i.e., that have been generated using the
-  formula interface.
+  \code{"lmSelect"} objects, i.e., objects that have been generated
+  using the formula interface.
 
-  The information is extracted from a subset model of a given size.  If
-  a method is not available, \code{refit} can be called explicitly to
-  obtain the corresponding \code{"lm"} object.
+  If \code{drop == FALSE}, the extractor methods \code{variable.names},
+  \code{deviance}, \code{sigma}, \code{logLik}, \code{AIC}, \code{BIC}
+  and \code{coef} return a \code{data.frame} object.  If \code{drop ==
+  TRUE}, the return value is a \code{logical} matrix
+  (\code{variable.names}), a \code{numeric} matrix (\code{coef}), or a
+  \code{numeric} vector.  If the \code{drop} parameter is not set
+  explicitly when calling \code{variable.names} or \code{coef},
+  one-dimensional values are represented in a compact form.
+
+  If a desired extractor function is not available, \code{refit} can be
+  called explicitly to obtain the corresponding \code{"lm"} object.
 }
 
 

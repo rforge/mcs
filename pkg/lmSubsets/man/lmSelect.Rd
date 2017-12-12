@@ -21,16 +21,16 @@
 \usage{
 lmSelect(formula, \ldots)
 
-\method{lmSelect}{default}(formula, data, subset, weights, na.action,
-  model = TRUE, x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
+\method{lmSelect}{default}(formula, data, subset, weights, na.action, model = TRUE,
+         x = FALSE, y = FALSE, contrasts = NULL, offset, \ldots)
 
 \method{lmSelect}{matrix}(formula, y, intercept = TRUE, \ldots)
 
 \method{lmSelect}{lmSubsets}(formula, penalty = "BIC", \ldots)
 
-lmSelect_fit(x, y, weights = NULL, offset = NULL,
-  include = NULL, exclude = NULL, penalty = "BIC", tolerance = 0,
-  nbest = 1, \ldots, pradius = NULL)
+lmSelect_fit(x, y, weights = NULL, offset = NULL, include = NULL,
+             exclude = NULL, penalty = "BIC", tolerance = 0,
+             nbest = 1, \ldots, pradius = NULL)
 }
 
 
@@ -39,7 +39,7 @@ lmSelect_fit(x, y, weights = NULL, offset = NULL,
     offset}{Standard formula interface.}
   \item{intercept}{Include intercept.}
   \item{include, exclude}{Force regressors in or out.}
-  \item{penalty}{Penalty per parameter (see \code{\link[stats]{AIC}}).}
+  \item{penalty}{Penalty per parameter.}
   \item{tolerance}{Approximation tolerance.}
   \item{nbest}{Number of best subsets.}
   \item{\dots}{Forwarded to \code{lmSelect_fit}.}
@@ -48,35 +48,41 @@ lmSelect_fit(x, y, weights = NULL, offset = NULL,
 
 
 \details{
-  The generic \code{lmSelect} computes best-variable-subset regression
-  for ordinary linear models: The \code{nbest} best subset models are
-  computed according to an information criterion of the AIC family (if
-  the \code{penalty} argument is numeric).
+  The \code{lmSelect} generic provides a convenient interface for best
+  variable-subset selection in linear regression: The \code{nbest} best
+  -- according to an information criterion of the AIC family -- subset
+  models are returned.
+
+  The information criterion is specified with the \code{penalty}
+  parameter.  Accepted values are \code{"AIC"}, \code{"BIC"}, or a
+  \code{numeric} value representing the penalty per model parameter (see
+  \code{\link[stats]{AIC}}).
 
   A custom selection criterion may be specified by passing an R function
   as the \code{penalty} argument.  The expected signature is
-  \code{function (size, rss)}, where \code{size} is the number of
-  predictors (including intercept, if any) in a submodel, and \code{rss}
-  the residual sum of squares.  Furthermore, the function must be
-  non-decreasing in both parameters.
+  \code{function(size, rss)}, where \code{size} is the number of
+  predictors (including intercept, if any), and \code{rss} the residual
+  sum of squares.  The function must be non-decreasing in both
+  parameters.
+
+  A low-level matrix interface is provided by \code{lmSelect_fit}.
 
   See \code{\link{lmSubsets}} for further information.
 }
 
 
 \value{
-  An object of class \code{"lmSelect"}, i.e. a list with the following
+  An object of class \code{"lmSelect"}, i.e., a list with the following
   components:
   \item{nobs, nvar}{Number of observations, of variables.}
   \item{intercept}{\code{TRUE} if model has intercept term;
     \code{FALSE} otherwise.}
   \item{include, exclude}{Included, excluded variables.}
-  \item{sizes}{Subset sizes.}
+  \item{size}{Subset sizes.}
   \item{tolerance}{Approximation tolerance.}
   \item{nbest}{Number of best subsets.}
-  \item{rank, df_residual}{Rank, residual degrees of freedom.}
-  \item{penalty}{Penalty value.}
-  \item{which}{Selected variables.}
+  \item{submodel}{Submodel information.}
+  \item{subset}{Selected variables.}
 
   Further components include \code{call}, \code{na.action},
   \code{weights}, \code{offset}, \code{contrasts}, \code{xlevels},
@@ -145,7 +151,8 @@ bic <- function (size, rss) {
   aic(size, rss, k = log(M))
 }
 
-lm_cust <- lmSelect(mortality ~ ., data = AirPollution, penalty = bic, nbest = 20)
+lm_cust <- lmSelect(mortality ~ ., data = AirPollution,
+                    penalty = bic, nbest = 20)
 lm_cust
 }
 

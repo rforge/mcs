@@ -1,10 +1,10 @@
 
 
 image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
-                             ylab = NULL, size = NULL, best = 1,
-                             which = NULL, col = gray.colors(2),
-                             hilite, hilite_col = heat.colors,
-                             hilite_lab = quote(lab), pad_size = 3,
+                             ylab = NULL, size = NULL, best = 1, which = NULL,
+                             col = gray.colors(2), lab = "lab",
+                             hilite, hilite_penalty, hilite_col = heat.colors,
+                             hilite_lab = "lab", pad_size = 3,
                              pad_best = 1, pad_which = 3,
                              axis_pos = -4, axis_tck = -4,
                              axis_lab = -10, ..., axes = TRUE,
@@ -14,23 +14,13 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
     ## DATA
 
     ## heatmap
-    if (is.null(size))  size <- object$sizes
-    if (is.null(best))  best <- seq_len(object$nbest)
+    if (is.null(size))  size <- object$size
     if (is.null(which))  which <- seq_len(object$nvar)
 
-    heatmap <- object$which[which, best, size, drop = FALSE]
-
-    .cnames <- dimnames(heatmap)[[1]]
-    .cnames[object$include[which]] <- paste0("+", .cnames[object$include[which]])
-    .cnames[object$exclude[which]] <- paste0("-", .cnames[object$exclude[which]])
-
-    .rnames <- rep(dimnames(heatmap)[[3]], each = dim(heatmap)[2])
-
-    dim(heatmap) <- c(dim(heatmap)[1], dim(heatmap)[2] * dim(heatmap)[3])
-    dimnames(heatmap) <- list(.cnames, .rnames)
-
-    heatmap <- t(heatmap)
-    heatmap <- heatmap[!apply(is.na(heatmap), 1L, all), , drop = FALSE]
+    heatmap <- variable.names(object, size = size, best = best, na.rm = TRUE,
+                              drop = TRUE)
+    rownames(heatmap) <- attr(heatmap, "SIZE")
+    heatmap <- heatmap[, which, drop = FALSE]
 
     ## highlight
     if (missing(hilite)) {
@@ -65,6 +55,16 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
     col <- col[rep_len(seq_len(nrow(col)), nrow(heatmap)), , drop = FALSE]
 
     if (!is.null(hilite) && !is.null(hilite_col)) {
+        if (!missing(hilite_penalty)) {
+            val <- eval_ic(ic(hilite_penalty), object)
+            val <- with(object$submodel, {
+                val[(SIZE %in% size) & (BEST %in% best)]
+            })
+            val <- val[!is.na(val)]
+
+            hilite <- order(val)[hilite]
+        }
+
         if (is.function(hilite_col))  {
             hilite_col <- hilite_col(length(hilite))
         } else {
@@ -94,10 +94,12 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
     ## coords
     w <- (1 - (ncol(heatmap) - 1) * pad_which) / ncol(heatmap)
-    h <- (1 - (max(padcnt_best) * pad_best) - (max(padcnt_size) * pad_size)) / nrow(heatmap)
+    h <- (1 - (max(padcnt_best) * pad_best) - (max(padcnt_size) * pad_size)) /
+        nrow(heatmap)
 
     x <- (col(heatmap) - 1) * w + padcnt_which * pad_which
-    y <- 1 - (row(heatmap) - 1) * h - padcnt_best * pad_best - padcnt_size * pad_size
+    y <- 1 - (row(heatmap) - 1) * h - padcnt_best * pad_best -
+        padcnt_size * pad_size
 
     ## plot
     rect(x, y - h, x + w, y, col = col, border = NA)
@@ -116,12 +118,14 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
         top <- y[which(c(TRUE, group[-nrow(heatmap)] != group[-1]))]
         bottom <- c(top[-1] + pad_size, 0)
 
-        segments(x0 = right, y0 = top, x1 = right, y1 = bottom, lend = 1, xpd = TRUE)
-        segments(x0 = right, y0 = top, x1 = left, y1 = top, lend = 1, xpd = TRUE)
+        segments(x0 = right, y0 = top, x1 = right, y1 = bottom,
+                 lend = 1, xpd = TRUE)
+        segments(x0 = right, y0 = top, x1 = left, y1 = top,
+                 lend = 1, xpd = TRUE)
 
         right <- pix2usr(x = axis_lab[2], carry = +1)
-        text(x = right, y = top, labels = unique(rownames(heatmap)), adj = c(1, 1),
-             cex = 0.9, xpd = TRUE)
+        text(x = right, y = top, labels = unique(rownames(heatmap)),
+             adj = c(1, 1), cex = 0.9, xpd = TRUE)
 
         ## x axis
         left <- x[which(row(heatmap) == 1)]
@@ -131,23 +135,38 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
         tick <- pix2usr(y = axis_tck[1], carry = +1)
         bottom <- top + tick
 
-        segments(x0 = left, y0 = top, x1 = right, y1 = top, lend = 1, xpd = TRUE)
-        segments(x0 = right, y0 = top, x1 = right, y1 = bottom, lend = 1, xpd = TRUE)
+        segments(x0 = left, y0 = top, x1 = right, y1 = top,
+                 lend = 1, xpd = TRUE)
+        segments(x0 = right, y0 = top, x1 = right, y1 = bottom,
+                 lend = 1, xpd = TRUE)
 
-        labs <- colnames(heatmap)
+        lab <- rep_len(lab, 2)
+        lab0 <- parse(text = lab[1])[[1]]
+        lab1 <- parse(text = lab[2])[[1]]
 
-        labs <- sapply(seq_along(labs), function (j) {
-            env <- list(lab = labs[j])
-            if (any(heatmap[hilite, j]))
-                ans <- do.call(substitute, list(hilite_lab, env))
-            else
-                ans <- substitute(lab, env)
+        hilite_lab <- parse(text = hilite_lab)[[1]]
+
+        labels <- colnames(heatmap)
+        labels <- sapply(seq_along(labels), function (j) {
+            ans <- labels[j]
+
+            if (any(heatmap[, j])) {
+                ans <- do.call(substitute, list(lab1, list(lab = ans)))
+
+                if (any(heatmap[hilite, j])) {
+                    ans <- do.call(substitute, list(hilite_lab,
+                                                    list(lab = ans)))
+                }
+            } else {
+                ans <- do.call(substitute, list(lab0, list(lab = ans)))
+            }
+
             as.expression(ans)
         })
 
         top <- pix2usr(y = axis_lab[1], carry = +1)
-        text(x = right, y = top, labels = labs, adj = c(1, 1), srt = 45,
-             cex = 0.9, xpd = TRUE)
+        text(x = right, y = top, labels = labels, adj = c(1, 1),
+             srt = 45, cex = 0.9, xpd = TRUE)
     }
 
     ## annotations
@@ -155,9 +174,10 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
         if (is.null(main))  main <- "All subsets"
         if (is.null(sub)) {
             sub <- paste0(format_ordinal(best), collapse = ", ")
-            sub <- paste0("Best = {", sub, "}")
+            sub <- paste0("Best = ", sub)
         }
-        if (is.null(ylab))  ylab <- if (length(best) > 1) quote(Size %*% Best) else quote(Size)
+        if (is.null(ylab))  ylab <- if (length(best) > 1) quote(Size %*% Best)
+                                    else quote(Size)
 
         title(main = main, sub = sub, xlab = xlab, ylab = ylab)
     }
@@ -169,9 +189,9 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
 image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
                             ylab = NULL, best = NULL, which = NULL,
-                            col = gray.colors(2), hilite,
+                            col = gray.colors(2), lab = "lab", hilite,
                             hilite_col = heat.colors,
-                            hilite_lab = quote(lab), pad_best = 2,
+                            hilite_lab = "lab", pad_best = 2,
                             pad_which = 2, axis_pos = -4,
                             axis_tck = -4, axis_lab = -10, ...,
                             axes = TRUE, ann = par("ann")) {
@@ -183,18 +203,10 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
     if (is.null(best))  best <- seq_len(object$nbest)
     if (is.null(which))  which <- seq_len(object$nvar)
 
-    best <- rev(best)
-    heatmap <- object$which[which, best, drop = FALSE]
-
-    .size <- apply(heatmap, 2L, sum)
-    dimnames(heatmap)[[2]] <-paste0(dimnames(heatmap)[[2]], " (", .size, ")")
-
-    .cnames <- dimnames(heatmap)[[1]]
-    .cnames[object$include[which]] <- paste0("+", .cnames[object$include[which]])
-    .cnames[object$exclude[which]] <- paste0("-", .cnames[object$exclude[which]])
-    dimnames(heatmap)[[1]] <- .cnames
-
-    heatmap <- t(heatmap)
+    heatmap <- variable.names(object, best = best, drop = TRUE,
+                              na.rm = TRUE)
+    rownames(heatmap) <- format_ordinal(attr(heatmap, "BEST"))
+    heatmap <- heatmap[rev(seq_len(nrow(heatmap))), which, drop = FALSE]
 
     ## highlight
     if (missing(hilite)) {
@@ -202,7 +214,7 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
     } else if (is.null(hilite)) {
         hilite <- rev(seq_along(best))
     } else {
-        hilite <- match(hilite, best)
+        hilite <- match(hilite, rev(best))
     }
 
     ## PLOT
@@ -270,12 +282,14 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
         top <- y[seq_len(nrow(heatmap))]
         bottom <- c(top[-1] + pad_best, 0)
 
-        segments(x0 = right, y0 = top, x1 = right, y1 = bottom, lend = 1, xpd = TRUE)
-        segments(x0 = right, y0 = top, x1 = left, y1 = top, lend = 1, xpd = TRUE)
+        segments(x0 = right, y0 = top, x1 = right, y1 = bottom,
+                 lend = 1, xpd = TRUE)
+        segments(x0 = right, y0 = top, x1 = left, y1 = top,
+                 lend = 1, xpd = TRUE)
 
         right <- pix2usr(x = axis_lab[2], carry = +1)
-        text(x = right, y = top, labels = unique(rownames(heatmap)), adj = c(1, 1),
-             cex = 0.9, xpd = TRUE)
+        text(x = right, y = top, labels = unique(rownames(heatmap)),
+             adj = c(1, 1), cex = 0.9, xpd = TRUE)
 
         ## x axis
         left <- x[which(row(heatmap) == 1)]
@@ -285,23 +299,38 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
         tick <- pix2usr(y = axis_tck[1], carry = +1)
         bottom <- top + tick
 
-        segments(x0 = left, y0 = top, x1 = right, y1 = top, lend = 1, xpd = TRUE)
-        segments(x0 = right, y0 = top, x1 = right, y1 = bottom, lend = 1, xpd = TRUE)
+        segments(x0 = left, y0 = top, x1 = right, y1 = top,
+                 lend = 1, xpd = TRUE)
+        segments(x0 = right, y0 = top, x1 = right, y1 = bottom,
+                 lend = 1, xpd = TRUE)
 
-        labs <- colnames(heatmap)
+        lab <- rep_len(lab, 2)
+        lab1 <- parse(text = lab[1])[[1]]
+        lab0 <- parse(text = lab[2])[[1]]
 
-        labs <- sapply(seq_along(labs), function (j) {
-            env <- list(lab = labs[j])
-            if (any(heatmap[hilite, j]))
-                ans <- do.call(substitute, list(hilite_lab, env))
-            else
-                ans <- substitute(lab, env)
+        hilite_lab <- parse(text = hilite_lab)[[1]]
+
+        labels <- colnames(heatmap)
+        labels <- sapply(seq_along(labels), function (j) {
+            ans <- labels[j]
+
+            if (any(heatmap[, j])) {
+                ans <- do.call(substitute, list(lab1, list(lab = ans)))
+
+                if (any(heatmap[hilite, j])) {
+                    ans <- do.call(substitute, list(hilite_lab,
+                                                    list(lab = ans)))
+                }
+            } else {
+                ans <- do.call(substitute, list(lab0, list(lab = ans)))
+            }
+
             as.expression(ans)
         })
 
         top <- pix2usr(y = axis_lab[1], carry = +1)
-        text(x = right, y = top, labels = labs, adj = c(1, 1), srt = 45,
-             cex = 0.9, xpd = TRUE)
+        text(x = right, y = top, labels = labels, adj = c(1, 1),
+             srt = 45, cex = 0.9, xpd = TRUE)
     }
 
     ## annotations

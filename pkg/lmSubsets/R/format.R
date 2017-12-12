@@ -1,9 +1,24 @@
 
 
-format_numeric <- function (x, scientific = FALSE, digits = 3,
-                            round = digits, ...) {
-    x <- round(x, digits = round)
-    format(x, scientific = scientific, nsmall = digits, ...)
+format_default <- function (x, na.encode = TRUE, ...) {
+    ans <- format(x, na.encode = TRUE, ...)
+
+    if (!na.encode) {
+        ans <- ifelse(is.na(x), NA, ans)
+    }
+
+    ans
+}
+
+
+format_pval <- function (x, na.encode = TRUE, ...) {
+    ans <- format.pval(x, ...)
+
+    if (!na.encode) {
+        ans <- ifelse(is.na(x), NA, ans)
+    }
+
+    ans
 }
 
 

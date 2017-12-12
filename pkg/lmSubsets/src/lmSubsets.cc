@@ -107,10 +107,10 @@ lmSubsets(
         ++protect_cnt;
     }
 
-    const int* const xy_dims =
+    const int* const xy_dim =
         INTEGER(Rf_coerceVector(Rf_getAttrib(r_xy, R_DimSymbol), INTSXP));
-    const int m = xy_dims[0];
-    const int n = xy_dims[1] - 1;
+    const int m = xy_dim[0];
+    const int n = xy_dim[1] - 1;
 
     if (m <= n)
     {
@@ -144,7 +144,7 @@ lmSubsets(
     if (LENGTH(r_tau) != n)
     {
         Rf_unprotect(protect_cnt);
-        Rf_error("'tau' (%d) must be of length %d", LENGTH(r_tau), n);
+        Rf_error("'tau' [%d] must be of length %d", LENGTH(r_tau), n);
     }
 
     if (!Rf_isReal(r_tau))
@@ -223,86 +223,112 @@ lmSubsets(
     }
 
 
-    SEXP r_rss_dim = Rf_protect(Rf_allocVector(INTSXP, 2));
+    const int ncase = n * nbest;
+
+
+    SEXP r_submodel_size = Rf_protect(Rf_allocVector(INTSXP, ncase));
     ++protect_cnt;
 
-    INTEGER(r_rss_dim)[0] = nbest;
-    INTEGER(r_rss_dim)[1] = n;
-
-    SEXP r_rss = Rf_protect(Rf_allocArray(REALSXP, r_rss_dim));
+    SEXP r_submodel_best = Rf_protect(Rf_allocVector(INTSXP, ncase));
     ++protect_cnt;
 
-    SEXP r_which_dim = Rf_protect(Rf_allocVector(INTSXP, 3));
+    SEXP r_submodel_rss = Rf_protect(Rf_allocVector(REALSXP, ncase));
     ++protect_cnt;
 
-    INTEGER(r_which_dim)[0] = n;
-    INTEGER(r_which_dim)[1] = nbest;
-    INTEGER(r_which_dim)[2] = n;
 
-    SEXP r_which = Rf_protect(Rf_allocArray(LGLSXP, r_which_dim));
+    SEXP r_subset_dim = Rf_protect(Rf_allocVector(INTSXP, 2));
     ++protect_cnt;
 
-    SEXP r_rank_dim = Rf_protect(Rf_allocVector(INTSXP, 2));
+    INTEGER(r_subset_dim)[0] = ncase;
+    INTEGER(r_subset_dim)[1] = n;
+
+    SEXP r_subset = Rf_protect(Rf_allocArray(LGLSXP, r_subset_dim));
     ++protect_cnt;
 
-    INTEGER(r_rank_dim)[0] = nbest;
-    INTEGER(r_rank_dim)[1] = n;
 
-    SEXP r_rank = Rf_protect(Rf_allocArray(INTSXP, r_rank_dim));
-    ++protect_cnt;
-
-    for (int i = 0; i < nbest; ++i)
+    for (int size = 1; size <= n; ++size)
     {
-        for (int j = 0; j < n; ++j)
+        for (int best = 1; best <= nbest; ++best)
         {
-            const auto& res = tab[j][i];
+            const int i = (size - 1) * nbest + (best - 1);
+
+            INTEGER(r_submodel_size)[i] = size;
+            INTEGER(r_submodel_best)[i] = best;
+
+            const auto& res = tab[size - 1][best - 1];
 
             if (res)
             {
-                REAL(r_rss)[j * nbest + i] = res.key();
-                INTEGER(r_rank)[j * nbest + i] = res.size();
+                REAL(r_submodel_rss)[i] = res.key();
 
-                for (int k = 0; k < n; ++k)
+                for (int j = 0; j < n; ++j)
                 {
-                    LOGICAL(r_which)[(i + j * nbest) * n + k] = FALSE;
+                    LOGICAL(r_subset)[i + j * ncase] = FALSE;
                 }
 
                 for (int k = 0; k < res.size(); ++k)
                 {
-                    LOGICAL(r_which)[(i + j * nbest) * n + res[k]] = TRUE;
+                    const int j = res[k];
+
+                    LOGICAL(r_subset)[i + j * ncase] = TRUE;
                 }
             }
             else
             {
-                REAL(r_rss)[j * nbest + i] = NA_REAL;
-                INTEGER(r_rank)[j * nbest + i] = NA_INTEGER;
+                REAL(r_submodel_rss)[i] = NA_REAL;
 
-                for (int k = 0; k < n; ++k)
+                for (int j = 0; j < n; ++j)
                 {
-                    LOGICAL(r_which)[(i + j * nbest) * n + k] = NA_LOGICAL;
+                    LOGICAL(r_subset)[i + j * ncase] = NA_LOGICAL;
                 }
             }
         }
     }
 
-    SEXP r_ans_names = Rf_protect(Rf_allocVector(STRSXP, 5));
+
+    SEXP r_submodel_names = Rf_protect(Rf_allocVector(STRSXP, 3));
     ++protect_cnt;
 
-    SET_STRING_ELT(r_ans_names, 0, Rf_mkChar(".nodes"));
-    SET_STRING_ELT(r_ans_names, 1, Rf_mkChar(".interrupted"));
-    SET_STRING_ELT(r_ans_names, 2, Rf_mkChar("rss"));
-    SET_STRING_ELT(r_ans_names, 3, Rf_mkChar("which"));
-    SET_STRING_ELT(r_ans_names, 4, Rf_mkChar("rank"));
+    SET_STRING_ELT(r_submodel_names, 0, Rf_mkChar("SIZE"));
+    SET_STRING_ELT(r_submodel_names, 1, Rf_mkChar("BEST"));
+    SET_STRING_ELT(r_submodel_names, 2, Rf_mkChar("RSS"));
 
-    SEXP r_ans = Rf_protect(Rf_allocVector(VECSXP, 5));
+    SEXP r_submodel_row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
     ++protect_cnt;
 
-    Rf_namesgets(r_ans, r_ans_names);
-    SET_VECTOR_ELT(r_ans, 0, Rf_ScalarInteger(node_cnt));
-    SET_VECTOR_ELT(r_ans, 1, Rf_ScalarLogical(r_interrupt_flag()));
-    SET_VECTOR_ELT(r_ans, 2, r_rss);
-    SET_VECTOR_ELT(r_ans, 3, r_which);
-    SET_VECTOR_ELT(r_ans, 4, r_rank);
+    INTEGER(r_submodel_row_names)[0] = NA_INTEGER;
+    INTEGER(r_submodel_row_names)[1] = -ncase;
+
+    SEXP r_submodel = Rf_protect(Rf_allocVector(VECSXP, 3));
+    ++protect_cnt;
+
+    Rf_setAttrib(r_submodel, R_ClassSymbol,
+                 Rf_ScalarString(Rf_mkChar("data.frame")));
+    Rf_setAttrib(r_submodel, R_NamesSymbol, r_submodel_names);
+    Rf_setAttrib(r_submodel, R_RowNamesSymbol, r_submodel_row_names);
+
+    SET_VECTOR_ELT(r_submodel, 0, r_submodel_size);
+    SET_VECTOR_ELT(r_submodel, 1, r_submodel_best);
+    SET_VECTOR_ELT(r_submodel, 2, r_submodel_rss);
+
+
+    SEXP r_ans_names = Rf_protect(Rf_allocVector(STRSXP, 4));
+    ++protect_cnt;
+
+    SET_STRING_ELT(r_ans_names, 0, Rf_mkChar("submodel"));
+    SET_STRING_ELT(r_ans_names, 1, Rf_mkChar("subset"));
+    SET_STRING_ELT(r_ans_names, 2, Rf_mkChar(".interrupted"));
+    SET_STRING_ELT(r_ans_names, 3, Rf_mkChar(".nodes"));
+
+    SEXP r_ans = Rf_protect(Rf_allocVector(VECSXP, 4));
+    ++protect_cnt;
+
+    Rf_setAttrib(r_ans, R_NamesSymbol, r_ans_names);
+
+    SET_VECTOR_ELT(r_ans, 0, r_submodel);
+    SET_VECTOR_ELT(r_ans, 1, r_subset);
+    SET_VECTOR_ELT(r_ans, 2, Rf_ScalarLogical(r_interrupt_flag()));
+    SET_VECTOR_ELT(r_ans, 3, Rf_ScalarInteger(node_cnt));
 
 
     Rf_unprotect(protect_cnt);
@@ -318,7 +344,7 @@ lmSelect(
     SEXP r_algo,
     SEXP r_xy,
     SEXP r_mark,
-    SEXP r_penalty_arg,
+    SEXP r_penalty,
     SEXP r_tau,
     SEXP r_nbest,
     SEXP r_prad
@@ -352,10 +378,10 @@ lmSelect(
         ++protect_cnt;
     }
 
-    const int* const xy_dims =
+    const int* const xy_dim =
         INTEGER(Rf_coerceVector(Rf_getAttrib(r_xy, R_DimSymbol), INTSXP));
-    const int m = xy_dims[0];
-    const int n = xy_dims[1] - 1;
+    const int m = xy_dim[0];
+    const int n = xy_dim[1] - 1;
 
     if (m <= n)
     {
@@ -381,13 +407,13 @@ lmSelect(
     }
 
 
-    if (!Rf_isNumeric(r_penalty_arg) && !Rf_isFunction(r_penalty_arg))
+    if (!Rf_isNumeric(r_penalty) && !Rf_isFunction(r_penalty))
     {
         Rf_unprotect(protect_cnt);
         Rf_error("'penalty' must be numeric or a function");
     }
 
-    const auto cost_aic = aic<double>(Rf_asReal(r_penalty_arg), m);
+    const auto cost_aic = aic<double>(Rf_asReal(r_penalty), m);
 
     SEXP r_size_arg = Rf_protect(Rf_allocVector(INTSXP, 1));
     ++protect_cnt;
@@ -395,19 +421,16 @@ lmSelect(
     SEXP r_rss_arg = Rf_protect(Rf_allocVector(REALSXP, 1));
     ++protect_cnt;
 
-    // SET_TAG(r_size_arg, Rf_install("size"));
-    // SET_TAG(r_rss_arg, Rf_install("rss"));
-
-    SEXP r_fcall = Rf_protect(Rf_lang3(r_penalty_arg, r_size_arg, r_rss_arg));
+    SEXP r_call = Rf_protect(Rf_lang3(r_penalty, r_size_arg, r_rss_arg));
     ++protect_cnt;
 
-    const auto cost_Rf = [&r_fcall, &r_size_arg, &r_rss_arg](
+    const auto cost_Rf = [&r_call, &r_size_arg, &r_rss_arg](
         const int size,
         const double rss
     ) -> double {
         INTEGER(r_size_arg)[0] = size;
         REAL(r_rss_arg)[0] = rss;
-        return Rf_asReal(Rf_eval(r_fcall, R_GlobalEnv));
+        return Rf_asReal(Rf_eval(r_call, R_GlobalEnv));
     };
 
 
@@ -458,7 +481,7 @@ lmSelect(
 
     if (algo == algo_dflt)
     {
-        tab = Rf_isNumeric(r_penalty_arg)?
+        tab = Rf_isNumeric(r_penalty)?
             subset_best<double, decltype(cost_aic)>(
                 ay_mat, mark, cost_aic, tau, nbest, prad):
             subset_best<double, decltype(cost_Rf)>(
@@ -466,7 +489,7 @@ lmSelect(
     }
     else if (algo == algo_abba)
     {
-        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty_arg)?
+        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty)?
             abba_best<double, decltype(cost_aic)>(
                 ay_mat, mark, cost_aic, tau, nbest, prad):
             abba_best<double, decltype(cost_Rf)>(
@@ -474,7 +497,7 @@ lmSelect(
     }
     else if (algo == algo_hbba)
     {
-        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty_arg)?
+        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty)?
             hbba_best<double, decltype(cost_aic)>(
                 ay_mat, mark, cost_aic, tau, nbest, prad):
             hbba_best<double, decltype(cost_Rf)>(
@@ -482,7 +505,7 @@ lmSelect(
     }
     else if (algo == algo_bba)
     {
-        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty_arg)?
+        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty)?
             bba_best<double, decltype(cost_aic)>(
                 ay_mat, mark, cost_aic, nbest, prad):
             bba_best<double, decltype(cost_Rf)>(
@@ -490,7 +513,7 @@ lmSelect(
     }
     else if (algo == algo_dca)
     {
-        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty_arg)?
+        std::tie(tab, node_cnt) = Rf_isNumeric(r_penalty)?
             dca_best<double, decltype(cost_aic)>(
                 ay_mat, mark, cost_aic, nbest, prad):
             dca_best<double, decltype(cost_Rf)>(
@@ -503,80 +526,105 @@ lmSelect(
     }
 
 
-    SEXP r_penalty_dim = Rf_protect(Rf_allocVector(INTSXP, 1));
+    SEXP r_submodel_best = Rf_protect(Rf_allocVector(INTSXP, nbest));
     ++protect_cnt;
 
-    INTEGER(r_penalty_dim)[0] = nbest;
-
-    SEXP r_penalty = Rf_protect(Rf_allocArray(REALSXP, r_penalty_dim));
+    SEXP r_submodel_size = Rf_protect(Rf_allocVector(INTSXP, nbest));
     ++protect_cnt;
 
-    SEXP r_which_dim = Rf_protect(Rf_allocVector(INTSXP, 2));
+    SEXP r_submodel_ic = Rf_protect(Rf_allocVector(REALSXP, nbest));
     ++protect_cnt;
 
-    INTEGER(r_which_dim)[0] = n;
-    INTEGER(r_which_dim)[1] = nbest;
 
-    SEXP r_which = Rf_protect(Rf_allocArray(LGLSXP, r_which_dim));
+    SEXP r_subset_dim = Rf_protect(Rf_allocVector(INTSXP, 2));
     ++protect_cnt;
 
-    SEXP r_rank_dim = Rf_protect(Rf_allocVector(INTSXP, 1));
+    INTEGER(r_subset_dim)[0] = nbest;
+    INTEGER(r_subset_dim)[1] = n;
+
+    SEXP r_subset = Rf_protect(Rf_allocArray(LGLSXP, r_subset_dim));
     ++protect_cnt;
 
-    INTEGER(r_rank_dim)[0] = nbest;
-
-    SEXP r_rank = Rf_protect(Rf_allocArray(INTSXP, r_rank_dim));
-    ++protect_cnt;
 
     for (int i = 0; i < nbest; ++i)
     {
+        INTEGER(r_submodel_best)[i] = i + 1;
+
         const auto& res = tab[i];
 
         if (res)
         {
-            REAL(r_penalty)[i] = res.key();
-            INTEGER(r_rank)[i] = res.size();
+            REAL(r_submodel_ic)[i] = res.key();
+            INTEGER(r_submodel_size)[i] = res.size();
 
             for (int j = 0; j < n; ++j)
             {
-                LOGICAL(r_which)[i * n + j] = FALSE;
+                LOGICAL(r_subset)[i + j * nbest] = FALSE;
             }
 
-            for (int j = 0; j < res.size(); ++j)
+            for (int k = 0; k < res.size(); ++k)
             {
-                LOGICAL(r_which)[i * n + res[j]] = TRUE;
+                const int j = res[k];
+
+                LOGICAL(r_subset)[i + j * nbest] = TRUE;
             }
         }
         else
         {
-            REAL(r_penalty)[i] = NA_REAL;
-            INTEGER(r_rank)[i] = NA_INTEGER;
+            REAL(r_submodel_ic)[i] = NA_REAL;
+            INTEGER(r_submodel_size)[i] = NA_INTEGER;
 
             for (int j = 0; j < n; ++j)
             {
-                LOGICAL(r_which)[i * n + j] = NA_LOGICAL;
+                LOGICAL(r_subset)[i + j * nbest] = NA_LOGICAL;
             }
         }
     }
 
-    SEXP r_ans_names = Rf_protect(Rf_allocVector(STRSXP, 5));
+
+    SEXP r_submodel_names = Rf_protect(Rf_allocVector(STRSXP, 3));
     ++protect_cnt;
 
-    SET_STRING_ELT(r_ans_names, 0, Rf_mkChar(".nodes"));
-    SET_STRING_ELT(r_ans_names, 1, Rf_mkChar(".interrupted"));
-    SET_STRING_ELT(r_ans_names, 2, Rf_mkChar("penalty"));
-    SET_STRING_ELT(r_ans_names, 3, Rf_mkChar("which"));
-    SET_STRING_ELT(r_ans_names, 4, Rf_mkChar("rank"));
+    SET_STRING_ELT(r_submodel_names, 0, Rf_mkChar("BEST"));
+    SET_STRING_ELT(r_submodel_names, 1, Rf_mkChar("SIZE"));
+    SET_STRING_ELT(r_submodel_names, 2, Rf_mkChar("IC"));
 
-    SEXP r_ans = Rf_protect(Rf_allocVector(VECSXP, 5));
+    SEXP r_submodel_row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
     ++protect_cnt;
 
-    Rf_namesgets(r_ans, r_ans_names);
-    SET_VECTOR_ELT(r_ans, 0, Rf_ScalarInteger(node_cnt));
-    SET_VECTOR_ELT(r_ans, 1, Rf_ScalarLogical(r_interrupt_flag()));
-    SET_VECTOR_ELT(r_ans, 2, r_penalty);
-    SET_VECTOR_ELT(r_ans, 3, r_which);
-    SET_VECTOR_ELT(r_ans, 4, r_rank);
+    INTEGER(r_submodel_row_names)[0] = NA_INTEGER;
+    INTEGER(r_submodel_row_names)[1] = -nbest;
+
+    SEXP r_submodel = Rf_protect(Rf_allocVector(VECSXP, 3));
+    ++protect_cnt;
+
+    Rf_setAttrib(r_submodel, R_ClassSymbol,
+                 Rf_ScalarString(Rf_mkChar("data.frame")));
+    Rf_setAttrib(r_submodel, R_NamesSymbol, r_submodel_names);
+    Rf_setAttrib(r_submodel, R_RowNamesSymbol, r_submodel_row_names);
+
+    SET_VECTOR_ELT(r_submodel, 0, r_submodel_best);
+    SET_VECTOR_ELT(r_submodel, 1, r_submodel_size);
+    SET_VECTOR_ELT(r_submodel, 2, r_submodel_ic);
+
+
+    SEXP r_ans_names = Rf_protect(Rf_allocVector(STRSXP, 4));
+    ++protect_cnt;
+
+    SET_STRING_ELT(r_ans_names, 0, Rf_mkChar("submodel"));
+    SET_STRING_ELT(r_ans_names, 1, Rf_mkChar("subset"));
+    SET_STRING_ELT(r_ans_names, 2, Rf_mkChar(".interrupted"));
+    SET_STRING_ELT(r_ans_names, 3, Rf_mkChar(".nodes"));
+
+    SEXP r_ans = Rf_protect(Rf_allocVector(VECSXP, 4));
+    ++protect_cnt;
+
+    Rf_setAttrib(r_ans, R_NamesSymbol, r_ans_names);
+
+    SET_VECTOR_ELT(r_ans, 0, r_submodel);
+    SET_VECTOR_ELT(r_ans, 1, r_subset);
+    SET_VECTOR_ELT(r_ans, 2, Rf_ScalarLogical(r_interrupt_flag()));
+    SET_VECTOR_ELT(r_ans, 3, Rf_ScalarInteger(node_cnt));
 
 
     Rf_unprotect(protect_cnt);
