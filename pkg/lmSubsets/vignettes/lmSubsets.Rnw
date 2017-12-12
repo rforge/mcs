@@ -9,7 +9,7 @@
 % vignette                                                           %
 %--------------------------------------------------------------------%
 
-% \VignetteIndexEntry{lmSubsets: Exact variable-subset selection in linear regression for R}
+% \VignetteIndexEntry{lmSubsets: Exact Variable-Subset Selection in Linear Regression for R}
 % \VignetteKeywords{linear regression, model selection, variable selection, best-subset regression, R}
 % \VignettePackage{lmSubsets}
 % \VignetteDepends{stats,graphics}
@@ -27,14 +27,13 @@
 % packages                                                           %
 %--------------------------------------------------------------------%
 
-\usepackage{thumbpdf}
-\usepackage{lmodern}
+\usepackage{thumbpdf,lmodern}
 \usepackage{booktabs,dcolumn}
 \usepackage{amsmath,amssymb}
 \usepackage{bbm}
-\usepackage[dvipsnames]{xcolor}
 \usepackage{tikz,forest}
 \usepackage{multirow}
+%\usepackage[dvipsnames]{xcolor}
 
 
 %--------------------------------------------------------------------%
@@ -69,23 +68,16 @@
 %--------------------------------------------------------------------%
 
 \author{%
-  Marc Hofmann\\
-  \small{University of Oviedo, Spain}\\
-  \small{Cyprus University of Technology, Cyprus}
-  \And Cristian Gatu\\
-  \small{\dquote{Alexandru Ioan Cuza}}\\\small{University of Iasi, Romania}
-  \AND Erricos J. Kontoghiorghes\\
-  \small{Cyprus University of Technology, Cyprus}\\
-  \small{Birkbeck University of London, UK}
-  \AND Ana Colubi\\
-  \small{University of Oviedo, Spain}
-  \And Achim Zeileis\\
-  \small{University of Innsbruck, Austria}
+  Marc Hofmann\\University of Oviedo\\Cyprus University of Technology
+  \And Cristian Gatu\\``Alexandru Ioan Cuza''\\University of Iasi
+  \And Erricos J. Kontoghiorghes\\Cyprus University of Technology\\Birkbeck, University of London
+  \AND Ana Colubi\\University of Oviedo
+  \And Achim Zeileis\\Universit\"at Innsbruck
 }
 \Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Ana Colubi, Achim Zeileis}
 
-\title{\pkg{lmSubsets}: Exact variable-subset selection in linear regression for {\R}}
-\Plaintitle{lmSubsets: Exact variable-subset selection in linear regression for R}
+\title{\pkg{lmSubsets}: Exact Variable-Subset Selection in Linear Regression for \proglang{R}}
+\Plaintitle{lmSubsets: Exact Variable-Subset Selection in Linear Regression for R}
 
 \Abstract{
   An {\R} package for computing the all-subsets regression problem is
@@ -108,9 +100,8 @@
   Institute of Natural Resources and Territorial Planning\\
   University of Oviedo\\
   33600 Mieres, Spain\\
-  E-mail: \email{marc.hofmann@gmail.com}\\
-  E-mail: \email{marc.indurot@uniovi.es}\\
-  URL: \url{http://www.indurot.uniovi.es}
+  E-mail: \email{marc.hofmann@gmail.com}, \email{marc.indurot@uniovi.es}\\
+  URL: \url{http://www.indurot.uniovi.es/}
 }
 
 %====================================================================%
@@ -122,7 +113,7 @@
 <<preliminaries, echo=FALSE, results=hide>>=
 options(width = 70, prompt = "R> ", continue = "+  ")
 library("lmSubsets")
-data("AirPollution")
+data("AirPollution", package = "lmSubsets")
 @
 
 
@@ -667,6 +658,32 @@ and
 %
 The parameters are summarized in Table~\ref{tab:params}.
 
+\begin{table}[t!]
+  \centering
+  \begin{tabular}{llll}
+    \toprule
+    Parameter        & Description               & Canonical representation                         \\
+    \midrule
+    \code{x}         & data matrix               & \code{double[nobs,nvar]}                         \\
+    \code{y}         & response variable         & \code{double[nobs]}                              \\
+    \code{weights}   & model weights             & \code{double[nobs]}                              \\
+    \code{offset}    & model offset              & \code{double[nvar]}                              \\
+    \code{include}   & regressors to force in    & \code{logical[nvar]}                             \\
+    \code{exclude}   & regressors to force out   & \code{logical[nvar]}                             \\
+    \code{nmin}      & min.~number of regressors & \code{integer[1]}         & \fct{lmSubsets} only \\
+    \code{nmax}      & max.~number of regressors & \code{integer[1]}         & \fct{lmSubsets} only \\
+    \code{penalty}   & penalty per parameter     & \code{double[1]}          & \fct{lmSelect} only  \\
+                     & or criterion function     & \code{function[1]}        &  		    \\
+    \code{tolerance} & BBA tolerance parameters  & \code{double[nvar]}       & \fct{lmSubsets}      \\
+                     &                           & \code{double[1]}          & \fct{lmSelect}	    \\
+    \code{nbest}     & number of best subsets    & \code{integer[1]}                                \\
+    \code{pradius}   & preordering radius        & \code{integer[1]}                                \\
+    \bottomrule
+  \end{tabular}
+  \caption{Core parameters for \fct{lmSubsets} and \fct{lmSelect}.}
+  \label{tab:params}
+\end{table}
+
 The \code{weights} and \code{offset} parameters correspond to the
 homonymous parameters of the \fct{lm} function.  The \code{include}
 and \code{exclude} parameters allow the user to specify variables that
@@ -714,33 +731,6 @@ $\lfloor\mathtt{nvar}/3\rfloor$.  The need to set this parameter
 directly should rarely arise; please refer to Section~\ref{sec:comput}
 for further information.
 
-\begin{table}[t!]
-  \centering
-  \begin{tabular}{lll>{\small}l}
-    \toprule
-    Parameter        & Description               & Canonical representation                             \\
-    \midrule
-    \code{x}         & data matrix               & \code{double[nobs,nvar]}                             \\
-    \code{y}         & response variable         & \code{double[nobs]}                                  \\
-    \code{weights}   & model weights             & \code{double[nobs]}                                  \\
-    \code{offset}    & model offset              & \code{double[nvar]}                                  \\
-    \code{include}   & regressors to force in    & \code{logical[nvar]}                                 \\
-    \code{exclude}   & regressors to force out   & \code{logical[nvar]}                                 \\
-    \code{nmin}      & min.~number of regressors & \code{integer[1]}         & for \fct{lmSubsets} only \\
-    \code{nmax}      & max.~number of regressors & \code{integer[1]}         & for \fct{lmSubsets} only \\
-    \code{penalty}   & penalty per parameter     & \code{double[1]}          & for \fct{lmSelect} only  \\
-                     & or criterion function     & \code{function[1]}        &                          \\
-    \code{tolerance} & BBA tolerance parameters  & \code{double[nvar]}       & for \fct{lmSubsets}      \\
-                     &                           & \code{double[1]}          & for \fct{lmSelect}       \\
-    \code{nbest}     & number of best subsets    & \code{integer[1]}                                    \\
-    \code{pradius}   & preordering radius        & \code{integer[1]}                                    \\
-    \bottomrule
-  \end{tabular}
-  \caption{Core parameters.}
-  \label{tab:params}
-\end{table}
-
-
 %--------------------------------------------------------------------%
 % section:  Extracting submodels                                     %
 %--------------------------------------------------------------------%
@@ -760,7 +750,6 @@ the result objects.
 
 \begin{table}[t!]
   \centering
-  \small
   \begin{tabular}{lll}
     \toprule
     Component        & Description            & Canonical representation \\
@@ -903,7 +892,6 @@ dynamic model.
 
 \begin{table}[t!]
 \centering
-\scriptsize
 <<echo=FALSE>>=
 sum0 <- summary(MOS0)
 sum1 <- summary(MOS1)
@@ -1439,10 +1427,10 @@ configurations of simulated datasets.
 
 
 %--------------------------------------------------------------------%
-% section:  Acknowledgements                                         %
+% section:  Acknowledgments                                         %
 %--------------------------------------------------------------------%
 
-\section*{Acknowledgements}
+\section*{Acknowledgments}
 
 \TODO{Oviedo project, IFMSE}
 
@@ -1452,7 +1440,7 @@ the \emph{F\"orderverein des wirtschaftswissenschaftlichen Zentrums
 IFMSE.  The authors are grateful to Jakob Messner for sharing the GEFS
 forecast data in \code{IbkTemperature}.
 
-The authors would particularly like to thank Prof. Manfred Gilli for
+The authors would particularly like to thank Prof.~Manfred Gilli for
 his continued support and encouragements throughout the years.
 
 
