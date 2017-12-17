@@ -6,7 +6,6 @@ useDynLib("lmSubsets")
 ## import packages
 ##
 import("stats", "graphics")
-importFrom("grDevices", "gray.colors", "heat.colors")
 importFrom("utils", "capture.output", "head")
 
 

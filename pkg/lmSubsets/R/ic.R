@@ -7,48 +7,73 @@ ic <- function (penalty, ...) {
         s <- evalq(substitute(penalty), parent.frame())
         s <- deparse(s)
 
-        format <- function (...)  s
-        eval <- function (obj, ...) {
-            rss <- deviance(obj, size = NULL, best = NULL, na.rm = FALSE)
-            size <- obj$submodel$SIZE
-
-            with(obj$submodel, mapply(f, size, rss))
+        format <- function (...) {
+            s
         }
-        penalty <- function (nobs, ...)  f
+
+        eval <- function (obj, ..., drop = TRUE) {
+            val <- deviance(obj, ..., drop = FALSE)
+            val <- within(val, {
+                df <- SIZE + 1
+                IC <- mapply(f, SIZE, RSS)
+
+                rm(RSS)
+            })
+
+            if (drop) {
+                val <- with(val, {
+                    structure(IC, df = df, SIZE = SIZE, BEST = BEST)
+                })
+
+                if ((length(val) == 1) && missing(drop)) {
+                    val <- as.vector(val)
+                }
+            }
+
+            val
+        }
+
+        penalty <- function (...) {
+            f
+        }
     } else if (tolower(penalty) == "aic") {
-        format <- function (...)  "AIC"
-        eval <- function (obj, ...) {
-            rss <- deviance(obj, size = NULL, best = NULL, na.rm = FALSE)
-            size <- obj$submodel$SIZE
-
-            ll <- stats_log_lik(obj$nobs, obj$weights, rss)
-            stats_aic(ll, 2, size + 1)
+        format <- function (...) {
+            "AIC"
         }
-        penalty <- function (nobs, ...)  2.0
+
+        eval <- function (obj, ...) {
+            AIC(obj, ...)
+        }
+
+        penalty <- function (...) {
+            2.0
+        }
     } else if (tolower(penalty) == "bic") {
-        format <- function (...)  "BIC"
-        eval <- function (obj, ...) {
-            rss <- deviance(obj, size = NULL, best = NULL, na.rm = FALSE)
-            size <- obj$submodel$SIZE
-
-            ll <- stats_log_lik(obj$nobs, obj$weights, rss)
-            stats_bic(ll, obj$nobs, size + 1)
+        format <- function (...) {
+            "BIC"
         }
-        penalty <- function (nobs, ...)  log(nobs)
+
+        eval <- function (obj, ...) {
+            BIC(obj, ...)
+        }
+
+        penalty <- function (nobs, ...) {
+            log(nobs)
+        }
     } else if (is.numeric(penalty)) {
-        k <- penalty
+        k_ <- penalty
 
         format <- function (...) {
-            paste0("AIC (k = ", format_default(k, ...), ")")
+            paste0("AIC (k = ", format_default(k_, ...), ")")
         }
-        eval <- function (obj, ...) {
-            rss <- deviance(obj, size = NULL, best = NULL, na.rm = FALSE)
-            size <- obj$submodel$SIZE
 
-            ll <- stats_log_lik(obj$nobs, obj$weights, rss)
-            stats_aic(ll, k, size + 1)
+        eval <- function (obj, ..., k) {
+            AIC(obj, ..., k = k_)
         }
-        penalty <- function (nobs, ...)  k
+
+        penalty <- function (...) {
+            k_
+        }
     } else {
         stop ("invalid penalty")
     }
@@ -67,6 +92,6 @@ eval_ic <- function (x, ...) {
 }
 
 
-penalty_ic <- function (x, nobs, ...) {
-    x$penalty(nobs, ...)
+penalty_ic <- function (x, ...) {
+    x$penalty(...)
 }

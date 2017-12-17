@@ -6,30 +6,29 @@
 \alias{image.lmSelect}
 
 
-\title{Heatmaps for Visualizing Subset Selections}
+\title{Variable Selection Heatmaps}
 
 
-\description{
-  Visualizations of all/best subset selections carried out via
-  \code{\link{lmSubsets}}.
-}
+\description{Visualization of variable subsets.}
+
 
 
 \usage{
 
 \method{image}{lmSubsets}(x, main = NULL, sub = NULL, xlab = NULL, ylab = NULL,
-      size = NULL, best = 1, which = NULL, col = gray.colors(2),
-      lab = "lab", hilite, hilite_penalty,
-      hilite_col = heat.colors, hilite_lab = "lab", pad_size = 3,
-      pad_best = 1, pad_which = 3, axis_pos = -4, axis_tck = -4,
+      size = NULL, best = 1, which = NULL,
+      col = c("gray30", "gray90"), lab = "lab",
+      hilite, hilite_penalty, hilite_col = cbind("red", "pink"),
+      hilite_lab = "lab", pad_size = 3, pad_best = 1,
+      pad_which = 3, axis_pos = -4, axis_tck = -4,
       axis_lab = -10, ..., axes = TRUE, ann = par("ann"))
 
 \method{image}{lmSelect}(x, main = NULL, sub = NULL, xlab = NULL, ylab = NULL,
-      best = NULL, which = NULL, col = gray.colors(2),
-      lab = "lab", hilite, hilite_col = heat.colors,
-      hilite_lab = "lab", pad_best = 2, pad_which = 2,
-      axis_pos = -4, axis_tck = -4, axis_lab = -10, ...,
-      axes = TRUE, ann = par("ann"))
+      best = NULL, which = NULL, col = c("gray30", "gray90"),
+      lab = "lab", hilite, hilite_penalty,
+      hilite_col = cbind("red", "pink"), hilite_lab = "lab",
+      pad_best = 2, pad_which = 2, axis_pos = -4, axis_tck = -4,
+      axis_lab = -10, ..., axes = TRUE, ann = par("ann"))
 }
 
 
@@ -54,8 +53,13 @@
 
 
 \examples{
-## all-subsets regression
+## data
 data("AirPollution", package = "lmSubsets")
+
+#################
+##  lmSubsets  ##
+#################
+
 lm_all <- lmSubsets(mortality ~ ., data = AirPollution, nbest = 20)
 
 ## heatmap
@@ -64,16 +68,19 @@ image(lm_all, best = 1:3)
 ## highlight 5 best (BIC)
 image(lm_all, best = 1:3, hilite = 1:5, hilite_penalty = "BIC")
 
-## highlight all (BIC)
-image(lm_all, best = 1:3, hilite = NULL, hilite_penalty = "BIC")
 
-## fun with colors
+################
+##  lmSelect  ##
+################
+
 lm_best <- lmSelect(lm_all)
-image(lm_best, col = cbind(rainbow(20), gray.colors(20)))
+
+## highlight 5 best (AIC)
+image(lm_best, hilite = 1:5, hilite_penalty = "AIC")
 
 ## axis labels
 image(lm_best, lab = c("bold(lab)", "lab"), hilite = 1,
-      hilite_col = "red", hilite_lab = "underline(lab)")
+      hilite_lab = "underline(lab)")
 }
 
 

@@ -113,7 +113,7 @@ summary.lmSelect <- function (object, ..., na.rm = TRUE) {
         r2 <- r2_stats(s)
         r2adj <- r2adj_stats(s, r2 = r2)
 
-        data.frame(BEST = object$submodel$BEST, SIZE = object$submodel$SIZE,
+        data.frame(SIZE = object$submodel$SIZE, BEST = object$submodel$BEST,
                    sigma = sigma_stats(s), R2 = r2, R2adj = r2adj,
                    pval = pval_stats(s), Cp = cp_stats(s), AIC = aic_stats(s),
                    BIC = bic_stats(s))

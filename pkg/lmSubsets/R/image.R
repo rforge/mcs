@@ -2,11 +2,11 @@
 
 image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
                              ylab = NULL, size = NULL, best = 1, which = NULL,
-                             col = gray.colors(2), lab = "lab",
-                             hilite, hilite_penalty, hilite_col = heat.colors,
-                             hilite_lab = "lab", pad_size = 3,
-                             pad_best = 1, pad_which = 3,
-                             axis_pos = -4, axis_tck = -4,
+                             col = c("gray30", "gray90"), lab = "lab",
+                             hilite, hilite_penalty,
+                             hilite_col = cbind("red", "pink"),
+                             hilite_lab = "lab", pad_size = 3, pad_best = 1,
+                             pad_which = 3, axis_pos = -4, axis_tck = -4,
                              axis_lab = -10, ..., axes = TRUE,
                              ann = par("ann")) {
     object <- x;  x <- NULL
@@ -24,15 +24,17 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
     ## highlight
     if (missing(hilite)) {
-        hilite <- NULL
+        hilite <- integer(0)
     } else if (is.null(hilite)) {
         hilite <- seq_len(nrow(heatmap))
-    } else if (is.matrix(hilite)) {
-        hilite[, 1] <- match(hilite[, 1], size)
-        hilite[, 2] <- match(hilite[, 2], best)
+    }
 
-        hilite <- (hilite[, 1] - 1) * length(best) + hilite[, 2]
-        hilite <- na.omit(hilite)
+    if (!missing(hilite_penalty)) {
+        val <- ic(hilite_penalty)
+        val <- eval_ic(val, object, size = size, best = best,
+                       na.rm = TRUE, drop = TRUE)
+
+        hilite <- order(val)[hilite]
     }
 
     ## PLOT
@@ -54,24 +56,17 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
     col <- matrix(col, ncol = 2)
     col <- col[rep_len(seq_len(nrow(col)), nrow(heatmap)), , drop = FALSE]
 
-    if (!is.null(hilite) && !is.null(hilite_col)) {
-        if (!missing(hilite_penalty)) {
-            val <- eval_ic(ic(hilite_penalty), object)
-            val <- with(object$submodel, {
-                val[(SIZE %in% size) & (BEST %in% best)]
-            })
-            val <- val[!is.na(val)]
+    if (!is.null(hilite_col)) {
+        if (is.matrix(hilite_col)) {
+            ix <- rep_len(nrow(hilite_col), length(hilite))
+            hilite_col <- hilite_col[ix, ]
 
-            hilite <- order(val)[hilite]
-        }
-
-        if (is.function(hilite_col))  {
-            hilite_col <- hilite_col(length(hilite))
+            col[hilite, ] <- hilite_col
         } else {
             hilite_col <- rep_len(hilite_col, length(hilite))
-        }
 
-        col[hilite, 1] <- hilite_col
+            col[hilite, 1] <- hilite_col
+        }
     }
 
     col <- ifelse(heatmap, col[row(heatmap), 1], col[row(heatmap), 2])
@@ -189,8 +184,8 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
 image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
                             ylab = NULL, best = NULL, which = NULL,
-                            col = gray.colors(2), lab = "lab", hilite,
-                            hilite_col = heat.colors,
+                            col = c("gray30", "gray90"), lab = "lab", hilite,
+                            hilite_penalty, hilite_col = cbind("red", "pink"),
                             hilite_lab = "lab", pad_best = 2,
                             pad_which = 2, axis_pos = -4,
                             axis_tck = -4, axis_lab = -10, ...,
@@ -210,11 +205,16 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
     ## highlight
     if (missing(hilite)) {
-        hilite <- NULL
+        hilite <- integer(0)
     } else if (is.null(hilite)) {
-        hilite <- rev(seq_along(best))
-    } else {
-        hilite <- match(hilite, rev(best))
+        hilite <- seq_along(best)
+    }
+
+    if (!missing(hilite_penalty)) {
+        val <- ic(hilite_penalty)
+        val <- eval_ic(val, object, best = best, na.rm = TRUE, drop = TRUE)
+
+        hilite <- order(val)[hilite]
     }
 
     ## PLOT
@@ -234,16 +234,19 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
     ## color map
     col <- matrix(col, ncol = 2)
-    col <- col[rev(rep_len(seq_len(nrow(col)), nrow(heatmap))), , drop = FALSE]
+    col <- col[rep_len(seq_len(nrow(col)), nrow(heatmap)), , drop = FALSE]
 
-    if (!is.null(hilite) && !is.null(hilite_col)) {
-        if (is.function(hilite_col)) {
-            hilite_col <- hilite_col(length(hilite))
+    if (!is.null(hilite_col)) {
+        if (is.matrix(hilite_col)) {
+            ix <- rep_len(nrow(hilite_col), length(hilite))
+            hilite_col <- hilite_col[ix, ]
+
+            col[hilite, ] <- hilite_col
         } else {
             hilite_col <- rep_len(hilite_col, length(hilite))
-        }
 
-        col[hilite, 1] <- hilite_col
+            col[hilite, 1] <- hilite_col
+        }
     }
 
     col <- ifelse(heatmap, col[row(heatmap), 1], col[row(heatmap), 2])
@@ -266,6 +269,7 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
     y <- 1 - (row(heatmap) - 1) * h - padcnt_best * pad_best
 
     ## plot
+    col <- col[rev(seq_len(nrow(col))), , drop = FALSE]
     rect(x, y - h, x + w, y, col = col, border = NA)
 
     ## axes

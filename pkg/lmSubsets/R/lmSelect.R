@@ -239,16 +239,17 @@ lmSelect.lmSubsets <- function (formula, penalty = "BIC", ...) {
     ## ic
     x$ic <- ic(penalty)
 
-    val <- eval_ic(x$ic, x)
+    val <- eval_ic(x$ic, x, best = NULL, size = NULL, na.rm = FALSE,
+                   drop = TRUE)
 
     ## order
-    pi <- order(val, na.last = NA)
+    pi <- order(val)
     pi <- pi[seq_len(x$nbest)]
 
     ## submodel
     x$submodel <- data.frame(
-        BEST = seq_len(x$nbest),
         SIZE = with(x$submodel, SIZE[pi]),
+        BEST = seq_len(x$nbest),
         IC = val[pi]
     )
 
@@ -436,7 +437,7 @@ print.lmSelect <- function (x, ...) {
     rownames(subset) <- names(x$subset)
     rownames(subset)[x$include] <- paste0("+", rownames(subset)[x$include])
     rownames(subset)[x$exclude] <- paste0("-", rownames(subset)[x$exclude])
-    colnames(subset) <- "bests"
+    colnames(subset) <- "best"
 
     catln("Subset:")
     print(subset, quote = FALSE, indent = 2)
@@ -452,14 +453,13 @@ print.lmSelect <- function (x, ...) {
 ##
 ## Arguments:
 ##   x    - (lmSelect)
-##   y    - ignored
-##   ...  - forwarded
-##   axes - (logical) draw axes
-##   ann  - (logical) annotate
+##   ...  - graphical parameters
 ##
 ## Result: (lmSelect) invisible
 ##
-plot.lmSelect <- function (x, ..., axes = TRUE, ann = par("ann")) {
+plot.lmSelect <- function (x, xlim, ylim, type = "o", main, sub, xlab, ylab,
+                           legend, ann = par("ann"), axes = TRUE, lty = 1,
+                           pch = 16, col = "red", bg = "white", ...) {
     object <- x;  x <- NULL
 
     ## new plot
@@ -476,11 +476,12 @@ plot.lmSelect <- function (x, ..., axes = TRUE, ann = par("ann")) {
     x <- seq_len(object$nbest)
     y <- with(object$submodel, IC)
 
-    xlim <- range(x)
-    ylim <- range(y, na.rm = TRUE)
+    if (missing(xlim))  xlim <- range(x)
+    if (missing(ylim))  ylim <- range(y, na.rm = TRUE)
+
     plot.window(xlim, ylim, ...)
 
-    lines(x, y, type = "o", lty = 1, pch = 16, col = "red", bg = "white", ...)
+    lines(x, y, type = type, lty = lty, pch = pch, col = col, bg = bg, ...)
 
     ## axes
     if (axes) {
@@ -491,15 +492,21 @@ plot.lmSelect <- function (x, ..., axes = TRUE, ann = par("ann")) {
 
     ## annotations
     if (ann) {
-        title(main = "Best subsets", xlab = "best", ylab = "criterion")
+        if (missing(main))  main <- "Best subsets"
+        if (missing(sub))  sub <- NULL
+        if (missing(xlab))  xlab <- "best"
+        if (missing(ylab))  ylab <- "criterion"
 
-        legend <- format_ic(object$ic)
-        legend("topleft", legend = legend, lty = 1, pch = 16, col = "red",
-               pt.bg = "white", bty = "n")
+        title(main = main, sub = sub, xlab = xlab, ylab = ylab)
+
+        if (missing(legend))  legend <- format_ic(object$ic)
+
+        legend("topleft", legend = legend, lty = lty, pch = pch, col = col,
+               pt.bg = bg, bty = "n")
     }
 
     ## done
-    invisible(x)
+    invisible(object)
 }
 
 
@@ -515,13 +522,13 @@ plot.lmSelect <- function (x, ..., axes = TRUE, ann = par("ann")) {
 ##   object - (lmSelect)
 ##   best   - (integer)
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|logical[,])
 ##
-variable.names.lmSelect <- function (object, best = 1, ..., drop = TRUE,
-                                     na.rm = TRUE) {
+variable.names.lmSelect <- function (object, best = 1, ..., na.rm = TRUE,
+                                     drop = TRUE) {
     ## full model
     x_names <- dimnames(object$which)[[1]]
 
@@ -537,7 +544,7 @@ variable.names.lmSelect <- function (object, best = 1, ..., drop = TRUE,
         ## NA action
         if (na.rm)  z <- z & !is.na(IC)
 
-        cbind(BEST = BEST[z], SIZE = SIZE[z], object$subset[z, ])
+        cbind(SIZE = SIZE[z], BEST = BEST[z], object$subset[z, ])
     })
 
     rownames(ans) <- NULL
@@ -545,8 +552,8 @@ variable.names.lmSelect <- function (object, best = 1, ..., drop = TRUE,
     ## drop
     if (drop) {
         ans <- structure(as.matrix(ans[-c(1, 2)]),
-                         BEST = ans$BEST,
-                         SIZE = ans$SIZE)
+                         SIZE = ans$SIZE,
+                         BEST = ans$BEST)
 
         if ((nrow(ans) == 1) && missing(drop)) {
             ans <- colnames(ans)[ans]
@@ -756,13 +763,13 @@ refit.lmSelect <- function (object, best = 1, ...) {
 ##   object - (lmSelect)
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-deviance.lmSelect <- function (object, best = 1, ..., drop = TRUE,
-                               na.rm = TRUE) {
+deviance.lmSelect <- function (object, best = 1, ..., na.rm = TRUE,
+                               drop = TRUE) {
     ## 'best' processing
     if (is.null(best)) {
         best <- seq_len(object$nbest)
@@ -786,8 +793,8 @@ deviance.lmSelect <- function (object, best = 1, ..., drop = TRUE,
             r <- residuals(object, best = i)
             sum((w * r)^2)
         }),
-        BEST = best,
-        SIZE = with(object$submodel, SIZE[best])
+        SIZE = with(object$submodel, SIZE[best]),
+        BEST = best
     )
 
     ## NA action
@@ -795,8 +802,8 @@ deviance.lmSelect <- function (object, best = 1, ..., drop = TRUE,
         ok <- !is.na(ans)
 
         ans <- structure(ans[ok],
-                         BEST = attr(ans, "BEST")[ok],
-                         SIZE = attr(ans, "SIZE")[ok])
+                         SIZE = attr(ans, "SIZE")[ok],
+                         BEST = attr(ans, "BEST")[ok])
     }
 
     ## drop
@@ -807,8 +814,8 @@ deviance.lmSelect <- function (object, best = 1, ..., drop = TRUE,
             ans <- as.vector(ans)
         }
     } else {
-        ans <- data.frame(BEST = attr(ans, "BEST"),
-                          SIZE = attr(ans, "SIZE"),
+        ans <- data.frame(SIZE = attr(ans, "SIZE"),
+                          BEST = attr(ans, "BEST"),
                           RSS = ans)
     }
 
@@ -823,12 +830,12 @@ deviance.lmSelect <- function (object, best = 1, ..., drop = TRUE,
 ##   object - (lmSubsets)
 ##   best   - (integer)
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-sigma.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
+sigma.lmSelect <- function (object, best = 1, ..., na.rm = TRUE, drop = TRUE) {
     ## extract sigma
     ans <- deviance(object, best = best, drop = FALSE, na.rm = na.rm)
     ans <- within(ans, {
@@ -841,7 +848,7 @@ sigma.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
     ## drop
     if (drop) {
         ans <- with(ans, {
-            structure(sigma, BEST = BEST, SIZE = SIZE)
+            structure(sigma, SIZE = SIZE, BEST = BEST)
         })
 
         if ((length(ans) == 1) && missing(drop)) {
@@ -860,13 +867,12 @@ sigma.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
 ##   object - (lmSelect)
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|logLik)
 ##
-logLik.lmSelect <- function (object, best = 1, ..., drop = TRUE,
-                              na.rm = TRUE) {
+logLik.lmSelect <- function (object, best = 1, ..., na.rm = TRUE, drop = TRUE) {
     ## extract log-likelihood
     ans <- deviance(object, best = best, drop = FALSE, na.rm = na.rm)
     ans <- within(ans, {
@@ -879,7 +885,7 @@ logLik.lmSelect <- function (object, best = 1, ..., drop = TRUE,
     ## drop
     if (drop) {
         ans <- with(ans, {
-            structure(logLik, df = df, BEST = BEST, SIZE = SIZE)
+            structure(logLik, df = df, SIZE = SIZE, BEST = BEST)
         })
 
         class(ans) <- "logLik"
@@ -900,13 +906,13 @@ logLik.lmSelect <- function (object, best = 1, ..., drop = TRUE,
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   k      - (double) penalty
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-AIC.lmSelect <- function (object, best = 1, ..., k = 2, drop = TRUE,
-                          na.rm = TRUE) {
+AIC.lmSelect <- function (object, best = 1, ..., k = 2, na.rm = TRUE,
+                          drop = TRUE) {
     ## extract AIC
     ans <- logLik(object, best = best, drop = FALSE, na.rm = na.rm)
     ans <- within(ans, {
@@ -918,7 +924,7 @@ AIC.lmSelect <- function (object, best = 1, ..., k = 2, drop = TRUE,
     ## drop
     if (drop) {
         ans <- with(ans, {
-            structure(AIC, df = df, BEST = BEST, SIZE = SIZE)
+            structure(AIC, df = df, SIZE = SIZE, BEST = BEST)
         })
 
         if ((length(ans) == 1) && missing(drop)) {
@@ -937,12 +943,12 @@ AIC.lmSelect <- function (object, best = 1, ..., k = 2, drop = TRUE,
 ##   object - (lmSelect)
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-BIC.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
+BIC.lmSelect <- function (object, best = 1, ..., na.rm = TRUE, drop = TRUE) {
     ## extract BIC
     ans <- logLik(object, best = best, drop = FALSE, na.rm = na.rm)
     ans <- within(ans, {
@@ -954,7 +960,7 @@ BIC.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
     ## drop
     if (drop) {
         ans <- with(ans, {
-            structure(BIC, df = df, BEST = BEST, SIZE = SIZE)
+            structure(BIC, df = df, SIZE = SIZE, BEST = BEST)
         })
 
         if ((length(ans) == 1) && missing(drop)) {
@@ -973,12 +979,12 @@ BIC.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
 ##   object - (lmSelect)
 ##   best   - (integer)
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[,])
 ##
-coef.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
+coef.lmSelect <- function (object, best = 1, ..., na.rm = TRUE, drop = TRUE) {
     y <- model_response(object)
 
     ## extract coefficients
@@ -1007,8 +1013,8 @@ coef.lmSelect <- function (object, best = 1, ..., drop = TRUE, na.rm = TRUE) {
         }
     } else {
         ans <- cbind(
-            BEST = attr(ans, "BEST"),
             SIZE = attr(ans, "SIZE"),
+            BEST = attr(ans, "BEST"),
             as.data.frame(ans)
         )
     }

@@ -403,7 +403,7 @@ print.lmSubsets <- function (x, ...) {
     colnames(subset) <- format_ordinal(seq_len(x$nbest))
 
     catln("Subset:")
-    catln("  [variable, best] = sizes")
+    catln("  [variable, best] = size")
     print(subset, quote = FALSE, indent = 2)
 
     catln()
@@ -418,14 +418,18 @@ print.lmSubsets <- function (x, ...) {
 ## Arguments:
 ##   x       - (lmSubsets)
 ##   penalty - (character|numeric|function)
-##   ...     - forwarded
-##   axes    - (logical) draw axes
-##   ann     - (logical) annotate
+##   ...     - graphical parameters
 ##
 ## Result: (lmSubsets) invisible
 ##
-plot.lmSubsets <- function (x, penalty = "BIC", ...,
-                            axes = TRUE, ann = par("ann")) {
+plot.lmSubsets <- function (x, penalty = "BIC", xlim, ylim_rss, ylim_ic,
+                            type_rss = "o", type_ic = "o", main, sub, xlab,
+                            ylab_rss, ylab_ic, legend_rss, legend_ic,
+                            ann = par("ann"), axes = TRUE, lty_rss = c(1, 3),
+                            pch_rss = c(16, 21), col_rss = "black",
+                            bg_rss = "white", lty_ic = c(1, 3),
+                            pch_ic = c(16, 21), col_ic = "red", bg_ic = "white",
+                            ...) {
     object <- x;  x <- NULL
 
     ## new plot
@@ -435,21 +439,29 @@ plot.lmSubsets <- function (x, penalty = "BIC", ...,
     opar <- par(no.readonly = TRUE)
     on.exit(par(opar))
 
-    ## margins
     par(mar = c(5, 4, 4, 4) + 0.1)
 
     ## RSS
-    xlim <- range(object$size)
-    ylim <- with(object$submodel, range(RSS, na.rm = TRUE))
-    plot.window(xlim, ylim, ...)
+    if (missing(xlim))  xlim <- range(object$size)
+    if (missing(ylim_rss)) {
+        ylim_rss <- with(object$submodel, range(RSS, na.rm = TRUE))
+    }
+
+    plot.window(xlim, ylim_rss, ...)
+
+    type_rss <- rep_len(type_rss, 2)
+    lty_rss <- rep_len(lty_rss, 2)
+    pch_rss <- rep_len(pch_rss, 2)
+    col_rss <- rep_len(col_rss, 2)
+    bg_rss <- rep_len(bg_rss, 2)
 
     for (j in object$size) {
         x <- rep_len(j, object$nbest)
         y <- with(object$submodel, rev(RSS[SIZE == j]))
 
-        lines(x, y, type = "o", lty = 3,
-              pch = c(rep_len(21, object$nbest - 1), NA), col = "black",
-              bg = "white", ...)
+        lines(x, y, type = type_rss[2], lty = lty_rss[2],
+              pch = c(rep_len(pch_rss[2], object$nbest - 1), NA),
+              col = col_rss[2], bg = bg_rss[2], ...)
     }
 
     x <- object$size
@@ -465,10 +477,14 @@ plot.lmSubsets <- function (x, penalty = "BIC", ...,
 
     ## annotations
     if (ann) {
-        title(main = "All subsets", sub = paste("nbest = ", object$nbest),
-              xlab = "Number of regressors", ylab = "deviance")
+        if (missing(main))  main <- "All subsets"
+        if (missing(sub))  sub <- paste("nbest = ", object$nbest)
+        if (missing(xlab))  xlab <- "Number of regressors"
+        if (missing(ylab_rss))  ylab_rss <- "deviance"
 
-        legend <- "RSS"
+        title(main = main, sub = sub, xlab = xlab, ylab = ylab_rss)
+
+        if (missing(legend_rss))  legend_rss <- "RSS"
     }
 
     ## criterion
@@ -476,25 +492,35 @@ plot.lmSubsets <- function (x, penalty = "BIC", ...,
         ic <- ic(penalty)
 
         submodel <- within(object$submodel, {
-            IC <- eval_ic(ic, object)
+            IC <- eval_ic(ic, object, size = NULL, best = NULL, na.rm = FALSE)
         })
 
-        ylim <- with(submodel, range(IC, na.rm = TRUE))
-        plot.window(xlim, ylim, ...)
+        if (missing(ylim_ic)) {
+            ylim_ic <- with(submodel, range(IC, na.rm = TRUE))
+        }
+        if (missing(type_ic))  type_ic <- "o"
+
+        type_ic <- rep_len(type_ic, 2)
+        lty_ic <- rep_len(lty_ic, 2)
+        pch_ic <- rep_len(pch_ic, 2)
+        col_ic <- rep_len(col_ic, 2)
+        bg_ic <- rep_len(bg_ic, 2)
+
+        plot.window(xlim, ylim_ic, ...)
 
         for (j in object$size) {
             x <- rep_len(j, object$nbest)
             y <- with(submodel, rev(IC[SIZE == j]))
 
-            lines(x, y, type = "o", lty = 3,
-                  pch = c(rep_len(21, object$nbest - 1), NA), col = "red",
-                  bg = "white", ...)
+            lines(x, y, type = type_ic[2], lty = lty_ic[2],
+                  pch = c(rep_len(pch_ic[2], object$nbest - 1), NA),
+                  col = col_ic[2], bg = bg_ic[2], ...)
         }
 
         x <- object$size
         y <- with(submodel, IC[(SIZE %in% x) & (BEST == 1)])
-        lines(x, y, type = "o", lty = 1, pch = 16, col = "red", bg = "white",
-              ...)
+        lines(x, y, type = type_ic[1], lty = lty_ic[1], pch = pch_ic[1],
+              col = col_ic[1], bg = bg_ic[1], ...)
 
         ## axes
         if (axes) {
@@ -503,16 +529,19 @@ plot.lmSubsets <- function (x, penalty = "BIC", ...,
 
         ## annotations
         if (ann) {
-            mtext("criterion", side = 4, line = 3)
+            if (missing(ylab_ic))  ylab_ic <- "criterion"
+            mtext(ylab_ic, side = 4, line = 3)
 
-            legend <- c(legend, format_ic(ic))
+            if (missing(legend_ic))  legend_ic <- format_ic(ic)
         }
     }
 
     ## legend
     if (ann) {
-        legend("topright", legend = legend, lty = 1, pch = 16,
-               col = c("black", "red"), pt.bg = "white", bty = "n")
+        legend <- c(legend_rss, legend_ic)
+        legend("topright", legend = legend, lty = c(lty_rss[1], lty_ic[1]),
+               pch = c(pch_rss[1], pch_rss[2]), col = c(col_rss[1], col_ic[1]),
+               pt.bg = c(bg_rss[1], bg_ic[1]), bty = "n")
     }
 
     ## done
@@ -533,13 +562,13 @@ plot.lmSubsets <- function (x, penalty = "BIC", ...,
 ##   size   - (integer)
 ##   best   - (integer)
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|logical[,])
 ##
-variable.names.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
-                                      na.rm = TRUE) {
+variable.names.lmSubsets <- function (object, size, best = 1, ..., na.rm = TRUE,
+                                      drop = TRUE) {
     ## full model
     x_names <- dimnames(object$which)[[1]]
 
@@ -819,13 +848,13 @@ refit.lmSubsets <- function (object, size, best = 1, ...) {
 ##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
-                                na.rm = TRUE) {
+deviance.lmSubsets <- function (object, size, best = 1, ..., na.rm = TRUE,
+                                drop = TRUE) {
     ## 'size' processing
     if (missing(size)) {
         size <- object$size
@@ -873,13 +902,13 @@ deviance.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
 ##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-sigma.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
-                             na.rm = TRUE) {
+sigma.lmSubsets <- function (object, size, best = 1, ..., na.rm = TRUE,
+                             drop = TRUE) {
     ## extract sigma
     ans <- deviance(object, size = size, best = best, drop = FALSE,
                     na.rm = na.rm)
@@ -913,13 +942,13 @@ sigma.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
 ##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|logLik)
 ##
-logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
-                              na.rm = TRUE) {
+logLik.lmSubsets <- function (object, size, best = 1, ..., na.rm = TRUE,
+                              drop = TRUE) {
     ## extract log-likelihood
     ans <- deviance(object, size = size, best = best, drop = FALSE,
                     na.rm = na.rm)
@@ -955,13 +984,13 @@ logLik.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
 ##   best   - (integer[])
 ##   ...    - ignored
 ##   k      - (double) penalty
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE,
-                           na.rm = TRUE) {
+AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, na.rm = TRUE,
+                           drop = TRUE) {
     ## extract AIC
     ans <- logLik(object, size = size, best = best, drop = FALSE,
                   na.rm = na.rm)
@@ -994,13 +1023,13 @@ AIC.lmSubsets <- function (object, size, best = 1, ..., k = 2, drop = TRUE,
 ##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[])
 ##
-BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
-                           na.rm = TRUE) {
+BIC.lmSubsets <- function (object, size, best = 1, ..., na.rm = TRUE,
+                           drop = TRUE) {
     ## extract BIC
     ans <- logLik(object, size = size, best = best, drop = FALSE,
                   na.rm = na.rm)
@@ -1033,13 +1062,13 @@ BIC.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
 ##   size   - (integer[])
 ##   best   - (integer[])
 ##   ...    - ignored
-##   drop   - (logical)
 ##   na.rm  - (logical)
+##   drop   - (logical)
 ##
 ## Result: (data.frame|double[,])
 ##
-coef.lmSubsets <- function (object, size, best = 1, ..., drop = TRUE,
-                            na.rm = TRUE) {
+coef.lmSubsets <- function (object, size, best = 1, ..., na.rm = TRUE,
+                            drop = TRUE) {
     y <- model_response(object)
 
     ## extract coefficients

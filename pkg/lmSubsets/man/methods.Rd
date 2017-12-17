@@ -48,36 +48,49 @@
 
 
 \usage{
-\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{formula}{lmSubsets}(x, size, best = 1, \ldots)
-\method{model.frame}{lmSubsets}(formula, size, best = 1, \ldots)
-\method{model.matrix}{lmSubsets}(object, size, best = 1, \ldots)
-\method{model_response}{lmSubsets}(data, \ldots)
-\method{refit}{lmSubsets}(object, size, best = 1, \ldots)
-\method{deviance}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{sigma}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{logLik}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{AIC}{lmSubsets}(object, size, best = 1, \ldots, k = 2, drop = TRUE, na.rm = TRUE)
-\method{BIC}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{coef}{lmSubsets}(object, size, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{vcov}{lmSubsets}(object, size, best = 1, \ldots)
-\method{fitted}{lmSubsets}(object, size, best = 1, \ldots)
-\method{residuals}{lmSubsets}(object, size, best = 1, \ldots)
+\method{variable.names}{lmSubsets}(object, size, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+\method{variable.names}{lmSelect}(object, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
 
-\method{variable.names}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+\method{formula}{lmSubsets}(x, size, best = 1, \ldots)
 \method{formula}{lmSelect}(x, best, \ldots)
+
+\method{model.frame}{lmSubsets}(formula, size, best = 1, \ldots)
 \method{model.frame}{lmSelect}(formula, best, \ldots)
+
+\method{model.matrix}{lmSubsets}(object, size, best = 1, \ldots)
 \method{model.matrix}{lmSelect}(object, best, \ldots)
+
+\method{model_response}{lmSubsets}(data, \ldots)
 \method{model_response}{lmSelect}(data, \ldots)
+
+\method{refit}{lmSubsets}(object, size, best = 1, \ldots)
 \method{refit}{lmSelect}(object, best = 1, \ldots)
-\method{deviance}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{sigma}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{logLik}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{AIC}{lmSelect}(object, best = 1, \ldots, k = 2, drop = TRUE, na.rm = TRUE)
-\method{BIC}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
-\method{coef}{lmSelect}(object, best = 1, \ldots, drop = TRUE, na.rm = TRUE)
+
+\method{deviance}{lmSubsets}(object, size, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+\method{deviance}{lmSelect}(object, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+
+\method{sigma}{lmSubsets}(object, size, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+\method{sigma}{lmSelect}(object, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+
+\method{logLik}{lmSubsets}(object, size, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+\method{logLik}{lmSelect}(object, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+
+\method{AIC}{lmSubsets}(object, size, best = 1, \ldots, k = 2, na.rm = TRUE, drop = TRUE)
+\method{AIC}{lmSelect}(object, best = 1, \ldots, k = 2, na.rm = TRUE, drop = TRUE)
+
+\method{BIC}{lmSubsets}(object, size, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+\method{BIC}{lmSelect}(object, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+
+\method{coef}{lmSubsets}(object, size, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+\method{coef}{lmSelect}(object, best = 1, \ldots, na.rm = TRUE, drop = TRUE)
+
+\method{vcov}{lmSubsets}(object, size, best = 1, \ldots)
 \method{vcov}{lmSelect}(object, best = 1, \ldots)
+
+\method{fitted}{lmSubsets}(object, size, best = 1, \ldots)
 \method{fitted}{lmSelect}(object, best = 1, \ldots)
+
+\method{residuals}{lmSubsets}(object, size, best = 1, \ldots)
 \method{residuals}{lmSelect}(object, best = 1, \ldots)
 }
 
