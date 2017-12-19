@@ -1,6 +1,6 @@
 Package: lmSubsets
 Version: 0.1
-Date: 2017-11-01
+Date: 2017-12-19
 Title: Exact variable-subset selection in linear regression
 Authors@R: c(person(given = "Marc", family = "Hofmann",
                     role  = c("aut", "cre"),

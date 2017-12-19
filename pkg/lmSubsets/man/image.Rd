@@ -15,20 +15,20 @@
 
 \usage{
 
-\method{image}{lmSubsets}(x, main = NULL, sub = NULL, xlab = NULL, ylab = NULL,
-      size = NULL, best = 1, which = NULL,
-      col = c("gray30", "gray90"), lab = "lab",
-      hilite, hilite_penalty, hilite_col = cbind("red", "pink"),
-      hilite_lab = "lab", pad_size = 3, pad_best = 1,
+\method{image}{lmSubsets}(x, size = NULL, best = 1, which = NULL,
+      hilite, hilite_penalty, main, sub, xlab = NULL, ylab,
+      ann = par("ann"), axes = TRUE, col = c("gray30", "gray90"),
+      lab = "lab", col_hilite = cbind("red", "pink"),
+      lab_hilite = "lab", pad_size = 3, pad_best = 1,
       pad_which = 3, axis_pos = -4, axis_tck = -4,
-      axis_lab = -10, ..., axes = TRUE, ann = par("ann"))
+      axis_lab = -10, ...)
 
-\method{image}{lmSelect}(x, main = NULL, sub = NULL, xlab = NULL, ylab = NULL,
-      best = NULL, which = NULL, col = c("gray30", "gray90"),
-      lab = "lab", hilite, hilite_penalty,
-      hilite_col = cbind("red", "pink"), hilite_lab = "lab",
-      pad_best = 2, pad_which = 2, axis_pos = -4, axis_tck = -4,
-      axis_lab = -10, ..., axes = TRUE, ann = par("ann"))
+\method{image}{lmSelect}(x, best = NULL, which = NULL, hilite,
+      hilite_penalty, main, sub = NULL, xlab = NULL, ylab = NULL,
+      ann = par("ann"), axes = TRUE, col = c("gray30", "gray90"),
+      lab = "lab",  col_hilite = cbind("red", "pink"),
+      lab_hilite = "lab", pad_best = 2, pad_which = 2,
+      axis_pos = -4, axis_tck = -4, axis_lab = -10, ...)
 }
 
 
@@ -39,7 +39,7 @@
   \item{which}{Regressors to be plotted.}
   \item{col, lab}{Color and label style.}
   \item{hilite, hilite_penalty}{Submodels to be highlighted.}
-  \item{hilite_col, hilite_lab}{Highlighting style.}
+  \item{col_hilite, lab_hilite}{Highlighting style.}
   \item{pad_size, pad_best, pad_which}{Padding.}
   \item{axis_pos, axis_tck, axis_lab}{Position of axes, tick length, and
     position of labels}
@@ -80,7 +80,7 @@ image(lm_best, hilite = 1:5, hilite_penalty = "AIC")
 
 ## axis labels
 image(lm_best, lab = c("bold(lab)", "lab"), hilite = 1,
-      hilite_lab = "underline(lab)")
+      lab_hilite = "underline(lab)")
 }
 
 

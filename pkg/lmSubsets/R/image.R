@@ -1,14 +1,13 @@
 
 
-image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
-                             ylab = NULL, size = NULL, best = 1, which = NULL,
+image.lmSubsets <- function (x, size = NULL, best = 1, which = NULL, hilite,
+                             hilite_penalty, main, sub, xlab = NULL, ylab,
+                             ann = par("ann"), axes = TRUE,
                              col = c("gray30", "gray90"), lab = "lab",
-                             hilite, hilite_penalty,
-                             hilite_col = cbind("red", "pink"),
-                             hilite_lab = "lab", pad_size = 3, pad_best = 1,
+                             col_hilite = cbind("red", "pink"),
+                             lab_hilite = "lab", pad_size = 3, pad_best = 1,
                              pad_which = 3, axis_pos = -4, axis_tck = -4,
-                             axis_lab = -10, ..., axes = TRUE,
-                             ann = par("ann")) {
+                             axis_lab = -10, ...) {
     object <- x;  x <- NULL
 
     ## DATA
@@ -56,16 +55,16 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
     col <- matrix(col, ncol = 2)
     col <- col[rep_len(seq_len(nrow(col)), nrow(heatmap)), , drop = FALSE]
 
-    if (!is.null(hilite_col)) {
-        if (is.matrix(hilite_col)) {
-            ix <- rep_len(nrow(hilite_col), length(hilite))
-            hilite_col <- hilite_col[ix, ]
+    if (!is.null(col_hilite)) {
+        if (is.matrix(col_hilite)) {
+            ix <- rep_len(nrow(col_hilite), length(hilite))
+            col_hilite <- col_hilite[ix, ]
 
-            col[hilite, ] <- hilite_col
+            col[hilite, ] <- col_hilite
         } else {
-            hilite_col <- rep_len(hilite_col, length(hilite))
+            col_hilite <- rep_len(col_hilite, length(hilite))
 
-            col[hilite, 1] <- hilite_col
+            col[hilite, 1] <- col_hilite
         }
     }
 
@@ -139,7 +138,7 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
         lab0 <- parse(text = lab[1])[[1]]
         lab1 <- parse(text = lab[2])[[1]]
 
-        hilite_lab <- parse(text = hilite_lab)[[1]]
+        lab_hilite <- parse(text = lab_hilite)[[1]]
 
         labels <- colnames(heatmap)
         labels <- sapply(seq_along(labels), function (j) {
@@ -149,7 +148,7 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
                 ans <- do.call(substitute, list(lab1, list(lab = ans)))
 
                 if (any(heatmap[hilite, j])) {
-                    ans <- do.call(substitute, list(hilite_lab,
+                    ans <- do.call(substitute, list(lab_hilite,
                                                     list(lab = ans)))
                 }
             } else {
@@ -166,12 +165,12 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
     ## annotations
     if (ann) {
-        if (is.null(main))  main <- "All subsets"
-        if (is.null(sub)) {
+        if (missing(main))  main <- "All subsets"
+        if (missing(sub)) {
             sub <- paste0(format_ordinal(best), collapse = ", ")
             sub <- paste0("Best = ", sub)
         }
-        if (is.null(ylab))  ylab <- if (length(best) > 1) quote(Size %*% Best)
+        if (missing(ylab))  ylab <- if (length(best) > 1) quote(Size %*% Best)
                                     else quote(Size)
 
         title(main = main, sub = sub, xlab = xlab, ylab = ylab)
@@ -182,14 +181,13 @@ image.lmSubsets <- function (x, main = NULL, sub = NULL, xlab = NULL,
 }
 
 
-image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
-                            ylab = NULL, best = NULL, which = NULL,
-                            col = c("gray30", "gray90"), lab = "lab", hilite,
-                            hilite_penalty, hilite_col = cbind("red", "pink"),
-                            hilite_lab = "lab", pad_best = 2,
-                            pad_which = 2, axis_pos = -4,
-                            axis_tck = -4, axis_lab = -10, ...,
-                            axes = TRUE, ann = par("ann")) {
+image.lmSelect <- function (x, best = NULL, which = NULL, hilite,
+                            hilite_penalty, main, sub = NULL, xlab = NULL,
+                            ylab = NULL, ann = par("ann"), axes = TRUE,
+                            col = c("gray30", "gray90"), lab = "lab",
+                            col_hilite = cbind("red", "pink"),
+                            lab_hilite = "lab", pad_best = 2, pad_which = 2,
+                            axis_pos = -4, axis_tck = -4, axis_lab = -10, ...) {
     object <- x;  x <- NULL
 
     ## DATA
@@ -236,16 +234,16 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
     col <- matrix(col, ncol = 2)
     col <- col[rep_len(seq_len(nrow(col)), nrow(heatmap)), , drop = FALSE]
 
-    if (!is.null(hilite_col)) {
-        if (is.matrix(hilite_col)) {
-            ix <- rep_len(nrow(hilite_col), length(hilite))
-            hilite_col <- hilite_col[ix, ]
+    if (!is.null(col_hilite)) {
+        if (is.matrix(col_hilite)) {
+            ix <- rep_len(nrow(col_hilite), length(hilite))
+            col_hilite <- col_hilite[ix, ]
 
-            col[hilite, ] <- hilite_col
+            col[hilite, ] <- col_hilite
         } else {
-            hilite_col <- rep_len(hilite_col, length(hilite))
+            col_hilite <- rep_len(col_hilite, length(hilite))
 
-            col[hilite, 1] <- hilite_col
+            col[hilite, 1] <- col_hilite
         }
     }
 
@@ -312,7 +310,7 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
         lab1 <- parse(text = lab[1])[[1]]
         lab0 <- parse(text = lab[2])[[1]]
 
-        hilite_lab <- parse(text = hilite_lab)[[1]]
+        lab_hilite <- parse(text = lab_hilite)[[1]]
 
         labels <- colnames(heatmap)
         labels <- sapply(seq_along(labels), function (j) {
@@ -322,7 +320,7 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
                 ans <- do.call(substitute, list(lab1, list(lab = ans)))
 
                 if (any(heatmap[hilite, j])) {
-                    ans <- do.call(substitute, list(hilite_lab,
+                    ans <- do.call(substitute, list(lab_hilite,
                                                     list(lab = ans)))
                 }
             } else {
@@ -339,7 +337,7 @@ image.lmSelect <- function (x, main = NULL, sub = NULL, xlab = NULL,
 
     ## annotations
     if (ann) {
-        if (is.null(main))  main <- "Best subsets"
+        if (missing(main))  main <- "Best subsets"
 
         title(main = main, sub = sub, xlab = xlab, ylab = ylab)
     }
