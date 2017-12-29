@@ -54,8 +54,8 @@
 \method{formula}{lmSubsets}(x, size, best = 1, \ldots)
 \method{formula}{lmSelect}(x, best, \ldots)
 
-\method{model.frame}{lmSubsets}(formula, size, best = 1, \ldots)
-\method{model.frame}{lmSelect}(formula, best, \ldots)
+\method{model.frame}{lmSubsets}(formula, \ldots)
+\method{model.frame}{lmSelect}(formula, \ldots)
 
 \method{model.matrix}{lmSubsets}(object, size, best = 1, \ldots)
 \method{model.matrix}{lmSelect}(object, best, \ldots)

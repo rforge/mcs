@@ -1,4 +1,3 @@
-
 %====================================================================%
 % PREAMBLE                                                           %
 %====================================================================%
@@ -10,7 +9,7 @@
 % vignette                                                           %
 %--------------------------------------------------------------------%
 
-% \VignetteIndexEntry{lmSubsets: Exact Variable-Subset Selection in Linear Regression for R}
+% \VignetteIndexEntry{lmSubsets: Exact variable-subset selection in linear regression for R}
 % \VignetteKeywords{linear regression, model selection, variable selection, best-subset regression, R}
 % \VignettePackage{lmSubsets}
 % \VignetteDepends{stats,graphics}
@@ -28,13 +27,14 @@
 % packages                                                           %
 %--------------------------------------------------------------------%
 
-\usepackage{thumbpdf,lmodern}
+\usepackage{thumbpdf}
+\usepackage{lmodern}
 \usepackage{booktabs,dcolumn}
 \usepackage{amsmath,amssymb}
 \usepackage{bbm}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{tikz,forest}
 \usepackage{multirow}
-%\usepackage[dvipsnames]{xcolor}
 
 
 %--------------------------------------------------------------------%
@@ -69,16 +69,23 @@
 %--------------------------------------------------------------------%
 
 \author{%
-  Marc Hofmann\\University of Oviedo\\Cyprus University of Technology
-  \And Cristian Gatu\\``Alexandru Ioan Cuza''\\University of Iasi
-  \And Erricos J. Kontoghiorghes\\Cyprus University of Technology\\Birkbeck, University of London
-  \AND Ana Colubi\\University of Oviedo
-  \And Achim Zeileis\\Universit\"at Innsbruck
+  Marc Hofmann\\
+  \small{University of Oviedo, Spain}\\
+  \small{Cyprus University of Technology, Cyprus}
+  \And Cristian Gatu\\
+  \small{\dquote{Alexandru Ioan Cuza}}\\\small{University of Iasi, Romania}
+  \AND Erricos J. Kontoghiorghes\\
+  \small{Cyprus University of Technology, Cyprus}\\
+  \small{Birkbeck University of London, UK}
+  \AND Ana Colubi\\
+  \small{University of Oviedo, Spain}
+  \And Achim Zeileis\\
+  \small{University of Innsbruck, Austria}
 }
 \Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Ana Colubi, Achim Zeileis}
 
-\title{\pkg{lmSubsets}: Exact Variable-Subset Selection in Linear Regression for {\R}}
-\Plaintitle{lmSubsets: Exact Variable-Subset Selection in Linear Regression for R}
+\title{\pkg{lmSubsets}: Exact variable-subset selection in linear regression for {\R}}
+\Plaintitle{lmSubsets: Exact variable-subset selection in linear regression for R}
 
 \Abstract{
   An {\R} package for computing the all-subsets regression problem is
@@ -101,8 +108,9 @@
   Institute of Natural Resources and Territorial Planning\\
   University of Oviedo\\
   33600 Mieres, Spain\\
-  E-mail: \email{marc.hofmann@gmail.com}, \email{marc.indurot@uniovi.es}\\
-  URL: \url{http://www.indurot.uniovi.es/}
+  E-mail: \email{marc.hofmann@gmail.com}\\
+  E-mail: \email{marc.indurot@uniovi.es}\\
+  URL: \url{http://www.indurot.uniovi.es}
 }
 
 %====================================================================%
@@ -114,7 +122,7 @@
 <<preliminaries, echo=FALSE, results=hide>>=
 options(width = 70, prompt = "R> ", continue = "+  ")
 library("lmSubsets")
-data("AirPollution", package = "lmSubsets")
+data("AirPollution")
 @
 
 
@@ -659,32 +667,6 @@ and
 %
 The parameters are summarized in Table~\ref{tab:params}.
 
-\begin{table}[t!]
-  \centering
-  \begin{tabular}{llll}
-    \toprule
-    Parameter        & Description               & Canonical representation                         \\
-    \midrule
-    \code{x}         & data matrix               & \code{double[nobs,nvar]}                         \\
-    \code{y}         & response variable         & \code{double[nobs]}                              \\
-    \code{weights}   & model weights             & \code{double[nobs]}                              \\
-    \code{offset}    & model offset              & \code{double[nvar]}                              \\
-    \code{include}   & regressors to force in    & \code{logical[nvar]}                             \\
-    \code{exclude}   & regressors to force out   & \code{logical[nvar]}                             \\
-    \code{nmin}      & min.~number of regressors & \code{integer[1]}         & \fct{lmSubsets} only \\
-    \code{nmax}      & max.~number of regressors & \code{integer[1]}         & \fct{lmSubsets} only \\
-    \code{penalty}   & penalty per parameter     & \code{double[1]}          & \fct{lmSelect} only  \\
-                     & or criterion function     & \code{function[1]}        &  		    \\
-    \code{tolerance} & BBA tolerance parameters  & \code{double[nvar]}       & \fct{lmSubsets}      \\
-                     &                           & \code{double[1]}          & \fct{lmSelect}	    \\
-    \code{nbest}     & number of best subsets    & \code{integer[1]}                                \\
-    \code{pradius}   & preordering radius        & \code{integer[1]}                                \\
-    \bottomrule
-  \end{tabular}
-  \caption{Core parameters for \fct{lmSubsets} and \fct{lmSelect}.}
-  \label{tab:params}
-\end{table}
-
 The \code{weights} and \code{offset} parameters correspond to the
 homonymous parameters of the \fct{lm} function.  The \code{include}
 and \code{exclude} parameters allow the user to specify variables that
@@ -732,6 +714,33 @@ $\lfloor\mathtt{nvar}/3\rfloor$.  The need to set this parameter
 directly should rarely arise; please refer to Section~\ref{sec:comput}
 for further information.
 
+\begin{table}[t!]
+  \centering
+  \begin{tabular}{lll>{\small}l}
+    \toprule
+    Parameter        & Description               & Canonical representation                             \\
+    \midrule
+    \code{x}         & data matrix               & \code{double[nobs,nvar]}                             \\
+    \code{y}         & response variable         & \code{double[nobs]}                                  \\
+    \code{weights}   & model weights             & \code{double[nobs]}                                  \\
+    \code{offset}    & model offset              & \code{double[nvar]}                                  \\
+    \code{include}   & regressors to force in    & \code{logical[nvar]}                                 \\
+    \code{exclude}   & regressors to force out   & \code{logical[nvar]}                                 \\
+    \code{nmin}      & min.~number of regressors & \code{integer[1]}         & for \fct{lmSubsets} only \\
+    \code{nmax}      & max.~number of regressors & \code{integer[1]}         & for \fct{lmSubsets} only \\
+    \code{penalty}   & penalty per parameter     & \code{double[1]}          & for \fct{lmSelect} only  \\
+                     & or criterion function     & \code{function[1]}        &                          \\
+    \code{tolerance} & BBA tolerance parameters  & \code{double[nvar]}       & for \fct{lmSubsets}      \\
+                     &                           & \code{double[1]}          & for \fct{lmSelect}       \\
+    \code{nbest}     & number of best subsets    & \code{integer[1]}                                    \\
+    \code{pradius}   & preordering radius        & \code{integer[1]}                                    \\
+    \bottomrule
+  \end{tabular}
+  \caption{Core parameters.}
+  \label{tab:params}
+\end{table}
+
+
 %--------------------------------------------------------------------%
 % section:  Extracting submodels                                     %
 %--------------------------------------------------------------------%
@@ -751,6 +760,7 @@ the result objects.
 
 \begin{table}[t!]
   \centering
+  \small
   \begin{tabular}{lll}
     \toprule
     Component        & Description            & Canonical representation \\
@@ -792,7 +802,7 @@ submodel at a time if passed a numeric vector as an argument to either
 \code{best = 1:3}).  The shape of the return value can be controlled
 with the \code{drop} parameter: a \code{numeric} or \code{character}
 vector (in some cases, a \code{logical} or \code{numeric} matrix) is
-returned if \code{drop} is \code{TRUE}; otherwise, a \code{data.frame} object
+returned if \code{drop == TRUE}; otherwise, a \code{data.frame} object
 is handed back.
 
 \begin{table}[t!]
@@ -836,57 +846,52 @@ is handed back.
 \section{Case study: Variable selection in weather forecasting}
 \label{sec:usecase}
 
-Over the last decades the field of weather forecasting made steady and
-substantial improvements especially through improvements in numerical
-weather prediction (NWP) models \citep{bauer:nature:15}.
-Starting from \cite{glahn:j_appl_meteorol:72} the outputs from these
-physically-based large-scale (typically global) NWP models are
-statistically post-processed to correct small-scale biases and obtain
-predictions for specific locations. Such model output statistics (MOS)
-relate past meteorological observations to the corresponding NWP
-quantity but can also include further quantities as additional regressors.
-Variable-subset selection is often employed to determine which
-NWP quantities should be included in the MOS regression model
-for a specific location.
+Statistical weather forecasting is a branch of objective weather
+forecasting -- the other being numerical weather forecasting (NWP) --,
+and relies on variable-subset selection (also known as
+\dquote{screening regression}) as an essential instrument.  Model
+output statistics (MOS) is a multiple linear regression technique that
+builds a statistical relationship between a predictand and variables
+forecast by an NWP (dynamic) model at some projection
+time~\citep{glahn:j_appl_meteorol:72}.  The output model is derived by
+relating past observations of the predictand with archived dynamic
+forecasts.  Variable-subset selection is employed to determine which
+quantities forecast by the dynamic model enter the regression for a
+particular predictand and projection time.
 
-In the following, we use such \pkg{lmSubsets} to build a MOS regression
-model predicting temperature at Innsbruck Airport, Austria, based on a wide
-range of NWP quantities from the Global Ensemble Forecast
+Here, as an application example, \pkg{lmSubsets} is used to build an
+MOS model for the daily temperature at Innsbruck Airport (Austria),
+based on data provided by the Global Ensemble Forecast
 System~\citep{hamill:b_am_meteorol_soc:13}.  The data frame
-\code{IbkTemperature} contains 1824 daily cases for 42 variables. The
-data frame \code{IbkTemperature} contains 1824 daily cases
-for the observed response (in degree Celsius), 36 NWP outputs (forecasted),
-and five deterministic time trend/season patterns. The NWP variables include
-several temperature quantities (in degree Kelvin, e.g., 2-meter, minimum,
-maximum, soil) as well as several quantities capturing precipitation, wind,
-and fluxes among others. See \code{?IbkTemperature} for more details.
+\code{IbkTemperature} contains 1824 daily cases for 42 variables.  The
+variables include the temperature at Innsbruck Airport (observed), as
+well as 36 NWP outputs (forecasted), among which quantities pertaining
+to temperature (two-meters-above-ground, minimum, maximum, and soil
+temperatures), precipitation, wind, pressure, radiative and heat
+fluxes.  Terms for deterministic trend and seasonal components are
+provided for convenience.  See \code{?IbkTemperature} for further
+details.
 
-First, the dataset is loaded and for simplicity a couple of missing values
-are omitted.
+In order to commence the analysis, the dataset is loaded and cases
+with missing values are removed.
 <<data>>=
 data("IbkTemperature", package = "lmSubsets")
 IbkTemperature <- na.omit(IbkTemperature)
 @
 A simple output model (\code{MOS0}) for the observed temperature
-(\code{temp}) is constructed, which will serve here as a reference model.
-It consists of the 2-meter temperature NWP forecast (\code{t2m}), a linear
-trend component (\code{time}), as well as harmonic seasonal components at
-annual (\code{sin}, \code{cos}) and bi-annual (\code{sin2}, \code{cos2})
-frequencies.
+(\code{temp}) is constructed, which will serve as a reference model.
+It consists of the temperature forecast by the dynamic model
+(\code{t2m}), a linear trend component (\code{time}), as well as
+annual (\code{sin}, \code{cos}) and bi-annual (\code{sin2},
+\code{cos2}) seasonal components.
 <<mos0>>=
 MOS0 <- lm(temp ~ t2m + time + sin + cos + sin2 + cos2,
-  data = IbkTemperature)
+           data = IbkTemperature)
 @
 
 <<mos1-all, echo=FALSE>>=
-MOS1.all <- lmSubsets(temp ~ ., data = IbkTemperature,
-  include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
+MOS1.all <- lmSubsets(temp ~ ., data = IbkTemperature)
 MOS1 <- refit(lmSelect(MOS1.all, penalty = "BIC"))
-@
-
-<<mos2-all, echo=FALSE>>=
-MOS2.all <- lmSubsets(temp ~ ., data = IbkTemperature)
-MOS2 <- refit(lmSelect(MOS2.all, penalty = "BIC"))
 @
 
 The estimated coefficients (and standard errors) are shown in
@@ -898,17 +903,15 @@ dynamic model.
 
 \begin{table}[t!]
 \centering
-\small
+\scriptsize
 <<echo=FALSE>>=
 sum0 <- summary(MOS0)
 sum1 <- summary(MOS1)
-sum2 <- summary(MOS2)
 
 xnms0 <- rownames(sum0$coefficients)
 xnms1 <- rownames(sum1$coefficients)
-xnms2 <- rownames(sum2$coefficients)
 
-xnms <- unique(c(xnms0, xnms1, xnms2))
+xnms <- unique(c(xnms0, xnms1))
 
 symb <- c("***", "**", "*", ".", "")
 cpts <- c(0, 0.001, 0.01, 0.05, 0.1, 1)
@@ -917,88 +920,69 @@ sgnf0 <- symnum(unname(sum0$coefficients[, 4]), corr = FALSE, na = FALSE,
                 cutpoints = cpts, symbols = symb)
 sgnf1 <- symnum(unname(sum1$coefficients[, 4]), corr = FALSE, na = FALSE,
                 cutpoints = cpts, symbols = symb)
-sgnf2 <- symnum(unname(sum2$coefficients[, 4]), corr = FALSE, na = FALSE,
-                cutpoints = cpts, symbols = symb)
 
-sgnf_tab <- matrix("", nrow = length(xnms), ncol = 3)
+sgnf_tab <- matrix("", nrow = length(xnms), ncol = 2)
 rownames(sgnf_tab) <- xnms
 
 sgnf_tab[xnms0, 1] <- sgnf0
 sgnf_tab[xnms1, 2] <- sgnf1
-sgnf_tab[xnms2, 3] <- sgnf2
 
 coef0 <- unname(sum0$coefficients[, 1])
 coef1 <- unname(sum1$coefficients[, 1])
-coef2 <- unname(sum2$coefficients[, 1])
 
 coef0 <- formatC(coef0, format = "f", digits = 3)
 coef1 <- formatC(coef1, format = "f", digits = 3)
-coef2 <- formatC(coef2, format = "f", digits = 3)
 
-coef_tab <- matrix("", nrow = length(xnms), ncol = 3)
+coef_tab <- matrix("", nrow = length(xnms), ncol = 2)
 rownames(coef_tab) <- xnms
 
 coef_tab[xnms0, 1] <- coef0
 coef_tab[xnms1, 2] <- coef1
-coef_tab[xnms2, 3] <- coef2
 
 stde0 <- unname(sum0$coefficients[, 2])
 stde1 <- unname(sum1$coefficients[, 2])
-stde2 <- unname(sum2$coefficients[, 2])
 
 stde0 <- formatC(stde0, format = "f", digits = 3)
 stde1 <- formatC(stde1, format = "f", digits = 3)
-stde2 <- formatC(stde2, format = "f", digits = 3)
 
 stde0 <- paste0("(", format(stde0, justify = "right"), ")")
 stde1 <- paste0("(", format(stde1, justify = "right"), ")")
-stde2 <- paste0("(", format(stde2, justify = "right"), ")")
 
-stde_tab <- matrix("", nrow = length(xnms), ncol = 3)
+stde_tab <- matrix("", nrow = length(xnms), ncol = 2)
 rownames(stde_tab) <- xnms
 
 stde_tab[xnms0, 1] <- stde0
 stde_tab[xnms1, 2] <- stde1
-stde_tab[xnms2, 3] <- stde2
 
 stde_tab <- gsub("\\s", "~", stde_tab)
 
-stat_tab <- matrix(NA, nrow = 5, ncol = 3)
-rownames(stat_tab) <- c("AIC", "BIC", "RSS", "Sigma", "R-sq.")
+stat_tab <- matrix(NA, nrow = 5, ncol = 2)
+rownames(stat_tab) <- c("AIC", "BIC", "Deviance", "Sigma", "R-squared")
 
 stat_tab["AIC", 1] <- AIC(MOS0)
 stat_tab["BIC", 1] <- BIC(MOS0)
-stat_tab["RSS", 1] <- deviance(MOS0)
+stat_tab["Deviance", 1] <- deviance(MOS0)
 stat_tab["Sigma", 1] <- sum0$sigma
-stat_tab["R-sq.", 1] <- sum0$r.squared
+stat_tab["R-squared", 1] <- sum0$r.squared
 
 stat_tab["AIC", 2] <- AIC(MOS1)
 stat_tab["BIC", 2] <- BIC(MOS1)
-stat_tab["RSS", 2] <- deviance(MOS1)
+stat_tab["Deviance", 2] <- deviance(MOS1)
 stat_tab["Sigma", 2] <- sum1$sigma
-stat_tab["R-sq.", 2] <- sum1$r.squared
-
-stat_tab["AIC", 3] <- AIC(MOS2)
-stat_tab["BIC", 3] <- BIC(MOS2)
-stat_tab["RSS", 3] <- deviance(MOS2)
-stat_tab["Sigma", 3] <- sum2$sigma
-stat_tab["R-sq.", 3] <- sum2$r.squared
+stat_tab["R-squared", 2] <- sum1$r.squared
 
 stat_tab <- formatC(stat_tab, format = "f", digits = 3)
 @
 \texttt{%
-\begin{tabular}{l@{\hskip 3ex}r@{}l@{\hskip 1.2ex}r
-                 @{\hskip 3ex}r@{}l@{\hskip 1.2ex}r
-                 @{\hskip 3ex}r@{}l@{\hskip 1.2ex}r}
+\begin{tabular}{l@{\hskip 5ex}r@{}l@{\hskip 2ex}r
+                 @{\hskip 5ex}r@{}l@{\hskip 2ex}r}
 \toprule
-& \multicolumn{3}{@{}l}{MOS0} & \multicolumn{3}{@{}l}{MOS1} & \multicolumn{3}{@{}l}{MOS2} \\
+& \multicolumn{3}{@{}l}{MOS0} & \multicolumn{3}{@{}l}{MOS1} \\
 \midrule
 <<echo=FALSE, results=tex, strip.white=false>>=
 for (nm in xnms) {
-    cat(nm,
-            " & ", coef_tab[nm, 1], " & ", sgnf_tab[nm, 1], " & ", stde_tab[nm, 1],
+    cat(nm, " & ", coef_tab[nm, 1], " & ", sgnf_tab[nm, 1], " & ", stde_tab[nm, 1],
             " & ", coef_tab[nm, 2], " & ", sgnf_tab[nm, 2], " & ", stde_tab[nm, 2],
-            " & ", coef_tab[nm, 3], " & ", sgnf_tab[nm, 3], " & ", stde_tab[nm, 3],
         "\\\\", "\n", sep = "")
 }
 @ 
@@ -1007,98 +991,77 @@ for (nm in xnms) {
 for (nm in rownames(stat_tab)) {
     cat(nm, " & ", stat_tab[nm, 1], " & ", " & ",
             " & ", stat_tab[nm, 2], " & ", " & ",
-            " & ", stat_tab[nm, 3], " & ", " & ",
         "\\\\", "\n")
 }
 @ 
 \bottomrule
 \end{tabular}}
 \caption{Estimated regression coefficients (along with standard
-  errors ) and summary statistics for the output models \code{MOS0} and
+  errors) and summary statistics for the output models \code{MOS0} and
   \code{MOS1}.}
 \label{tab:coefs}%
 \end{table}
 
-Next, variable-subset models with the lowest RSS for all submodel
-sizes are computed and the \class{lm} object corresponding to the
-submodel with the lowest BIC score is extracted. Two ``flavors''
-of variable selection are considered: (1) The variables from the
-based \code{MOS0} (based on the direct model output and climatology)
-are kept in the model and all-subsets regression is employed to select
-the relevant regressors from the remaining 35 NWP variables.
+Next, the variable-subset models with the lowest RSS for all submodel
+sizes (2--42 regressors, including the intercept) are computed
+(\code{MOS1.all}).  The \class{lm} object corresponding to the
+submodel with the lowest BIC score is extracted (\code{MOS1}).
 <<>>=
 <<mos1-all>>
 @
-(2) All variables are considered in the subset selection without
-restriction (i.e., searching models with (2--42 regressors, including
-the intercept).
-<<>>=
-<<mos2-all>>
-@
-The best-BIC models \code{MOS1} and \code{MOS2} both have 13 regressors,
-which are listed in Table~\ref{tab:coefs}. Up to eight additional
-NWP outputs are selected, six of which are included in both selections:
-quantities relating to temperature (\code{tmax2m}, \code{st}, \code{t2pvu}),
-pressure (\code{mslp}, \code{p2pvu}), hydrology (\code{vsmc}, \code{wr}), and
-heat flux (\code{sshnf}). The deterministic trend and most of the harmonic
-seasonal components are retained also in \code{MOS2}. However, and most
-remarkably, \code{MOS1} does not include the direct 2-meter temperature
-output from the NWP (\code{t2m}). The summary statistics reveal that
-both \code{MOS1} and \code{MOS2} significantly improves over the simple
-reference model \code{MOS0} with \code{MOS2} begin very slightly better
-than \code{MOS1}. 
-
-The RSS and BIC of the variable-subset models for all sizes 2--42
-in \code{MOS2.all} are illustrated in Figure~\ref{fig:mos2:plot},
-showing again that the BIC minimum is attained at 13 regressors.
+The RSS and BIC of the variable-subset models in \code{MOS1.all} are
+illustrated in Figure~\ref{fig:mos1:plot}.  The BIC-best model
+\code{MOS1} has 13 regressors, which are listed in
+Table~\ref{tab:coefs}.  Eight dynamic variables not included in
+\code{MOS0} are selected, among which quantities relating to
+temperature (\code{tmax2m}, \code{st}, \code{t2pvu}), pressure
+(\code{mslp}, \code{p2pvu}), hydrology (\code{vsmc}, \code{wr}), and
+heat flux (\code{sshnf}).  The deterministic components (linear trend,
+annual and bi-annual seasonal patterns) are present in \code{MOS1}.
+However, and most remarkably, \code{MOS1} does not include the
+temperature forecast by the dynamic model (\code{t2m}).  The summary
+statistics reveal that \code{MOS1} significantly improves over the
+reference model \code{MOS0}.
 
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=0.6\textwidth}
-<<fig-mos2-plot, fig=TRUE, echo=FALSE>>=
-plot(MOS2.all)
+<<fig-mos1-plot, fig=TRUE, echo=FALSE>>=
+plot(MOS1.all)
 @
 \caption{RSS and BIC for the best subset models.}
-\label{fig:mos2:plot}
+\label{fig:mos1:plot}
 \end{figure}
 
-Furthermore, the 20 overall best MOS subset models are computed in
-\code{MOS2.best} and illustrated by a selection heatmap in
-Figure~\ref{fig:mos2:image}.
-<<mos2-best>>=
-MOS2.best <- lmSelect(temp ~ ., data = IbkTemperature, penalty = "BIC",
-  nbest = 20)
+The 20 overall best MOS subset models are computed (\code{MOS1.best})
+and illustrated by a selection heatmap in Figure~\ref{fig:mos1:image}.
+<<mos1-best>>=
+MOS1.best <- lmSelect(temp ~ ., data = IbkTemperature,
+                      penalty = "BIC", nbest = 20)
 @
-A selected variable is indicated by a dark cell with the number of
-selected variables per submodel ranging from 11 to 14. Note that
-\code{t2m} has not been picked up by any of the submodels but instead
-\code{tmax2m}, \code{st}, and \code{t2pvu} are included in all of them.
+A selected variable is indicated by a dark cell.  The number of
+selected variables per submodel ranges from 11 to 14.  It is
+noticeable that \code{t2m} has not been picked up by any of the
+submodels.  Per contra, the deterministic components are always
+present.
 
 \begin{figure}[t!]
 \centering
 \setkeys{Gin}{width=\textwidth}
-<<fig-mos2-image, fig=TRUE, echo=FALSE, height=6, width=12>>=
-image(MOS2.best, col = c("gray50", "gray90"), lab = c("bold(lab)", "lab"),
-  hilite = 1, hilite_col = "red")
+<<fig-mos1-image, fig=TRUE, echo=FALSE, height=6, width=12>>=
+image(MOS1.best, col = c("gray50", "gray90"), lab = c("bold(lab)", "lab"),
+      hilite = 1, hilite_col = "red")
 @
-\caption{Subset selection for \code{MOS2.best}.}
-\label{fig:mos2:image}
+\caption{Subset selection for \code{MOS1.best}.}
+\label{fig:mos1:image}
 \end{figure}
 
 In summary, this case study illustrates how \pkg{lmSubsets} can be
-used to easily identify relevant variables beyond the direct model
-output for MOS regressions, yielding substantial improvements in
-forecasting skill. In a full meteorological application this should,
-of course, be further tested using cross-validation or other
-out-of-sample assessments. Similarly, it is worth remarking that
-recently there has been increasing interest in MOS models beyond
-least-squares linear regression, e.g., for incorporating heteroscedasticity,
-censoring, or truncation. As all-subsets regression is much more
-burdensome in such models, other selection techniques such as boosting can
-be considered \citep[e.g., as available in the \pkg{crch} package,][]{messner:r_j:16,messner:mon_wea_rev:17}.
-A comparison with such approaches, however, is beyond the scope of this
-paper.
-
+used in the context of MOS regression, to identify dynamic variables
+which improve the predictive skill of the output model.  In a fully
+fledged meteorological application, the constructed model would have
+to be validated using cross-validation or other out-of-sample
+assessment techniques.
 
 
 %--------------------------------------------------------------------%
@@ -1476,10 +1439,10 @@ configurations of simulated datasets.
 
 
 %--------------------------------------------------------------------%
-% section:  Acknowledgments                                         %
+% section:  Acknowledgements                                         %
 %--------------------------------------------------------------------%
 
-\section*{Acknowledgments}
+\section*{Acknowledgements}
 
 \TODO{Oviedo project, IFMSE}
 
@@ -1489,7 +1452,7 @@ the \emph{F\"orderverein des wirtschaftswissenschaftlichen Zentrums
 IFMSE.  The authors are grateful to Jakob Messner for sharing the GEFS
 forecast data in \code{IbkTemperature}.
 
-The authors would particularly like to thank Prof.~Manfred Gilli for
+The authors would particularly like to thank Prof. Manfred Gilli for
 his continued support and encouragements throughout the years.
 
 

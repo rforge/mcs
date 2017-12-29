@@ -1,6 +1,19 @@
+## Copyright 2018  Marc Hofmann and Achim Zeileis
 ##
-## File:  lmSubsets.R
+## This file is part of 'lmSubsets'.
 ##
+## 'lmSubsets' is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## 'lmSubsets' is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with 'lmSubsets'.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
@@ -221,30 +234,59 @@ lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
 ## matrix interface
 ##
 ## Arguments:
-##   formula  - (double[,])
-##   y        - (double[])
-##   interept - (logical)
-##   ...      - forwarded
+##   formula   - (double[,])
+##   y         - (double[]|integer|character)
+##   intercept - (logical)
+##   ...       - forwarded
 ##
 ## Result: (lmSubsets) see also 'lmSubsets.default'
 ##
 lmSubsets.matrix <- function (formula, y, intercept = TRUE, ...) {
-    x <- formula;  formula <- NULL
+    x_which <- seq_len(ncol(formula))
+    x_names <- colnames(formula)
 
-    ## names
-    x_names <- paste0("x[, ", seq_len(ncol(x)), "]")
-    if (all(x[, 1] == 1)) {
-        x_names <- x_names[-1]
-        intercept <- TRUE
+    ## extract expression for x
+    x <- substitute(formula)
+
+    ## extract expression for y
+    if (length(y) != 1) {
+        y <- substitute(y)
+    } else {
+        if (is.numeric(y)) {
+            y <- match(y, x_which)
+        } else if (is.character(y)) {
+            y <- match(y, x_names)
+        } else {
+            stop ("'y' must be numeric or character")
+        }
+
+        if (is.na(y)) {
+            stop ("non-existing column selected in 'y'")
+        }
+
+        x_which <- x_which[-y]
+
+        y <- bquote(.(x)[, .(y)], list(x = x, y = x_names[y]))
     }
 
-    ## formula
-    f <- stats_formula(x_names, "y", intercept)
+    ## build formula
+    if (!is.null(x_names))  x_which <- x_names[x_which]
+
+    f <- bquote(.(x)[, .(j)], list(x = x, j = x_which[1]))
+    for (j in x_which[-1]) {
+        f <- bquote(.(f) + .(x)[, .(j)], list(f = f, x = x, j = j))
+    }
+
+    if (!intercept) {
+        f <- bquote(.(f) - 1, list(f = f))
+    }
+
+    f <- bquote(.(y) ~ .(f), list(y = y, f = f))
+    environment(f) <- parent.frame()
 
     ## forward call
     cl <- match.call()
     cl[[1]] <- quote(lmSubsets)
-    cl$data <- bquote(list(x = .(x), y = .(y)), list(x = cl$formula, y = cl$y))
     cl$formula <- f
     cl$y <- cl$intercept <- NULL
 
@@ -540,7 +582,7 @@ plot.lmSubsets <- function (x, penalty = "BIC", xlim, ylim_rss, ylim_ic,
     if (ann) {
         legend <- c(legend_rss, legend_ic)
         legend("topright", legend = legend, lty = c(lty_rss[1], lty_ic[1]),
-               pch = c(pch_rss[1], pch_rss[2]), col = c(col_rss[1], col_ic[1]),
+               pch = c(pch_rss[1], pch_rss[1]), col = c(col_rss[1], col_ic[1]),
                pt.bg = c(bg_rss[1], bg_ic[1]), bty = "n")
     }
 
@@ -643,17 +685,19 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
         best <- best[1]
     }
 
-    ## names
-    y_name <- all.vars(x$terms)[1]
-    x_names <- variable.names(x, size = size, best = best)
+    ## extract subset
+    ans <- variable.names(x, size = size, best = best, drop = TRUE)
+    ans <- as.logical(ans)
 
     if (x$intercept) {
-        x_names <- x_names[-1]
+        ans <- ans[-1]
     }
 
-    ## build formula
-    stats_formula(x_names, y_name, x$intercept,
-                  env = environment(x$terms))
+    ans <- x$terms[ans]
+    ans <- formula(ans)
+
+    ## done
+    ans
 }
 
 
@@ -661,54 +705,32 @@ formula.lmSubsets <- function (x, size, best = 1, ...) {
 ##
 ## Arguments:
 ##   object - (lmSubsets)
-##   size   - (integer)
-##   best   - (integer)
 ##   ...    - ignored
 ##
 ## Result: (model.frame)
 ##
-model.frame.lmSubsets <- function (formula, size, best = 1, ...) {
+## See also:  model.frame.lm
+##
+model.frame.lmSubsets <- function(formula, ...) {
     ## further arguments
     args <- list(...)
     m <- c("data", "na.action", "subset")
     m <- match(m, names(args), 0L)
     args <- args[m]
 
-    ## 'size' processing
-    if (missing(size)) {
-        if ((length(args) == 0) && !is.null(mf <- formula[["model"]])) {
-            return (mf)
-        }
-    } else if (length(size) > 1) {
-        warning ("'size' has length > 1: only the first element will be used")
-
-        size <- size[1]
-    }
-
-    ## 'best' processing
-    if (length(best) > 1) {
-        warning ("'best' has length > 1: only the first element will be used")
-
-        best <- best[1]
-    }
-
-    ## extract formula
-    if (!missing(size)) {
-        f <- formula(formula, size = size, best = best)
-    } else {
-        f <- terms(formula)
+    if ((length(args) == 0) && !is.null(mf <- formula[["model"]])) {
+        return (mf)
     }
 
     ## forward call to 'model.frame'
     cl <- formula$call
-    m <- c("formula", "data", "subset",
-           "weights", "na.action", "offset")
+    m <- c("formula", "data", "subset", "weights", "na.action", "offset")
     m <- match(m, names(cl), 0L)
     cl <- cl[c(1L, m)]
     cl[[1L]] <- quote(model.frame)
-    cl$formula <- f
     cl$drop.unused.levels <- TRUE
     cl$xlev <- formula$xlevels
+    cl$formula <- terms(formula)
     cl[names(args)] <- args
 
     env <- environment(formula$terms)
@@ -758,9 +780,10 @@ model.matrix.lmSubsets <- function (object, size, best = 1, ...) {
     }
 
     ## extract subset
-    ans <- with(object$submodel, (SIZE == size) & (BEST == best))
-    ans <- object$subset[ans, ]
-    ans <- x[, unlist(ans)]
+    ans <- variable.names(object, size = size, best = best, drop = TRUE)
+    ans <- as.logical(ans)
+    ans <- structure(x[, ans, drop = FALSE],
+                     assign = attr(x, "assign")[ans])
 
     ## done
     ans

@@ -51,7 +51,7 @@ lmSubsets_fit(x, y, weights = NULL, offset = NULL, include = NULL,
   \code{formula} interface (see \code{\link[stats]{lm}}) can be used, or
   the information can be extracted from an already fitted \code{"lm"}
   object.  The regressor matrix and response variable can also be passed
-  in directly.
+  in directly (see Examples).
 
   The call is forwarded to \code{lmSubsets_fit}, which provides a
   low-level matrix interface.
@@ -147,10 +147,9 @@ lm_force
 ########################
 
 ## same as above
-x <- as.matrix(AirPollution[, names(AirPollution) != "mortality"])
-y <- AirPollution[, "mortality"]
+x <- as.matrix(AirPollution)
 
-lm_mat <- lmSubsets(x, y)
+lm_mat <- lmSubsets(x, y = "mortality")
 lm_mat
 }
 

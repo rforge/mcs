@@ -1,21 +1,20 @@
+## Copyright 2018  Marc Hofmann and Achim Zeileis
+##
+## This file is part of 'lmSubsets'.
+##
+## 'lmSubsets' is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## 'lmSubsets' is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with 'lmSubsets'.  If not, see <http://www.gnu.org/licenses/>.
 
-
-stats_formula <- function (x_names, y_name, intercept, env = NULL) {
-    f <- paste0(x_names, collapse = " + ")
-    f <- paste0(y_name, " ~ ", f)
-
-    if (intercept) {
-        f <- paste0(f, " + 1")
-    } else {
-        f <- paste0(f, " + 0")
-    }
-
-    if (is.null(env)) {
-        env <- parent.frame(2L)
-    }
-
-    formula(f, env)
-}
 
 
 stats_coef <- function (x, y, o, w) {

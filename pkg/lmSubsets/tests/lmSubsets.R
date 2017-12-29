@@ -62,7 +62,10 @@ local({
 
     all <- lmSubsets(mortality ~ ., data = AirPollution)
 
-    lm5 <- lm(formula(all, size = 5), data = AirPollution)
+    lm5 <- variable.names(all, size = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5)
+
     rf5 <- refit(all, size = 5)
 
     ## deviance
@@ -110,7 +113,10 @@ local({
 
     all <- lmSubsets(mortality ~ . - 1, data = AirPollution)
 
-    lm5 <- lm(formula(all, size = 5), data = AirPollution)
+    lm5 <- variable.names(all, size = 5)
+    lm5 <- AirPollution[c("mortality", lm5)]
+    lm5 <- lm(mortality ~ . - 1, data = lm5)
+
     rf5 <- refit(all, size = 5)
 
     ## deviance
@@ -159,9 +165,13 @@ local({
     w <- abs(rnorm(nall))
     o <- rnorm(nall)
 
-    all <- lmSubsets(mortality ~ ., data = AirPollution, weights = w, offset = o)
+    all <- lmSubsets(mortality ~ ., data = AirPollution,
+                     weights = w, offset = o)
 
-    lm5 <- lm(formula(all, size = 5), data = AirPollution, weights = w, offset = o)
+    lm5 <- variable.names(all, size = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5, weights = w, offset = o)
+
     rf5 <- refit(all, size = 5)
 
     ## deviance
@@ -207,14 +217,15 @@ local({
 local({
     message ("Zero weights...")
 
-    w <- abs(rnorm(nall))
-    o <- rnorm(nall)
-
+    w <- rep_len(1, nall)
     w[sample(nall, 10)] <- 0
 
-    all <- lmSubsets(mortality ~ ., data = AirPollution, weights = w, offset = o)
+    all <- lmSubsets(mortality ~ ., data = AirPollution, weights = w)
 
-    lm5 <- lm(formula(all, size = 5), data = AirPollution, weights = w, offset = o)
+    lm5 <- variable.names(all, size = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5, weights = w)
+
     rf5 <- refit(all, size = 5)
 
     ## deviance
@@ -260,14 +271,14 @@ local({
 local({
     message ("Matrix interface...")
 
-    x <- AirPollution[, which(names(AirPollution) != "mortality")]
-    x <- as.matrix(x)
-    y <- AirPollution[, "mortality"]
-
     all <- lmSubsets(mortality ~ ., data = AirPollution)
 
-    mat <- lmSubsets(x, y)
-    lm5 <- lm(formula(mat, size = 5))
+    mat <- lmSubsets(as.matrix(AirPollution), y = "mortality")
+
+    lm5 <- variable.names(mat, size = 5)
+    lm5 <- paste0("mortality ~ ", paste(lm5[-1], collapse = " + "))
+    lm5 <- lm(as.formula(lm5), data = AirPollution)
+
     rf5 <- refit(mat, size = 5)
 
     ## deviance
@@ -325,14 +336,15 @@ local({
     lm0 <- lm(mortality ~ ., data = AirPollution)
 
     all <- lmSubsets(lm0)
-    lm5 <- lm(formula(all, size = 5), data = AirPollution)
+    lm5 <- variable.names(all, size = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5)
 
     nse <- lmSubsets(mortality ~ ., data = AirPollution, model = FALSE)
     rf5 <- refit(nse, size = 5)
 
     ## model frame
     stopifnot(abs(model.frame(nse)           - model.frame(lm0)) < TOL)
-    stopifnot(abs(model.frame(nse, size = 5) - model.frame(lm5)) < TOL)
     stopifnot(abs(model.frame(rf5)           - model.frame(lm5)) < TOL)
 })
 
@@ -345,13 +357,16 @@ local({
     lm0 <- lm(mortality ~ ., data = AirPollution)
 
     all <- lmSubsets(lm0)
-    lm5 <- lm(formula(all, size = 5), data = AirPollution)
+    lm5 <- variable.names(all, size = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5)
 
-    nse <- lmSubsets(formula(AirPollution[, c(16, 1:15)]), model = FALSE)
+    nse <- paste(names(AirPollution)[-16], collapse = " + ")
+    nse <- paste0("mortality ~ ", nse)
+    nse <- lmSubsets(as.formula(nse), model = FALSE)
     rf5 <- refit(nse, size = 5)
 
     ## model frame
     stopifnot(abs(model.frame(nse)           - model.frame(lm0)) < TOL)
-    stopifnot(abs(model.frame(nse, size = 5) - model.frame(lm5)) < TOL)
     stopifnot(abs(model.frame(rf5)           - model.frame(lm5)) < TOL)
 }, env = AirPollution)

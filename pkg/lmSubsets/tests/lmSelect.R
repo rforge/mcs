@@ -47,7 +47,10 @@ local({
 
     best <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
 
-    lm5 <- lm(formula(best, best = 5), data = AirPollution)
+    lm5 <- variable.names(best, best = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5)
+
     rf5 <- refit(best, best = 5)
 
     ## deviance
@@ -98,7 +101,7 @@ local({
     best0 <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
     best1 <- lmSelect(all)
 
-    stopifnot(abs(best0$penalty - best1$penalty) < TOL)
+    stopifnot(abs(with(best0$submodel, IC) - with(best1$submodel, IC)) < TOL)
 })
 
 
@@ -109,7 +112,10 @@ local({
 
     best <- lmSelect(mortality ~ . - 1, data = AirPollution, nbest = 10)
 
-    lm5 <- lm(formula(best, best = 5), data = AirPollution)
+    lm5 <- variable.names(best, best = 5)
+    lm5 <- AirPollution[c("mortality", lm5)]
+    lm5 <- lm(mortality ~ . - 1, data = lm5)
+
     rf5 <- refit(best, best = 5)
 
     ## deviance
@@ -158,11 +164,13 @@ local({
     w <- abs(rnorm(nall))
     o <- rnorm(nall)
 
-    best <- lmSelect(mortality ~ ., data = AirPollution, weights = w, offset = o,
-                     nbest = 10)
+    best <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10,
+                     weights = w, offset = o)
 
-    lm5 <- lm(formula(best, best = 5), data = AirPollution, weights = w,
-              offset = o)
+    lm5 <- variable.names(best, best = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5, weights = w, offset = o)
+
     rf5 <- refit(best, best = 5)
 
     ## deviance
@@ -208,16 +216,16 @@ local({
 local({
     message ("Zero weights...")
 
-    w <- abs(rnorm(nall))
-    o <- rnorm(nall)
-
+    w <- rep_len(1, nall)
     w[sample(nall, 10)] <- 0
 
-    best <- lmSelect(mortality ~ ., data = AirPollution, weights = w, offset = o,
-                     nbest = 10)
+    best <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10,
+                     weights = w)
 
-    lm5 <- lm(formula(best, best = 5), data = AirPollution, weights = w,
-              offset = o)
+    lm5 <- variable.names(best, best = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5, weights = w)
+
     rf5 <- refit(best, best = 5)
 
     ## deviance
@@ -263,14 +271,14 @@ local({
 local({
     message ("Matrix interface...")
 
-    x <- AirPollution[, which(names(AirPollution) != "mortality")]
-    x <- as.matrix(x)
-    y <- AirPollution[, "mortality"]
-
     best <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10)
 
-    mat <- lmSelect(x, y, nbest = 10)
-    lm5 <- lm(formula(mat, best = 5))
+    mat <- lmSelect(as.matrix(AirPollution), y = "mortality", nbest = 10)
+
+    lm5 <- variable.names(mat, best = 5)
+    lm5 <- paste0("mortality ~ ", paste(lm5[-1], collapse = " + "))
+    lm5 <- lm(as.formula(lm5), data = AirPollution)
+
     rf5 <- refit(mat, best = 5)
 
     ## deviance
@@ -335,11 +343,14 @@ local({
         -2 * ll(rss) + k * (size + 1)
     }
 
-    best.aic <- lmSelect(mortality ~ ., data = AirPollution, penalty = "AIC", .algo = "abba")
-    best.fun <- lmSelect(mortality ~ ., data = AirPollution, penalty = aic, .algo = "abba")
+    best_aic <- lmSelect(mortality ~ ., data = AirPollution, penalty = "AIC",
+                         .algo = "abba")
+    best_fun <- lmSelect(mortality ~ ., data = AirPollution, penalty = aic,
+                         .algo = "abba")
 
-    stopifnot(best.aic$.nodes == best.fun$.nodes)  # 137 nodes
-    stopifnot(abs(best.aic$penalty - best.fun$penalty) < TOL)
+    stopifnot(best_aic$.nodes == best_fun$.nodes)  # 137 nodes
+    stopifnot(abs(with(best_aic$submodel, IC) - with(best_fun$submodel, IC))
+              < TOL)
 })
 
 
@@ -364,11 +375,14 @@ local({
         aic(size, rss) - aic0
     }
 
-    abba <- lmSelect(mortality ~ ., data = AirPollution, penalty = "AIC", .algo = "abba")
-    hbba <- lmSelect(mortality ~ ., data = AirPollution, penalty = fun, .algo = "hbba")
+    abba <- lmSelect(mortality ~ ., data = AirPollution, penalty = "AIC",
+                     .algo = "abba")
+    hbba <- lmSelect(mortality ~ ., data = AirPollution, penalty = fun,
+                     .algo = "hbba")
 
     stopifnot(abba$.nodes == hbba$.nodes)  # 137 nodes
-    stopifnot(abs(abba$penalty - hbba$penalty - aic0) < 1e-10)
+    stopifnot(abs(with(abba$submodel, IC) - with(hbba$submodel, IC + aic0))
+              < TOL)
 })
 
 
@@ -380,14 +394,16 @@ local({
     lm0 <- lm(mortality ~ ., data = AirPollution)
 
     best <- lmSelect(lm0, nbest = 10)
-    lm5 <- lm(formula(best, best = 5), data = AirPollution)
+    lm5 <- variable.names(best, best = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5)
 
-    nse <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10, model = FALSE)
+    nse <- lmSelect(mortality ~ ., data = AirPollution, nbest = 10,
+                    model = FALSE)
     rf5 <- refit(nse, best = 5)
 
     ## model frame
     stopifnot(abs(model.frame(nse)           - model.frame(lm0)) < TOL)
-    stopifnot(abs(model.frame(nse, best = 5) - model.frame(lm5)) < TOL)
     stopifnot(abs(model.frame(rf5)           - model.frame(lm5)) < TOL)
 })
 
@@ -400,13 +416,16 @@ local({
     lm0 <- lm(mortality ~ ., data = AirPollution)
 
     best <- lmSelect(lm0, nbest = 10)
-    lm5 <- lm(formula(best, best = 5), data = AirPollution)
+    lm5 <- variable.names(best, best = 5)
+    lm5 <- AirPollution[c("mortality", lm5[-1])]
+    lm5 <- lm(mortality ~ ., data = lm5)
 
-    nse <- lmSelect(formula(AirPollution[, c(16, 1:15)]), nbest = 10, model = FALSE)
+    nse <- paste(names(AirPollution)[-16], collapse = " + ")
+    nse <- paste0("mortality ~ ", nse)
+    nse <- lmSelect(as.formula(nse), nbest = 10, model = FALSE)
     rf5 <- refit(nse, best = 5)
 
     ## model frame
     stopifnot(abs(model.frame(nse)           - model.frame(lm0)) < TOL)
-    stopifnot(abs(model.frame(nse, best = 5) - model.frame(lm5)) < TOL)
     stopifnot(abs(model.frame(rf5)           - model.frame(lm5)) < TOL)
 }, env = AirPollution)

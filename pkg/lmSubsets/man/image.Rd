@@ -56,6 +56,7 @@
 ## data
 data("AirPollution", package = "lmSubsets")
 
+
 #################
 ##  lmSubsets  ##
 #################
@@ -73,6 +74,7 @@ image(lm_all, best = 1:3, hilite = 1:5, hilite_penalty = "BIC")
 ##  lmSelect  ##
 ################
 
+## default criterion: BIC
 lm_best <- lmSelect(lm_all)
 
 ## highlight 5 best (AIC)

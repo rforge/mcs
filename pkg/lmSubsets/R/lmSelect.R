@@ -1,6 +1,19 @@
+## Copyright 2018  Marc Hofmann and Achim Zeileis
 ##
-## File:  lmSelect.R
+## This file is part of 'lmSubsets'.
 ##
+## 'lmSubsets' is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## 'lmSubsets' is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with 'lmSubsets'.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
@@ -268,30 +281,59 @@ lmSelect.lmSubsets <- function (formula, penalty = "BIC", ...) {
 ## matrix interface
 ##
 ## Arguments:
-##   formula  - (double[,])
-##   y        - (double[])
-##   interept - (logical)
-##   ...      - forwarded
+##   formula   - (double[,])
+##   y         - (double[]|integer|character)
+##   intercept - (logical)
+##   ...       - forwarded
 ##
 ## Result: (lmSelect) see also 'lmSelect.default'
 ##
 lmSelect.matrix <- function (formula, y, intercept = TRUE, ...) {
-    x <- formula;  formula <- NULL
+    x_which <- seq_len(ncol(formula))
+    x_names <- colnames(formula)
 
-    ## names
-    x_names <- paste0("x[, ", seq_len(ncol(x)), "]")
-    if (all(x[, 1] == 1)) {
-        x_names <- x_names[, -1]
-        intercept <- TRUE
+    ## extract expression for x
+    x <- substitute(formula)
+
+    ## extract expression for y
+    if (length(y) != 1) {
+        y <- substitute(y)
+    } else {
+        if (is.numeric(y)) {
+            y <- match(y, x_which)
+        } else if (is.character(y)) {
+            y <- match(y, x_names)
+        } else {
+            stop ("'y' must be numeric or character")
+        }
+
+        if (is.na(y)) {
+            stop ("non-existing column selected in 'y'")
+        }
+
+        x_which <- x_which[-y]
+
+        y <- bquote(.(x)[, .(y)], list(x = x, y = x_names[y]))
     }
 
-    ## formula
-    f <- stats_formula(x_names, "y", intercept)
+    ## build formula
+    if (!is.null(x_names))  x_which <- x_names[x_which]
+
+    f <- bquote(.(x)[, .(j)], list(x = x, j = x_which[1]))
+    for (j in x_which[-1]) {
+        f <- bquote(.(f) + .(x)[, .(j)], list(f = f, x = x, j = j))
+    }
+
+    if (!intercept) {
+        f <- bquote(.(f) - 1, list(f = f))
+    }
+
+    f <- bquote(.(y) ~ .(f), list(y = y, f = f))
+    environment(f) <- parent.frame()
 
     ## forward call
     cl <- match.call()
     cl[[1]] <- quote(lmSelect)
-    cl$data <- bquote(list(x = .(x), y = .(y)), list(x = cl$formula, y = cl$y))
     cl$formula <- f
     cl$y <- cl$intercept <- NULL
 
@@ -588,17 +630,19 @@ formula.lmSelect <- function (x, best, ...) {
         best <- best[1]
     }
 
-    ## names
-    y_name <- all.vars(x$terms)[1]
-    x_names <- variable.names(x, best)
+    ## extract subset
+    ans <- variable.names(x, best, drop = TRUE)
+    ans <- as.logical(ans)
 
     if (x$intercept) {
-        x_names <- x_names[-1]
+        ans <- ans[-1]
     }
 
-    ## build formula
-    stats_formula(x_names, y_name, x$intercept,
-                  env = environment(x$terms))
+    ans <- x$terms[ans]
+    ans <- formula(ans)
+
+    ## done
+    ans
 }
 
 
@@ -606,46 +650,33 @@ formula.lmSelect <- function (x, best, ...) {
 ##
 ## Arguments:
 ##   object - (lmSubsets)
-##   best   - (integer)
 ##   ...    - ignored
 ##
 ## Result: (model.frame)
 ##
-model.frame.lmSelect <- function(formula, best, ...) {
+## See also:  model.frame.lm
+##
+model.frame.lmSelect <- function(formula, ...) {
     ## further arguments
     args <- list(...)
     m <- c("data", "na.action", "subset")
     m <- match(m, names(args), 0L)
     args <- args[m]
 
-    ## 'best' processing
-    if (missing(best)) {
-        if ((length(args) == 0) && !is.null(mf <- formula[["model"]])) {
-            return (mf)
-        }
-    } else if (length(best) > 1) {
-        warning ("'best' has length > 1: only the first element will be used")
-
-        best <- best[1]
-    }
-
-    ## extract formula
-    if (!missing(best)) {
-        f <- formula(formula, best = best)
-    } else {
-        f <- terms(formula)
+    if ((length(args) == 0) && !is.null(mf <- formula[["model"]])) {
+        return (mf)
     }
 
     ## forward call to 'model.frame'
     cl <- formula$call
-    m <- c("formula", "data", "subset",
-           "weights", "na.action", "offset")
+    m <- c("formula", "data", "subset", "weights", "na.action", "offset")
     m <- match(m, names(cl), 0L)
     cl <- cl[c(1L, m)]
     cl[[1L]] <- quote(model.frame)
-    cl$formula <- f
     cl$drop.unused.levels <- TRUE
     cl$xlev <- formula$xlevels
+    cl$formula <- terms(formula)
+    cl[names(args)] <- args
 
     env <- environment(formula$terms)
     if (is.null(env)) {
@@ -686,9 +717,10 @@ model.matrix.lmSelect <- function (object, best, ...) {
     }
 
     ## extract subset
-    ans <- with(object$submodel, BEST == best)
-    ans <- object$subset[ans, ]
-    ans <- x[, unlist(ans)]
+    ans <- variable.names(object, best = best, drop = TRUE)
+    ans <- as.logical(ans)
+    ans <- structure(x[, ans, drop = FALSE],
+                     assign = attr(x, "assign")[ans])
 
     ## done
     ans
