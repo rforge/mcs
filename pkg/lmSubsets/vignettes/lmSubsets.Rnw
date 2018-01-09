@@ -844,14 +844,13 @@ decades~\citep{bauer:nature:15}.  Numerical models simulate physical
 systems that operate at a large, typically global, scale.  The
 horizontal (spatial) resolution is limited by the computational power
 available today.  To obtain forecasts for specific locations, the NWP
-outputs are post-processed to correct for local effects and for
-certain model biases~\citep{barry:03}.  Model output statistics (MOS)
-develops a statistical relationship between the variable to be
-estimated (observed quantity) and selected variables from the
-numerical model at some projection time (forecasted
-quantities)~\citep{glahn:j_appl_meteorol:72}.  MOS employs
-variable-subset selection to determine which NWP variables should be
-included in the regression model for a specific location.
+outputs are post-processed to correct for local and unresolved effects.
+Model output statistics (MOS, \citealp{glahn:j_appl_meteorol:72})
+develops a statistical relationship between observations of a
+meteorological variable to be predicted and the corresponding projected
+NWP quantity at some lead time. To refine such a basic MOS,
+variable-subset selection is often employed to determine which NWP
+outputs should be included in the regression model for a specific location.
 
 In the following, package \pkg{lmSubsets} is used to build a MOS
 regression model predicting temperature at Innsbruck Airport, Austria,
@@ -864,7 +863,7 @@ variables include quantities pertaining to temperature (e.g., 2-meter
 above ground, minimum, maximum, soil), precipitation, wind, and
 fluxes, among others.  See \code{?IbkTemperature} for more details.
 
-First, the dataset is loaded and missing values are omitted for
+First, the dataset is loaded and the few missing values are omitted for
 simplicity.
 <<data>>=
 data("IbkTemperature", package = "lmSubsets")
@@ -1024,7 +1023,7 @@ for (nm in rownames(stat_tab)) {
 \end{table}
 
 Next, the reference model is extended with selected regressors taken
-from the remaining 35 NWP variables.
+from the remaining 35~NWP variables.
 <<>>=
 <<mos1>>
 @
@@ -1094,7 +1093,7 @@ instead of the cheaper best-subsets regression -- in order to give
 insights into possible variable selection patterns over a range of
 submodel sizes.  The \class{lm} object for the submodel with the
 lowest BIC is extracted (\code{MOS2}).  See Table~\ref{tab:summary}
-for \code{MOS2} statistics.
+for \code{MOS2} summary statistics.
 
 The best-BIC models \code{MOS1} and \code{MOS2} both have 13
 regressors.  The deterministic trend and all but one of the harmonic
