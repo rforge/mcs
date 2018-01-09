@@ -20,7 +20,7 @@
 image.lmSubsets <- function (x, size = NULL, best = 1, which = NULL, hilite,
                              hilite_penalty, main, sub, xlab = NULL, ylab,
                              ann = par("ann"), axes = TRUE,
-                             col = c("gray30", "gray90"), lab = "lab",
+                             col = c("gray40", "gray90"), lab = "lab",
                              col_hilite = cbind("red", "pink"),
                              lab_hilite = "lab", pad_size = 3, pad_best = 1,
                              pad_which = 3, axis_pos = -4, axis_tck = -4,
@@ -36,6 +36,10 @@ image.lmSubsets <- function (x, size = NULL, best = 1, which = NULL, hilite,
     heatmap <- variable.names(object, size = size, best = best, na.rm = TRUE,
                               drop = TRUE)
     rownames(heatmap) <- attr(heatmap, "SIZE")
+    colnames(heatmap)[object$include] <-
+        paste0("+", colnames(heatmap)[object$include])
+    colnames(heatmap)[object$exclude] <-
+        paste0("-", colnames(heatmap)[object$exclude])
     heatmap <- heatmap[, which, drop = FALSE]
 
     ## highlight
@@ -184,11 +188,15 @@ image.lmSubsets <- function (x, size = NULL, best = 1, which = NULL, hilite,
     if (ann) {
         if (missing(main))  main <- "All subsets"
         if (missing(sub)) {
-            sub <- paste0(format_ordinal(best), collapse = ", ")
-            sub <- paste0("Best = ", sub)
+            if (length(best) > 1) {
+                sub <- paste0(format_ordinal(best), collapse = ", ")
+                sub <- paste0("best = ", sub)
+            } else {
+                sub <- NULL
+            }
         }
-        if (missing(ylab))  ylab <- if (length(best) > 1) quote(Size %*% Best)
-                                    else quote(Size)
+        if (missing(ylab))  ylab <- if (length(best) > 1) quote(size %*% best)
+                                    else quote(size)
 
         title(main = main, sub = sub, xlab = xlab, ylab = ylab)
     }
@@ -200,8 +208,8 @@ image.lmSubsets <- function (x, size = NULL, best = 1, which = NULL, hilite,
 
 image.lmSelect <- function (x, best = NULL, which = NULL, hilite,
                             hilite_penalty, main, sub = NULL, xlab = NULL,
-                            ylab = NULL, ann = par("ann"), axes = TRUE,
-                            col = c("gray30", "gray90"), lab = "lab",
+                            ylab, ann = par("ann"), axes = TRUE,
+                            col = c("gray40", "gray90"), lab = "lab",
                             col_hilite = cbind("red", "pink"),
                             lab_hilite = "lab", pad_best = 2, pad_which = 2,
                             axis_pos = -4, axis_tck = -4, axis_lab = -10, ...) {
@@ -215,8 +223,12 @@ image.lmSelect <- function (x, best = NULL, which = NULL, hilite,
 
     heatmap <- variable.names(object, best = best, drop = TRUE,
                               na.rm = TRUE)
-    rownames(heatmap) <- format_ordinal(attr(heatmap, "BEST"))
-    heatmap <- heatmap[rev(seq_len(nrow(heatmap))), which, drop = FALSE]
+    rownames(heatmap) <- paste0(attr(heatmap, "BEST"))
+    colnames(heatmap)[object$include] <-
+        paste0("+", colnames(heatmap)[object$include])
+    colnames(heatmap)[object$exclude] <-
+        paste0("-", colnames(heatmap)[object$exclude])
+    heatmap <- heatmap[seq_len(nrow(heatmap)), which, drop = FALSE]
 
     ## highlight
     if (missing(hilite)) {
@@ -307,7 +319,7 @@ image.lmSelect <- function (x, best = NULL, which = NULL, hilite,
                  lend = 1, xpd = TRUE)
 
         right <- pix2usr(x = axis_lab[2], carry = +1)
-        text(x = right, y = top, labels = unique(rownames(heatmap)),
+        text(x = right, y = top, labels = rev(rownames(heatmap)),
              adj = c(1, 1), cex = 0.9, xpd = TRUE)
 
         ## x axis
@@ -355,6 +367,7 @@ image.lmSelect <- function (x, best = NULL, which = NULL, hilite,
     ## annotations
     if (ann) {
         if (missing(main))  main <- "Best subsets"
+        if (missing(ylab))  ylab <- "best"
 
         title(main = main, sub = sub, xlab = xlab, ylab = ylab)
     }

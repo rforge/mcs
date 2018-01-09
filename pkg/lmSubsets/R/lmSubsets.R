@@ -520,8 +520,11 @@ plot.lmSubsets <- function (x, penalty = "BIC", xlim, ylim_rss, ylim_ic,
     ## annotations
     if (ann) {
         if (missing(main))  main <- "All subsets"
-        if (missing(sub))  sub <- paste("nbest = ", object$nbest)
-        if (missing(xlab))  xlab <- "Number of regressors"
+        if (missing(sub)) {
+            sub <- if (object$nbest > 1)  paste("nbest = ", object$nbest)
+                   else NULL
+        }
+        if (missing(xlab))  xlab <- "size"
         if (missing(ylab_rss))  ylab_rss <- "deviance"
 
         title(main = main, sub = sub, xlab = xlab, ylab = ylab_rss)

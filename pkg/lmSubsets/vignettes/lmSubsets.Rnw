@@ -34,7 +34,7 @@
 \usepackage{bbm}
 \usepackage{tikz,forest}
 \usepackage{multirow}
-%\usepackage[dvipsnames]{xcolor}
+\usepackage{subcaption}
 
 
 %--------------------------------------------------------------------%
@@ -77,7 +77,7 @@
 }
 \Plainauthor{Marc Hofmann, Cristian Gatu, Erricos J. Kontoghiorghes, Ana Colubi, Achim Zeileis}
 
-\title{\pkg{lmSubsets}: Exact Variable-Subset Selection in Linear Regression for {\R}}
+\title{\pkg{lmSubsets}: Exact Variable-Subset Selection in Linear Regression for \proglang{R}}
 \Plaintitle{lmSubsets: Exact Variable-Subset Selection in Linear Regression for R}
 
 \Abstract{
@@ -449,7 +449,8 @@ The DCA and its derivatives report the $N$ subset models with the
 lowest RSS, one for each subset size.  The user can then analyze the
 list of returned subsets to determine the \dquote{best} subset, for
 example by evaluating some criterion function.  This approach is
-practical but not necessarily the most efficient.  Let $f$ be a
+practical but not necessarily the most efficient to solve the
+best-subset selection problem~\eqref{eq:best_subset}.  Let $f$ be a
 criterion function such that $f(S)=F(n,\rho)$, where $n=\card{S}$ and
 $\rho=\rss(S)$, satisfying the monotonicity
 property~\eqref{eq:f:monotonicity}.  The $f$-BBA specializes the
@@ -675,7 +676,7 @@ The parameters are summarized in Table~\ref{tab:params}.
     \code{nmax}      & max.~number of regressors & \code{integer[1]}         & \fct{lmSubsets} only \\
     \code{penalty}   & penalty per parameter     & \code{double[1]}          & \fct{lmSelect} only  \\
                      & or criterion function     & \code{function[1]}        &  		    \\
-    \code{tolerance} & BBA tolerance parameters  & \code{double[nvar]}       & \fct{lmSubsets}      \\
+    \code{tolerance} & ABBA tolerance parameter  & \code{double[nvar]}       & \fct{lmSubsets}      \\
                      &                           & \code{double[1]}          & \fct{lmSelect}	    \\
     \code{nbest}     & number of best subsets    & \code{integer[1]}                                \\
     \code{pradius}   & preordering radius        & \code{integer[1]}                                \\
@@ -707,9 +708,10 @@ selection algorithm, and the search space is thus reduced.
 In the second approach, expectations with respect to the solution
 quality are lowered, i.e., non-optimal solutions are tolerated.  The
 numeric value -- typically between $0$ and $1$ -- passed as the
-\code{tolerance} argument indicates the degree of over-pruning
-performed by the ABBA cutting test~\eqref{eq:abba}.  The solution
-produced by the ABBA satisfies the following relationship:
+\code{tolerance} argument indicates the degree of
+\dquote{over-pruning} performed by the ABBA cutting
+test~\eqref{eq:abba}.  The solution produced by the ABBA satisfies the
+following relationship:
 %
 \begin{equation*}
   f(S)-f(V)\leq(1+\mathtt{tolerance})\cdot (f(S^*)-f(V))\mathrm{,}
@@ -823,7 +825,7 @@ is handed back.
     \fct{residuals}       & extract residual values             \\
     \bottomrule
   \end{tabular}
-  \caption{\SSS{} methods for \class{lmSubsets} and \class{lmSelect}
+  \caption{{\SSS} methods for \class{lmSubsets} and \class{lmSelect}
     objects.}
   \label{tab:methods}
 \end{table}
@@ -836,65 +838,67 @@ is handed back.
 \section{Case study: Variable selection in weather forecasting}
 \label{sec:usecase}
 
-Over the last decades the field of weather forecasting made steady and
-substantial improvements especially through improvements in numerical
-weather prediction (NWP) models \citep{bauer:nature:15}.
-Starting from \cite{glahn:j_appl_meteorol:72} the outputs from these
-physically-based large-scale (typically global) NWP models are
-statistically post-processed to correct small-scale biases and obtain
-predictions for specific locations. Such model output statistics (MOS)
-relate past meteorological observations to the corresponding NWP
-quantity but can also include further quantities as additional regressors.
-Variable-subset selection is often employed to determine which
-NWP quantities should be included in the MOS regression model
-for a specific location.
+Advances in numerical weather prediction (NWP) have played an
+important role in the increase of weather forecast skill over the past
+decades~\citep{bauer:nature:15}.  Numerical models simulate physical
+systems that operate at a large, typically global, scale.  The
+horizontal (spatial) resolution is limited by the computational power
+available today.  To obtain forecasts for specific locations, the NWP
+outputs are post-processed to correct for local effects and for
+certain model biases~\citep{barry:03}.  Model output statistics (MOS)
+develops a statistical relationship between the variable to be
+estimated (observed quantity) and selected variables from the
+numerical model at some projection time (forecasted
+quantities)~\citep{glahn:j_appl_meteorol:72}.  MOS employs
+variable-subset selection to determine which NWP variables should be
+included in the regression model for a specific location.
 
-In the following, we use such \pkg{lmSubsets} to build a MOS regression
-model predicting temperature at Innsbruck Airport, Austria, based on a wide
-range of NWP quantities from the Global Ensemble Forecast
+In the following, package \pkg{lmSubsets} is used to build a MOS
+regression model predicting temperature at Innsbruck Airport, Austria,
+based on data from the Global Ensemble Forecast
 System~\citep{hamill:b_am_meteorol_soc:13}.  The data frame
-\code{IbkTemperature} contains 1824 daily cases for 42 variables. The
-data frame \code{IbkTemperature} contains 1824 daily cases
-for the observed response (in degree Celsius), 36 NWP outputs (forecasted),
-and five deterministic time trend/season patterns. The NWP variables include
-several temperature quantities (in degree Kelvin, e.g., 2-meter, minimum,
-maximum, soil) as well as several quantities capturing precipitation, wind,
-and fluxes among others. See \code{?IbkTemperature} for more details.
+\code{IbkTemperature} contains 1824 daily cases for 42 variables: the
+temperature at Innsbruck Airport (observed), 36 NWP outputs
+(forecasted), and 5 deterministic time trend/season patterns.  The NWP
+variables include quantities pertaining to temperature (e.g., 2-meter
+above ground, minimum, maximum, soil), precipitation, wind, and
+fluxes, among others.  See \code{?IbkTemperature} for more details.
 
-First, the dataset is loaded and for simplicity a couple of missing values
-are omitted.
+First, the dataset is loaded and missing values are omitted for
+simplicity.
 <<data>>=
 data("IbkTemperature", package = "lmSubsets")
 IbkTemperature <- na.omit(IbkTemperature)
 @
-A simple output model (\code{MOS0}) for the observed temperature
-(\code{temp}) is constructed, which will serve here as a reference model.
-It consists of the 2-meter temperature NWP forecast (\code{t2m}), a linear
-trend component (\code{time}), as well as harmonic seasonal components at
-annual (\code{sin}, \code{cos}) and bi-annual (\code{sin2}, \code{cos2})
-frequencies.
+A simple output model for the observed temperature (\code{temp}) is
+constructed, which will serve as the reference model.  It consists of
+the 2-meter temperature NWP forecast (\code{t2m}), a linear trend
+component (\code{time}), as well as seasonal components with annual
+(\code{sin}, \code{cos}) and bi-annual (\code{sin2}, \code{cos2})
+harmonic patterns.
 <<mos0>>=
 MOS0 <- lm(temp ~ t2m + time + sin + cos + sin2 + cos2,
   data = IbkTemperature)
 @
 
-<<mos1-all, echo=FALSE>>=
-MOS1.all <- lmSubsets(temp ~ ., data = IbkTemperature,
-  include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
-MOS1 <- refit(lmSelect(MOS1.all, penalty = "BIC"))
+<<mos1, echo=FALSE>>=
+MOS1_best <- lmSelect(temp ~ ., data = IbkTemperature,
+  include = c("t2m", "time", "sin", "cos", "sin2", "cos2"),
+  penalty = "BIC", nbest = 20)
+MOS1 <- refit(MOS1_best)
 @
 
-<<mos2-all, echo=FALSE>>=
-MOS2.all <- lmSubsets(temp ~ ., data = IbkTemperature)
-MOS2 <- refit(lmSelect(MOS2.all, penalty = "BIC"))
+<<mos2, echo=FALSE>>=
+MOS2_all <- lmSubsets(temp ~ ., data = IbkTemperature)
+MOS2 <- refit(lmSelect(MOS2_all, penalty = "BIC"))
 @
 
 The estimated coefficients (and standard errors) are shown in
-Table~\ref{tab:coefs}.  It can be observed that despite the inclusion
-of the dynamic variable \code{t2m}, the coefficients for the
+Table~\ref{tab:summary}.  It can be observed that despite the
+inclusion of the NWP variable \code{t2m}, the coefficients for the
 deterministic components remain significant, which indicates that the
 seasonal temperature fluctuations are not fully resolved by the
-dynamic model.
+numerical model.
 
 \begin{table}[t!]
 \centering
@@ -1014,90 +1018,111 @@ for (nm in rownames(stat_tab)) {
 \bottomrule
 \end{tabular}}
 \caption{Estimated regression coefficients (along with standard
-  errors ) and summary statistics for the output models \code{MOS0} and
-  \code{MOS1}.}
-\label{tab:coefs}%
+  errors) and summary statistics for models \code{MOS0}, \code{MOS1},
+  and \code{MOS2}.}
+\label{tab:summary}%
 \end{table}
 
-Next, variable-subset models with the lowest RSS for all submodel
-sizes are computed and the \class{lm} object corresponding to the
-submodel with the lowest BIC score is extracted. Two ``flavors''
-of variable selection are considered: (1) The variables from the
-based \code{MOS0} (based on the direct model output and climatology)
-are kept in the model and all-subsets regression is employed to select
-the relevant regressors from the remaining 35 NWP variables.
+Next, the reference model is extended with selected regressors taken
+from the remaining 35 NWP variables.
 <<>>=
-<<mos1-all>>
+<<mos1>>
 @
-(2) All variables are considered in the subset selection without
-restriction (i.e., searching models with (2--42 regressors, including
-the intercept).
-<<>>=
-<<mos2-all>>
-@
-The best-BIC models \code{MOS1} and \code{MOS2} both have 13 regressors,
-which are listed in Table~\ref{tab:coefs}. Up to eight additional
-NWP outputs are selected, six of which are included in both selections:
-quantities relating to temperature (\code{tmax2m}, \code{st}, \code{t2pvu}),
-pressure (\code{mslp}, \code{p2pvu}), hydrology (\code{vsmc}, \code{wr}), and
-heat flux (\code{sshnf}). The deterministic trend and most of the harmonic
-seasonal components are retained also in \code{MOS2}. However, and most
-remarkably, \code{MOS1} does not include the direct 2-meter temperature
-output from the NWP (\code{t2m}). The summary statistics reveal that
-both \code{MOS1} and \code{MOS2} significantly improves over the simple
-reference model \code{MOS0} with \code{MOS2} begin very slightly better
-than \code{MOS1}. 
-
-The RSS and BIC of the variable-subset models for all sizes 2--42
-in \code{MOS2.all} are illustrated in Figure~\ref{fig:mos2:plot},
-showing again that the BIC minimum is attained at 13 regressors.
+Best-subset regression is employed to determine pertinent veriables in
+addition to the regressors already found in \code{MOS0}.  The 20 best
+submodels with respect to the BIC are computed.  The selected subsets
+and the corresponding BIC values are illustrated in
+Figures~\ref{fig:image:mos1} and~\ref{fig:plot:mos1}, respectively.
+The \class{lm} object for the best submodel is extracted
+(\code{MOS1}).  Selected coefficients and summary statistics for
+\code{MOS1} are listed in Table~\ref{tab:summary}.
 
 \begin{figure}[t!]
 \centering
-\setkeys{Gin}{width=0.6\textwidth}
-<<fig-mos2-plot, fig=TRUE, echo=FALSE>>=
-plot(MOS2.all)
-@
-\caption{RSS and BIC for the best subset models.}
-\label{fig:mos2:plot}
-\end{figure}
-
-Furthermore, the 20 overall best MOS subset models are computed in
-\code{MOS2.best} and illustrated by a selection heatmap in
-Figure~\ref{fig:mos2:image}.
-<<mos2-best>>=
-MOS2.best <- lmSelect(temp ~ ., data = IbkTemperature, penalty = "BIC",
-  nbest = 20)
-@
-A selected variable is indicated by a dark cell with the number of
-selected variables per submodel ranging from 11 to 14. Note that
-\code{t2m} has not been picked up by any of the submodels but instead
-\code{tmax2m}, \code{st}, and \code{t2pvu} are included in all of them.
-
-\begin{figure}[t!]
-\centering
+\begin{subfigure}[b]{\textwidth}
 \setkeys{Gin}{width=\textwidth}
-<<fig-mos2-image, fig=TRUE, echo=FALSE, height=6, width=12>>=
-image(MOS2.best, col = c("gray50", "gray90"), lab = c("bold(lab)", "lab"),
-  hilite = 1, hilite_col = "red")
+<<fig-image-mos1, fig=TRUE, echo=FALSE, width=12, height=6.5>>=
+image(MOS1_best, hilite = 1, lab_hilite = "bold(lab)",
+      pad_size = 2, pad_which = 2)
 @
-\caption{Subset selection for \code{MOS2.best}.}
-\label{fig:mos2:image}
+\caption{\code{MOS1\_best}}
+\label{fig:image:mos1}
+\end{subfigure}
+\begin{subfigure}[b]{\textwidth}
+\setkeys{Gin}{width=\textwidth}
+<<fig-image-mos2, fig=TRUE, echo=FALSE, width=12, height=6.5>>=
+image(MOS2_all, size = 8:27, hilite = 1, hilite_penalty = "BIC",
+      lab_hilite = "bold(lab)", pad_size = 2, pad_which = 2)
+@
+\caption{\code{MOS2\_all}}
+\label{fig:image:mos2}
+\end{subfigure}
+\caption{Variables selected in \code{MOS1\_best} and \code{MOS2\_all}.
+  Submodels \code{MOS1} and \code{MOS2} are highlighted in red.}
 \end{figure}
+
+\begin{figure}[t!]
+\centering
+\begin{subfigure}[b]{0.5\textwidth}
+\setkeys{Gin}{width=\textwidth}
+<<fig-plot-mos1, fig=TRUE, echo=FALSE>>=
+plot(MOS1_best)
+@
+\caption{\code{MOS1\_best}}
+\label{fig:plot:mos1}
+\end{subfigure}%
+\begin{subfigure}[b]{0.5\textwidth}
+\setkeys{Gin}{width=\textwidth}
+<<fig-plot-mos2, fig=TRUE, echo=FALSE>>=
+plot(MOS2_all, ylim_ic = c(9000, 9700))
+@
+\caption{\code{MOS2\_all}}
+\label{fig:plot:mos2}
+\end{subfigure}
+\caption{BIC (and RSS) for submodels in \code{MOS1\_best} and
+  \code{MOS2\_all}.}
+\end{figure}
+
+Finally, an all-subsets regression is conducted on all 41 variables
+without any restrictions.
+<<>>=
+<<mos2>>
+@
+The results are illustrated in Figures~\ref{fig:image:mos2}
+and~\ref{fig:plot:mos2}.  Here, all-subsets regression is employed --
+instead of the cheaper best-subsets regression -- in order to give
+insights into possible variable selection patterns over a range of
+submodel sizes.  The \class{lm} object for the submodel with the
+lowest BIC is extracted (\code{MOS2}).  See Table~\ref{tab:summary}
+for \code{MOS2} statistics.
+
+The best-BIC models \code{MOS1} and \code{MOS2} both have 13
+regressors.  The deterministic trend and all but one of the harmonic
+seasonal components are retained in \code{MOS2}.  In addition,
+\code{MOS1} and \code{MOS2} share six NWP outputs relating to
+temperature (\code{tmax2m}, \code{st}, \code{t2pvu}), pressure
+(\code{mslp}, \code{p2pvu}), hydrology (\code{vsmc}, \code{wr}), and
+heat flux (\code{sshnf}).  However, and most remarkably, \code{MOS1}
+does not include the direct 2-meter temperature output from the NWP
+model (\code{t2m}).  In fact, \code{t2m} is not included by any of the
+20 submodels (sizes 8 to 27) shown in Figure~\ref{fig:image:mos2},
+whereas the temperature quantities \code{tmax2m}, \code{st},
+\code{t2pvu} are included by all.  The summary statistics reveal that
+both \code{MOS1} and \code{MOS2} significantly improve over the simple
+reference model \code{MOS0}, with \code{MOS2} being slightly better
+than \code{MOS1}.
 
 In summary, this case study illustrates how \pkg{lmSubsets} can be
 used to easily identify relevant variables beyond the direct model
 output for MOS regressions, yielding substantial improvements in
-forecasting skill. In a full meteorological application this should,
-of course, be further tested using cross-validation or other
-out-of-sample assessments. Similarly, it is worth remarking that
-recently there has been increasing interest in MOS models beyond
-least-squares linear regression, e.g., for incorporating heteroscedasticity,
-censoring, or truncation. As all-subsets regression is much more
-burdensome in such models, other selection techniques such as boosting can
-be considered \citep[e.g., as available in the \pkg{crch} package,][]{messner:r_j:16,messner:mon_wea_rev:17}.
-A comparison with such approaches, however, is beyond the scope of this
-paper.
+forecasting skill.  A full meteorological application would require
+further testing using cross-validation or other out-of-sample
+assessments.  Recently, there has been increasing interest in MOS
+models beyond least-squares linear regression, e.g., to take into
+account the effects of heteroscedasticity, censoring, and truncation.
+In this context, other selection techniques -- such as
+boosting~\citep{messner:r_j:16,messner:mon_weather_rev:17} -- can be
+considered.
 
 
 
@@ -1243,7 +1268,7 @@ junk <- lapply(split(df, with(df, SD)), function (grp) {
 \end{table}
 
 It is not surprising that \fct{bestglm} is very close to \fct{leaps}
-in terms of running times, as the former post-processes the results
+in terms of execution time, as the former post-processes the results
 returned by the latter; in fact, \fct{bestglm} implements the
 two-stage approach to solving the best-subset selection problem, where
 Stage~1 is tackled by \fct{leaps} (see Section~\ref{sec:intro} for

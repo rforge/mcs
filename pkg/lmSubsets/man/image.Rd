@@ -17,15 +17,15 @@
 
 \method{image}{lmSubsets}(x, size = NULL, best = 1, which = NULL,
       hilite, hilite_penalty, main, sub, xlab = NULL, ylab,
-      ann = par("ann"), axes = TRUE, col = c("gray30", "gray90"),
+      ann = par("ann"), axes = TRUE, col = c("gray40", "gray90"),
       lab = "lab", col_hilite = cbind("red", "pink"),
       lab_hilite = "lab", pad_size = 3, pad_best = 1,
       pad_which = 3, axis_pos = -4, axis_tck = -4,
       axis_lab = -10, ...)
 
 \method{image}{lmSelect}(x, best = NULL, which = NULL, hilite,
-      hilite_penalty, main, sub = NULL, xlab = NULL, ylab = NULL,
-      ann = par("ann"), axes = TRUE, col = c("gray30", "gray90"),
+      hilite_penalty, main, sub = NULL, xlab = NULL, ylab,
+      ann = par("ann"), axes = TRUE, col = c("gray40", "gray90"),
       lab = "lab",  col_hilite = cbind("red", "pink"),
       lab_hilite = "lab", pad_best = 2, pad_which = 2,
       axis_pos = -4, axis_tck = -4, axis_lab = -10, ...)
