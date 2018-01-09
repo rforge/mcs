@@ -21,7 +21,7 @@
 \format{
   A data frame containing 1824 daily observations/forecasts for 42 variables.
   The first column (\code{temp}) contains temperature observations at
-  00UTC (coordinated universal time) in degree Celsius, columns 2--37 are
+  00UTC (coordinated universal time) in degrees Celsius, columns 2--37 are
   24-hour lead time GEFS reforecast ensemble means for different variables (see below).
   Columns 38--42 are deterministic time trend/season patterns.
 

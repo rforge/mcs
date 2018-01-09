@@ -56,8 +56,7 @@ data("AirPollution")
 
   Miller AJ (2002). 
   \emph{Subset Selection in Regression}.
-  New York: Chapman and Hall. Related software can be found online at
-  \url{http://users.bigpond.net.au/amiller/}.
+  New York: Chapman and Hall.
 }
 
 
