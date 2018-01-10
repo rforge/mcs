@@ -87,60 +87,63 @@
 
 
 \examples{
-## load data and omit only a couple of observations with some missing values
+## load data and omit missing values
 data("IbkTemperature", package = "lmSubsets")
 IbkTemperature <- na.omit(IbkTemperature)
 
 ## fit a simple climatological model for the temperature
 ## with a linear trend and annual/bi-annual harmonic seasonal pattern
-m0 <- lm(temp ~ time + sin + cos + sin2 + cos2, data = IbkTemperature)
+CLIM <- lm(temp ~ time + sin + cos + sin2 + cos2,
+  data = IbkTemperature)
 
 ## fit a simple MOS with 2-meter temperature forecast in addition
 ## to the climatological model
-m1 <- lm(temp ~ t2m + time + sin + cos + sin2 + cos2, data = IbkTemperature)
+MOS0 <- lm(temp ~ t2m + time + sin + cos + sin2 + cos2,
+  data = IbkTemperature)
 
 ## graphical comparison and MOS summary
 plot(temp ~ time, data = IbkTemperature, type = "l", col = "darkgray")
-lines(fitted(m1) ~ time, data = IbkTemperature, col = "darkred")
-lines(fitted(m0) ~ time, data = IbkTemperature, lwd = 2)
-m1
+lines(fitted(MOS0) ~ time, data = IbkTemperature, col = "darkred")
+lines(fitted(CLIM) ~ time, data = IbkTemperature, lwd = 2)
+MOS0
 
 ## best subset selection of remaining variables for the MOS
 ## (i.e., forcing the regressors of m1 into the model)
-ms2 <- lmSubsets(temp ~ ., data = IbkTemperature,
-                 include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
-plot(ms2)
-image(ms2, size = 8:20)
+MOS1_all <- lmSubsets(temp ~ ., data = IbkTemperature,
+  include = c("t2m", "time", "sin", "cos", "sin2", "cos2"))
+plot(MOS1_all)
+image(MOS1_all, size = 8:20)
 ## -> Note that soil temperature and maximum temperature are selected
 ## in addition to the 2-meter temperature
 
 ## best subset selection of all variables
-ms3 <- lmSubsets(temp ~ ., data = IbkTemperature)
-plot(ms3)
-image(ms3, size = 2:20)
+MOS2_all <- lmSubsets(temp ~ ., data = IbkTemperature)
+plot(MOS2_all)
+image(MOS2_all, size = 2:20)
 ## -> Note that 2-meter temperature is not selected into the best
 ## BIC model but soil-temperature (and maximum temperature) are used instead
 
 ## refit the best BIC subset selections
-m2 <- refit(lmSelect(ms2))
-m3 <- refit(lmSelect(ms3))
+MOS1 <- refit(lmSelect(MOS1_all))
+MOS2 <- refit(lmSelect(MOS2_all))
 
 ## compare BIC
-BIC(m0, m1, m2, m3)
+BIC(CLIM, MOS0, MOS1, MOS2)
 
 ## compare RMSE
-sqrt(sapply(list(m0, m1, m2, m3), deviance)/nrow(IbkTemperature))
+sqrt(sapply(list(CLIM, MOS0, MOS1, MOS2), deviance)/
+  nrow(IbkTemperature))
 
 ## compare coefficients
-cf0 <- coef(m0)
-cf1 <- coef(m1)
-cf2 <- coef(m2)
-cf3 <- coef(m3)
-names(cf2) <- gsub("^x", "", names(coef(m2)))
-names(cf3) <- gsub("^x", "", names(coef(m3)))
+cf0 <- coef(CLIM)
+cf1 <- coef(MOS0)
+cf2 <- coef(MOS1)
+cf3 <- coef(MOS2)
+names(cf2) <- gsub("^x", "", names(coef(MOS1)))
+names(cf3) <- gsub("^x", "", names(coef(MOS2)))
 nam <- unique(c(names(cf0), names(cf1), names(cf2), names(cf3)))
 cf <- matrix(NA, nrow = length(nam), ncol = 4,
-             dimnames = list(nam, c("m0", "m1", "m2", "m3")))
+  dimnames = list(nam, c("CLIM", "MOS0", "MOS1", "MOS2")))
 cf[names(cf0), 1] <- cf0
 cf[names(cf1), 2] <- cf1
 cf[names(cf2), 3] <- cf2
