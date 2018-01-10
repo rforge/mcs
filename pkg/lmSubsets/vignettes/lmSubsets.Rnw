@@ -843,15 +843,15 @@ important role in the increase of weather forecast skill over the past
 decades~\citep{bauer:nature:15}.  Numerical models simulate physical
 systems that operate at a large, typically global, scale.  The
 horizontal (spatial) resolution is limited by the computational power
-available today. Starting from \cite{glahn:j_appl_meteorol:72}
-the NWP outputs are post-processed to correct for local and unresolved
-effects in order to obtain forecasts for specific locations
-\citep[see][Chapter~7, for an overview]{wilks:11}. So-called model
-output statistics (MOS) develops a regression relationship based
-on past meteorological observations of the variable to be predicted
-and forecasted NWP quantities at a certain lead time. Variable-subset
-selection is often employed to determine which NWP outputs should be
-included in the regression model for a specific location.
+available today.  To obtain forecasts for specific locations, the NWP
+outputs are post-processed to correct for local and unresolved
+effects~\citep[p. 220]{wilks:06}.  Model output statistics (MOS,
+\citealp{glahn:j_appl_meteorol:72}) develops a statistical
+relationship between a meteorological variable to be predicted
+(observed quantity) and variables from the numerical model at some
+lead time (forecasted quantities).  MOS employs variable-subset
+selection to determine which NWP outputs to include in the regression
+model for a specific location.
 
 In the following, package \pkg{lmSubsets} is used to build a MOS
 regression model predicting temperature at Innsbruck Airport, Austria,
