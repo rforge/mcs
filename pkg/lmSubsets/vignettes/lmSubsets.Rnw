@@ -845,7 +845,7 @@ systems that operate at a large, typically global, scale.  The
 horizontal (spatial) resolution is limited by the computational power
 available today.  To obtain forecasts for specific locations, the NWP
 outputs are post-processed to correct for local and unresolved
-effects~\citep{wilks:11}.  Model output statistics (MOS,
+effects~\citep[p. 220]{wilks:06}.  Model output statistics (MOS,
 \citealp{glahn:j_appl_meteorol:72}) develops a statistical
 relationship between a meteorological variable to be predicted
 (observed quantity) and variables from the numerical model at some
