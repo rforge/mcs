@@ -19,16 +19,17 @@
 
 
 \format{
-  A data frame containing 1824 daily observations/forecasts for 42 variables.
-  The first column (\code{temp}) contains temperature observations at
-  00UTC (coordinated universal time) in degrees Celsius, columns 2--37 are
-  24-hour lead time GEFS reforecast ensemble means for different variables (see below).
-  Columns 38--42 are deterministic time trend/season patterns.
+  A data frame containing 1824 daily observations/forecasts for 42
+  variables.  The first column (\code{temp}) contains temperature
+  observations at 00UTC (coordinated universal time), columns 2--37 are
+  24-hour lead time GEFS reforecast ensemble means for different
+  variables (see below).  Columns 38--42 are deterministic time
+  trend/season patterns.
 
   \describe{
-    \item{temp}{Observed temperature at Innsbruck Airport.} 
+    \item{temp}{Observed temperature at Innsbruck Airport (C).} 
     \item{tp}{Total accumulated precipitation.} 
-    \item{t2m}{Temperature at 2 meters.}
+    \item{t2m}{Temperature at 2 meters (K).}
     \item{u10m}{U-component of wind at 10 meters.} 
     \item{v10m}{V-component of wind at 10 meters.} 
     \item{u80m}{U-component of wind at 80 meters.} 
@@ -49,16 +50,16 @@
     \item{sh2m}{Specific humidity at 2 meters.} 
     \item{tcc}{Total cloud cover.} 
     \item{tcic}{Total column-integrated condensate.} 
-    \item{tsfc}{Skin temperature.} 
-    \item{tmax2m}{Maximum temperature.} 
-    \item{tmin2m}{Minimum temperature.} 
-    \item{st}{Soil temperature (0-10 cm below surface).} 
+    \item{tsfc}{Skin temperature (K).} 
+    \item{tmax2m}{Maximum temperature (K).} 
+    \item{tmin2m}{Minimum temperature (K).} 
+    \item{st}{Soil temperature (0-10 cm below surface) (K).} 
     \item{ulwrf}{Upward long-wave radiation flux.}  
     \item{wr}{Water runoff.} 
     \item{we}{Water equivalent of accumulated snow depth.} 
     \item{wp}{Wind mixing energy.} 
     \item{w850}{Vertical velocity at 850 hPa surface.} 
-    \item{t2pvu}{Temperature on 2 PVU surface.} 
+    \item{t2pvu}{Temperature on 2 PVU surface (K).} 
     \item{p2pvu}{Pressure on 2 PVU surface.} 
     \item{u2pvu}{U-component of wind on 2 PVU surface.} 
     \item{v2pvu}{U-component of wind on 2 PVU surface.} 
