@@ -27,43 +27,43 @@
   trend/season patterns.
 
   \describe{
-    \item{temp}{Observed temperature at Innsbruck Airport.} 
-    \item{tp}{Total accumulated precipitation.} 
-    \item{t2m}{Temperature at 2 meters.}
-    \item{u10m}{U-component of wind at 10 meters.} 
-    \item{v10m}{V-component of wind at 10 meters.} 
-    \item{u80m}{U-component of wind at 80 meters.} 
-    \item{v80m}{U-component of wind at 80 meters.} 
-    \item{cape}{Convective available potential energy.} 
-    \item{ci}{Convective inhibition.} 
-    \item{sdlwrf}{Surface downward long-wave radiation flux.} 
-    \item{sdswrf}{Surface downward short-wave radiation flux.} 
-    \item{sulwrf}{Surface upward long-wave radiation flux.} 
-    \item{suswrf}{Surface upward short-wave radiation flux.}
-    \item{ghf}{Ground heat flux.} 
-    \item{slhnf}{Surface latent heat net flux.} 
-    \item{sshnf}{Surface sensible heat net flux.}
-    \item{mslp}{Mean sea level pressure.} 
-    \item{psfc}{Surface pressure.} 
-    \item{pw}{Precipitable water.}
-    \item{vsmc}{Volumetric soil moisture content.} 
-    \item{sh2m}{Specific humidity at 2 meters.} 
-    \item{tcc}{Total cloud cover.} 
-    \item{tcic}{Total column-integrated condensate.} 
-    \item{tsfc}{Skin temperature.} 
-    \item{tmax2m}{Maximum temperature.} 
-    \item{tmin2m}{Minimum temperature.} 
-    \item{st}{Soil temperature (0-10 cm below surface).} 
-    \item{ulwrf}{Upward long-wave radiation flux.}  
-    \item{wr}{Water runoff.} 
-    \item{we}{Water equivalent of accumulated snow depth.} 
-    \item{wp}{Wind mixing energy.} 
-    \item{w850}{Vertical velocity at 850 hPa surface.} 
-    \item{t2pvu}{Temperature on 2 PVU surface.} 
-    \item{p2pvu}{Pressure on 2 PVU surface.} 
-    \item{u2pvu}{U-component of wind on 2 PVU surface.} 
-    \item{v2pvu}{U-component of wind on 2 PVU surface.} 
-    \item{pv}{Potential vorticity on 320 K isentrope.} 
+    \item{temp}{Observed temperature at Innsbruck Airport (deg \eqn{C}).} 
+    \item{tp}{Total accumulated precipitation (\eqn{kg~m^{-2}}{kg m^-2}).} 
+    \item{t2m}{Temperature at 2 meters (\eqn{K}).}
+    \item{u10m}{U-component of wind at 10 meters (\eqn{m~s^{-1}}{m s^-1}).} 
+    \item{v10m}{V-component of wind at 10 meters (\eqn{m~s^{-1}}{m s^-1}).} 
+    \item{u80m}{U-component of wind at 80 meters (\eqn{m~s^{-1}}{m s^-1}).} 
+    \item{v80m}{U-component of wind at 80 meters (\eqn{m~s^{-1}}{m s^-1}).} 
+    \item{cape}{Convective available potential energy (\eqn{J~kg^{-1}}{J kg^-1}).} 
+    \item{ci}{Convective inhibition (\eqn{J~kg^{-1}}{J kg^-1}).} 
+    \item{sdlwrf}{Surface downward long-wave radiation flux (\eqn{W~m^{-2}}{W m^-2}).} 
+    \item{sdswrf}{Surface downward short-wave radiation flux (\eqn{W~m^{-2}}{W m^-2}).} 
+    \item{sulwrf}{Surface upward long-wave radiation flux (\eqn{W~m^{-2}}{W m^-2}).} 
+    \item{suswrf}{Surface upward short-wave radiation flux (\eqn{W~m^{-2}}{W m^-2}).}
+    \item{ghf}{Ground heat flux (\eqn{W~m^{-2}}{W m^-2}).} 
+    \item{slhnf}{Surface latent heat net flux (\eqn{W~m^{-2}}{W m^-2}).} 
+    \item{sshnf}{Surface sensible heat net flux (\eqn{W~m^{-2}}{W m^-2}).}
+    \item{mslp}{Mean sea level pressure (\eqn{Pa}).} 
+    \item{psfc}{Surface pressure (\eqn{Pa}).} 
+    \item{pw}{Precipitable water (\eqn{kg~m^{-2}}{kg m^-2}).}
+    \item{vsmc}{Volumetric soil moisture content (fraction).} 
+    \item{sh2m}{Specific humidity at 2 meters (\eqn{kg~kg^{-1}}{kg kg^-1}).} 
+    \item{tcc}{Total cloud cover (percent).} 
+    \item{tcic}{Total column-integrated condensate (\eqn{kg~m^{-2}}{kg m^-2}).} 
+    \item{tsfc}{Skin temperature (\eqn{K}).} 
+    \item{tmax2m}{Maximum temperature (\eqn{K}).} 
+    \item{tmin2m}{Minimum temperature (\eqn{K}).} 
+    \item{st}{Soil temperature (0-10 cm below surface) (\eqn{K}).} 
+    \item{ulwrf}{Upward long-wave radiation flux (\eqn{W~m^{-2}}{W m^-2}).}  
+    \item{wr}{Water runoff (\eqn{kg~m^{-2}}{kg m^-2}).} 
+    \item{we}{Water equivalent of accumulated snow depth (\eqn{kg~m^{-2}}{kg m^-2}).} 
+    \item{wp}{Wind mixing energy (\eqn{J}).} 
+    \item{w850}{Vertical velocity at 850 hPa surface (\eqn{Pa~s^{-1}}{Pa s^-1}).} 
+    \item{t2pvu}{Temperature on 2 PVU surface (\eqn{K}).} 
+    \item{p2pvu}{Pressure on 2 PVU surface (\eqn{Pa}).} 
+    \item{u2pvu}{U-component of wind on 2 PVU surface (\eqn{m~s^{-1}}{m s^-1}).} 
+    \item{v2pvu}{U-component of wind on 2 PVU surface (\eqn{m~s^{-1}}{m s^-1}).} 
+    \item{pv}{Potential vorticity on 320 K isentrope (\eqn{K~m^{2}~kg^{-1}~s^{-1}}{K m^2 kg^-1 s^-1}).} 
     \item{time}{Time in years.}
     \item{sin, cos}{Sine and cosine component of annual harmonic pattern.}
     \item{sin2, cos2}{Sine and cosine component of bi-annual harmonic pattern.}
