@@ -1,6 +1,6 @@
 ## Copyright 2018  Marc Hofmann and Achim Zeileis
 ##
-## This file is part of 'lmSubsets'.
+## This file is part of the 'lmSubsets' R extension.
 ##
 ## 'lmSubsets' is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
