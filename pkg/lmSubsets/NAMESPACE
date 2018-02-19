@@ -1,6 +1,6 @@
 ## dynamic library
 ##
-useDynLib("lmSubsets")
+useDynLib("lmSubsets", .registration = TRUE, .fixes = "C_")
 
 
 ## import packages

@@ -653,4 +653,21 @@ lmSelect(
 
 
 
+static const R_CallMethodDef R_CallDef[]  = {
+  {"lmSubsets", (DL_FUNC) &lmSubsets, 6},
+  {"lmSelect", (DL_FUNC) &lmSelect, 7},
+  {NULL, NULL, 0}
+};
+
+
+extern "C"
+void R_init_lmSubsets(DllInfo *dll)
+{
+    R_registerRoutines(dll, NULL, R_CallDef, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
+    R_forceSymbols(dll, TRUE);
+}
+
+
+
 #endif

@@ -24,78 +24,94 @@ ic <- function (penalty, ...) {
         s <- evalq(substitute(penalty), parent.frame())
         s <- deparse(s)
 
-        format <- function (...) {
-            s
-        }
-
-        eval <- function (obj, ..., drop = TRUE) {
-            val <- deviance(obj, ..., drop = FALSE)
-            val <- within(val, {
-                df <- SIZE + 1
-                IC <- mapply(f, SIZE, RSS)
-
-                rm(RSS)
-            })
-
-            if (drop) {
-                val <- with(val, {
-                    structure(IC, df = df, SIZE = SIZE, BEST = BEST)
-                })
-
-                if ((length(val) == 1) && missing(drop)) {
-                    val <- as.vector(val)
-                }
+        ans <- local({
+            format <- function (...) {
+                s
             }
 
-            val
-        }
+            eval <- function (obj, ..., drop = TRUE) {
+                val <- deviance(obj, ..., drop = FALSE)
+                val <- within(val, {
+                    df <- SIZE + 1
+                    IC <- mapply(f, SIZE, RSS)
 
-        penalty <- function (...) {
-            f
-        }
+                    rm(RSS)
+                })
+
+                if (drop) {
+                    val <- with(val, {
+                        structure(IC, df = df, SIZE = SIZE, BEST = BEST)
+                    })
+
+                    if ((length(val) == 1) && missing(drop)) {
+                        val <- as.vector(val)
+                    }
+                }
+
+                val
+            }
+
+            penalty <- function (...) {
+                f
+            }
+
+            list(format = format, eval = eval, penalty = penalty)
+        })
     } else if (tolower(penalty) == "aic") {
-        format <- function (...) {
-            "AIC"
-        }
+        ans <- local({
+            format <- function (...) {
+                "AIC"
+            }
 
-        eval <- function (obj, ...) {
-            AIC(obj, ...)
-        }
+            eval <- function (obj, ...) {
+                AIC(obj, ...)
+            }
 
-        penalty <- function (...) {
-            2.0
-        }
+            penalty <- function (...) {
+                2.0
+            }
+
+            list(format = format, eval = eval, penalty = penalty)
+        })
     } else if (tolower(penalty) == "bic") {
-        format <- function (...) {
-            "BIC"
-        }
+        ans <- local({
+            format <- function (...) {
+                "BIC"
+            }
 
-        eval <- function (obj, ...) {
-            BIC(obj, ...)
-        }
+            eval <- function (obj, ...) {
+                BIC(obj, ...)
+            }
 
-        penalty <- function (nobs, ...) {
-            log(nobs)
-        }
+            penalty <- function (nobs, ...) {
+                log(nobs)
+            }
+
+            list(format = format, eval = eval, penalty = penalty)
+        })
     } else if (is.numeric(penalty)) {
         k_ <- penalty
 
-        format <- function (...) {
-            paste0("AIC (k = ", format_default(k_, ...), ")")
-        }
+        ans <- local({
+            format <- function (...) {
+                paste0("AIC (k = ", format_default(k_, ...), ")")
+            }
 
-        eval <- function (obj, ..., k) {
-            AIC(obj, ..., k = k_)
-        }
+            eval <- function (obj, ..., k) {
+                AIC(obj, ..., k = k_)
+            }
 
-        penalty <- function (...) {
-            k_
-        }
+            penalty <- function (...) {
+                k_
+            }
+
+            list(format = format, eval = eval, penalty = penalty)
+        })
     } else {
         stop ("invalid penalty")
     }
 
-    list(format = format, eval = eval, penalty = penalty)
+    ans
 }
 
 

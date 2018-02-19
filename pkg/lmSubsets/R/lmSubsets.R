@@ -192,7 +192,7 @@ lmSubsets_fit <- function (x, y, weights = NULL, offset = NULL,
         mark <- nincl
         tau <- tolerance + 1.0
 
-        .Call("lmSubsets", algo, xy, mark, tau, nbest, pradius)
+        .Call(C_lmSubsets, algo, xy, mark, tau, nbest, pradius)
     })
 
     ## value

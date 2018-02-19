@@ -3,6 +3,8 @@
 local({
     title <- paste0("{", meta$Package, "}: ", meta$Title)
 
+    authors <- eval(parse(text = meta[["Authors@R"]]))
+    authors <- authors[sapply(authors, function (pers) "aut" %in% pers$role)]
 
     mheader <- "To cite package 'lmSubsets' in publications use:"
 
@@ -10,10 +12,10 @@ local({
         bibentry(
             bibtype = "Manual",
             title   = title,
-            author  = eval(parse(text = meta[["Authors@R"]])),
+            author  = authors,
             year    = format(as.Date(meta$Date), "%Y"),
             note    = paste0("R package version ", meta$Version),
-            url     = "http://CRAN.R-project.org/package=lmSubsets"
+            url     = "https://CRAN.R-project.org/package=lmSubsets"
         ),
 
         bibentry(

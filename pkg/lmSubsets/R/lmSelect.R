@@ -189,7 +189,7 @@ lmSelect_fit <- function (x, y, weights = NULL, offset = NULL,
         penalty <- penalty_ic(ic, nobs)
         tau <- tolerance + 1.0
 
-        .Call("lmSelect", algo, xy, mark, penalty, tau, nbest, pradius)
+        .Call(C_lmSelect, algo, xy, mark, penalty, tau, nbest, pradius)
     })
 
     ## value
