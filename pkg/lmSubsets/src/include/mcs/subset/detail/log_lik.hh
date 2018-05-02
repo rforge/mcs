@@ -40,8 +40,12 @@ class log_lik
 
 private:
 
-    static constexpr Scalar LOG_2PI_ = std::log(Scalar(2.0) * Scalar(M_PI));
-
+    //
+    // NOTE:  'std::log' is not 'constexpr'
+    // static constexpr Scalar LOG_2PI_ = std::log(Scalar(2.0) * Scalar(M_PI));
+    //
+    // from 'Rmath.h':
+    static constexpr Scalar LOG_2PI_ = 1.837877066409345483560659472811;
 
 
 private:
@@ -66,9 +70,11 @@ public:
     constexpr Scalar
     operator ()(const Scalar rss) const noexcept
     {
-        const Scalar log_rss = std::log(rss);
+        // const Scalar log_rss = std::log(rss);
 
-        return -nobs_half_ * (LOG_2PI_ - log_nobs_ + log_rss + Scalar(1.0));
+        return -nobs_half_ * (
+            LOG_2PI_ - log_nobs_ + std::log(rss) + Scalar(1.0)
+        );
     }
 
 };
